@@ -275,7 +275,7 @@
     
                     <div class="flex justify-between items-center mb-3">
                         <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Riwayat Transaksi</h3>
-                        <span onclick="if(typeof openArsipModal === 'function') openArsipModal()" class="text-xs text-blue-600 font-bold cursor-pointer hover:underline hover:text-blue-700 transition">Lihat Semua</span>
+                        <span onclick="if(typeof openArsipModal === 'function') openArsipModal()" class="text-xs text-blue-600 font-bold cursor-pointer hover:underline hover:text-blue-700 transition">Filter Riwayat</span>
                     </div>
                     
                     <div id="container-riwayat-transaksi" class="divide-y divide-gray-100">
@@ -409,6 +409,79 @@
                 <div id="list-slip-detail" class="overflow-y-auto space-y-2 flex-1 pr-1 text-xs">
                     <p class="text-center text-gray-400 py-4">Memuat data slip...</p>
                 </div>
+            </div>
+        </div>
+
+        <!-- MODAL RIWAYAT AKTIVITAS (GOPAY STYLE) -->
+        <div id="modal-arsip-riwayat" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center hidden p-4">
+            <div class="bg-gray-50 w-full max-w-md h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate__animated animate__fadeInUp animate__faster">
+                
+                <!-- HEADER MODAL -->
+                <div class="p-4 bg-white border-b border-gray-100 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <button onclick="window.closeArsipModal()" class="text-gray-700 hover:bg-gray-100 p-2 rounded-full transition">
+                            <i class="fas fa-times text-lg"></i>
+                        </button>
+                        <div>
+                            <h2 class="text-base font-bold text-gray-800">Riwayat Aktivitas</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AREA KONTROL & FILTER (SCROLLABLE ATAS) -->
+                <div class="bg-white p-3 space-y-4 shadow-sm z-10">
+                    <!-- Filter Cepat Durasi -->
+                    <div class="flex items-center space-x-2 overflow-x-auto pb-1 no-scrollbar text-xs">
+                        <button id="btn-filter-hari-ini" onclick="window.setFilterCepat('hari-ini')" class="px-4 py-1.5 rounded-full border border-emerald-600 bg-emerald-50 text-emerald-700 font-bold whitespace-nowrap transition">Hari ini</button>
+                        <button id="btn-filter-7-hari" onclick="window.setFilterCepat('7-hari')" class="px-4 py-1.5 rounded-full border border-gray-200 bg-gray-50 text-gray-600 font-semibold whitespace-nowrap transition">7 hari</button>
+                        <button id="btn-filter-1-bulan" onclick="window.setFilterCepat('1-bulan')" class="px-4 py-1.5 rounded-full border border-gray-200 bg-gray-50 text-gray-600 font-semibold whitespace-nowrap transition">1 bulan</button>
+                        <button id="btn-filter-6-bulan" onclick="window.setFilterCepat('6-bulan')" class="px-4 py-1.5 rounded-full border border-gray-200 bg-gray-50 text-gray-600 font-semibold whitespace-nowrap transition">6 bulan</button>
+                    </div>
+
+                    <!-- Navigasi Tanggal Geser (Hanya Aktif jika filter 'hari-ini') -->
+                    <div id="navigasi-tanggal-box" class="flex items-center justify-between px-2">
+                        <button onclick="window.geserTanggalRiwayat(-1)" class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-700 transition">
+                            <i class="fas fa-chevron-left text-xs"></i>
+                        </button>
+                        <div class="text-center">
+                            <p id="riwayat-hari-teks" class="text-xs font-semibold text-gray-400">Minggu</p>
+                            <p id="riwayat-tanggal-teks" class="text-sm font-bold text-gray-800">08/12/2024</p>
+                        </div>
+                        <button onclick="window.geserTanggalRiwayat(1)" class="w-8 h-8 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center hover:bg-gray-300 transition">
+                            <i class="fas fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+
+                    <!-- Tombol Filter Kustom -->
+                    <div class="flex items-center space-x-2">
+                        <button onclick="window.toggleFilterKustomTipe()" class="flex items-center space-x-1.5 px-3 py-1.5 border border-gray-200 rounded-full text-xs font-bold text-gray-700 bg-white hover:bg-gray-50 transition">
+                            <i class="fas fa-sliders-h text-gray-500"></i>
+                            <span>Filter</span>
+                        </button>
+                        <!-- Indikator Filter Aktif -->
+                        <div id="badge-filter-aktif" class="hidden text-[10px] bg-blue-50 text-blue-600 border border-blue-100 font-bold px-2.5 py-1 rounded-full">
+                            Kategori Terfilter
+                        </div>
+                    </div>
+                    
+                    <!-- Panel Dropdown Filter Kustom Jenis Transaksi (Hidden) -->
+                    <div id="panel-filter-kustom" class="hidden grid grid-cols-3 gap-2 pt-1 border-t border-gray-100 text-[11px]">
+                        <button onclick="window.setFilterKategori('semua')" class="py-1 px-2 text-center rounded-lg bg-blue-600 text-white font-bold">Semua</button>
+                        <button onclick="window.setFilterKategori('slip')" class="py-1 px-2 text-center rounded-lg bg-gray-100 text-gray-600 font-medium hover:bg-gray-200">Slip Gaji</button>
+                        <button onclick="window.setFilterKategori('pengeluaran')" class="py-1 px-2 text-center rounded-lg bg-gray-100 text-gray-600 font-medium hover:bg-gray-200">Pengeluaran</button>
+                        <button onclick="window.setFilterKategori('mutasi')" class="py-1 px-2 text-center rounded-lg bg-gray-100 text-gray-600 font-medium hover:bg-gray-200">Mutasi</button>
+                    </div>
+                </div>
+
+                <!-- KONTEN LIST TRANSAKSI (SCROLLABLE TENGAH) -->
+                <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-white" id="container-list-riwayat">
+                    <!-- Item Riwayat akan di-render dinamis di sini -->
+                    <div class="flex items-center justify-center py-12 text-gray-400 text-xs flex-col space-y-2">
+                        <i class="fas fa-spinner fa-spin text-xl text-emerald-500"></i>
+                        <span>Memuat riwayat aktivitas...</span>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -1782,10 +1855,26 @@
         };
 
         window.tutupModalPengeluaran = function() {
-            document.getElementById('modal-pengeluaran-baru').classList.add('hidden');
-            // Reset form
-            document.getElementById('out-keterangan').value = "";
-            document.getElementById('out-nominal').value = "";
+            const modal = document.getElementById('modal-pengeluaran-baru');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+                
+                // ─── RESET ELEMEN INPUT FORM ───
+                if (document.getElementById('out-keterangan')) document.getElementById('out-keterangan').value = "";
+                if (document.getElementById('out-nominal')) document.getElementById('out-nominal').value = "";
+                
+                // ─── UTAMA: Kembalikan fungsi tombol simpan ke mode awal (Tambah Baru) ───
+                const btnSimpan = modal.querySelector('button[onclick*="prosesUpdateTransaksiUmum"]') || modal.querySelector('button[onclick*="simpanPengeluaranManual"]');
+                if (btnSimpan) {
+                    btnSimpan.innerHTML = `<i class="fas fa-save"></i> Simpan Pengeluaran`;
+                    btnSimpan.setAttribute('onclick', 'window.simpanPengeluaranManual()');
+                }
+            }
+            
+            // Hapus sisa tanda metadata edit global
+            window.idDokumenSedangDiedit = null;
+            window.jenisTransaksiSedangDiedit = null;
         };
 
 
@@ -1898,12 +1987,26 @@
         };
 
         window.tutupModalMutasi = function() {
-            const modalMutasi = document.getElementById('modal-mutasi-saldo');
-            if (modalMutasi) {
-                modalMutasi.classList.add('hidden');
-                document.getElementById('mutasi-keterangan').value = "";
-                document.getElementById('mutasi-nominal').value = "";
+            const modal = document.getElementById('modal-mutasi-saldo');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+                
+                // ─── RESET ELEMEN INPUT FORM ───
+                if (document.getElementById('mutasi-keterangan')) document.getElementById('mutasi-keterangan').value = "";
+                if (document.getElementById('mutasi-nominal')) document.getElementById('mutasi-nominal').value = "";
+                
+                // ─── UTAMA: Kembalikan fungsi tombol simpan ke mode awal (Tambah Baru) ───
+                const btnSimpan = modal.querySelector('button[onclick*="prosesUpdateTransaksiUmum"]') || modal.querySelector('button[onclick*="simpanMutasiSaldo"]');
+                if (btnSimpan) {
+                    btnSimpan.innerHTML = `<i class="fas fa-paper-plane"></i> Kirim Alokasi`;
+                    btnSimpan.setAttribute('onclick', 'window.simpanMutasiSaldo()');
+                }
             }
+            
+            // Hapus sisa tanda metadata edit global
+            window.idDokumenSedangDiedit = null;
+            window.jenisTransaksiSedangDiedit = null;
         };
 
         // --- FUNGSIONALITAS PROSES SIMPAN MUTASI ---
@@ -2835,7 +2938,6 @@
                     const konfirmasiSlip = confirm("Untuk mengedit dokumen slip, data lama akan dihapus dan Anda akan diarahkan ke modal OCR Slip Gaji untuk upload ulang. Lanjutkan?");
                     if (!konfirmasiSlip) return;
 
-                    // Hapus data lama terlebih dahulu
                     const urlDelete = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/rekap_finansial/${idDokumen}`;
                     const responDel = await fetch(urlDelete, {
                         method: 'DELETE',
@@ -2843,10 +2945,7 @@
                     });
 
                     if (responDel.ok) {
-                        // Jalankan fungsi hitung ulang dashboard
                         await window.muatRekapFinansialDashboard(window.currentDeveloperUid);
-                        
-                        // Buka modal OCR Slip Gaji (Sesuaikan ID modal OCR milik Anda jika berbeda)
                         const modalOcr = document.getElementById('modal-ocr-slip') || document.getElementById('modal-upload-slip');
                         if (modalOcr) {
                             modalOcr.classList.remove('hidden');
@@ -2860,30 +2959,30 @@
                     }
 
                 } else if (jenisTransaksi === 'pengeluaran') {
-                    // ─── ALUR PENGELUARAN (TAMPILKAN KE MODAL PENGELUARAN) ───
+                    // ─── ALUR PENGELUARAN ───
                     const kategoriRaw = fields.kategori?.stringValue || "lainnya";
-                    const periodeRaw = fields.periode?.stringValue || ""; // Format text (ex: "Januari 2026")
+                    const periodeRaw = fields.periode?.stringValue || ""; 
                     const keterangan = fields.keterangan?.stringValue || "";
-                    const nominal = parseInt(fields.potongan?.integerValue || fields.potongan?.stringValue || 0);
+                    const nominal = parseInt(fields.potongan?.integerValue || fields.potongan?.stringValue || 0, 10);
 
-                    // Set data ke elemen form input modal pengeluaran yang sudah kita perbaiki
                     if (document.getElementById('out-kategori')) document.getElementById('out-kategori').value = kategoriRaw.toLowerCase();
                     if (document.getElementById('out-keterangan')) document.getElementById('out-keterangan').value = keterangan;
-                    if (document.getElementById('out-nominal')) document.getElementById('out-nominal').value = nominal;
                     
-                    // Mengubah teks bulan (ex: "Januari 2026") menjadi format YYYY-MM untuk input type="month"
+                    // PERUBAHAN: Tampilkan nominal dengan format ribuan (.toLocaleString) agar serasi dengan sistem oninput baru
+                    if (document.getElementById('out-nominal')) {
+                        document.getElementById('out-nominal').value = nominal === 0 ? "" : nominal.toLocaleString('id-ID');
+                    }
+                    
                     if (document.getElementById('out-periode') && periodeRaw) {
                         document.getElementById('out-periode').value = window.konversiTeksKeMonthInput(periodeRaw);
                     }
 
-                    // Buka Modal Pengeluaran Baru yang responsif
                     const modalPengeluaran = document.getElementById('modal-pengeluaran-baru');
                     if (modalPengeluaran) {
                         modalPengeluaran.classList.remove('hidden');
                         modalPengeluaran.style.display = 'flex';
                         
-                        // Siasat: Ubah text tombol simpan modal menjadi "Perbarui Pengeluaran" secara dinamis
-                        const btnSimpan = modalPengeluaran.querySelector('button[onclick*="simpanPengeluaranManual"]');
+                        const btnSimpan = modalPengeluaran.querySelector('button[onclick*="simpanPengeluaranManual"]') || modalPengeluaran.querySelector('button[onclick*="prosesUpdateTransaksiUmum"]');
                         if (btnSimpan) {
                             btnSimpan.innerHTML = `<i class="fas fa-save"></i> Perbarui Data`;
                             btnSimpan.setAttribute('onclick', `window.prosesUpdateTransaksiUmum('${idDokumen}', 'pengeluaran')`);
@@ -2891,30 +2990,31 @@
                     }
 
                 } else if (jenisTransaksi === 'mutasi') {
-                    // ─── ALUR MUTASI (TAMPILKAN KE MODAL MUTASI) ───
-                    const kategoriRaw = fields.kategori?.stringValue || ""; // ex: "mutasi_tabungan1"
+                    // ─── ALUR MUTASI ───
+                    const kategoriRaw = fields.kategori?.stringValue || ""; 
                     const targetPos = kategoriRaw.replace("mutasi_", ""); 
                     const periodeRaw = fields.periode?.stringValue || "";
                     const keterangan = fields.keterangan?.stringValue || "";
-                    const nominal = parseInt(fields.potongan?.integerValue || fields.potongan?.stringValue || 0);
+                    const nominal = parseInt(fields.potongan?.integerValue || fields.potongan?.stringValue || 0, 10);
 
-                    // Set data ke elemen form input modal mutasi saldo
                     if (document.getElementById('mutasi-tujuan')) document.getElementById('mutasi-tujuan').value = targetPos;
                     if (document.getElementById('mutasi-keterangan')) document.getElementById('mutasi-keterangan').value = keterangan;
-                    if (document.getElementById('mutasi-nominal')) document.getElementById('mutasi-nominal').value = nominal;
+                    
+                    // PERUBAHAN: Tampilkan nominal dengan format ribuan (.toLocaleString)
+                    if (document.getElementById('mutasi-nominal')) {
+                        document.getElementById('mutasi-nominal').value = nominal === 0 ? "" : nominal.toLocaleString('id-ID');
+                    }
                     
                     if (document.getElementById('mutasi-periode') && periodeRaw) {
                         document.getElementById('mutasi-periode').value = window.konversiTeksKeMonthInput(periodeRaw);
                     }
 
-                    // Buka Modal Mutasi Saldo
                     const modalMutasi = document.getElementById('modal-mutasi-saldo');
                     if (modalMutasi) {
                         modalMutasi.classList.remove('hidden');
                         modalMutasi.style.display = 'flex';
 
-                        // Ubah text tombol simpan mutasi menjadi "Perbarui Mutasi"
-                        const btnSimpan = modalMutasi.querySelector('button[onclick*="simpanMutasiSaldo"]');
+                        const btnSimpan = modalMutasi.querySelector('button[onclick*="simpanMutasiSaldo"]') || modalMutasi.querySelector('button[onclick*="prosesUpdateTransaksiUmum"]');
                         if (btnSimpan) {
                             btnSimpan.innerHTML = `<i class="fas fa-paper-plane"></i> Perbarui Mutasi`;
                             btnSimpan.setAttribute('onclick', `window.prosesUpdateTransaksiUmum('${idDokumen}', 'mutasi')`);
@@ -3493,6 +3593,238 @@
             if (elImg) {
                 elImg.src = "";
             }
+        };
+
+
+        // ─── STATE MANAGEMENT DATA RIWAYAT ───
+        window.riwayatState = {
+            filterCepat: 'hari-ini', // Pilihan: 'hari-ini', '7-hari', '1-bulan', '6-bulan'
+            tanggalAcuan: new Date(), // Menampung tanggal aktif untuk filter harian
+            kategoriTerpilih: 'semua', // Pilihan: 'semua', 'slip', 'pengeluaran', 'mutasi'
+            dataMentahLokal: [] // Wadah penampung seluruh mutasi dari dashboard utama
+        };
+
+        // 1. Fungsi Membuka Modal Riwayat
+        window.openArsipModal = function() {
+            const modal = document.getElementById('modal-arsip-riwayat');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.style.display = 'flex';
+                
+                // Ambil data mutasi yang sudah diload di dashboard utama aplikasi Anda
+                // Catatan: Sesuaikan 'window.arrayRekapFinansialGlobal' dengan nama variabel array dashboard Anda
+                window.riwayatState.dataMentahLokal = window.arrayRekapFinansialGlobal || [];
+                
+                window.riwayatState.tanggalAcuan = new Date(); // Reset ke hari ini
+                window.setFilterCepat('hari-ini'); // Default filter bawaan GoPay
+            }
+        };
+
+        // 2. Fungsi Menutup Modal
+        window.closeArsipModal = function() {
+            const modal = document.getElementById('modal-arsip-riwayat');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+            }
+        };
+
+        // 3. Pengendali Filter Cepat (Hari ini, 7 Hari, dll)
+        window.setFilterCepat = function(tipe) {
+            window.riwayatState.filterCepat = tipe;
+            
+            // Kelola kosmetik class tombol aktif/tidak aktif
+            const daftarTipe = ['hari-ini', '7-hari', '1-bulan', '6-bulan'];
+            daftarTipe.forEach(t => {
+                const btn = document.getElementById(`btn-filter-${t}`);
+                if (btn) {
+                    if (t === tipe) {
+                        btn.className = "px-4 py-1.5 rounded-full border border-emerald-600 bg-emerald-50 text-emerald-700 font-bold whitespace-nowrap transition";
+                    } else {
+                        btn.className = "px-4 py-1.5 rounded-full border border-gray-200 bg-gray-50 text-gray-600 font-semibold whitespace-nowrap transition";
+                    }
+                }
+            });
+
+            // Tampilkan/sembunyikan geser tanggal jika bukan filter harian
+            const navBox = document.getElementById('navigasi-tanggal-box');
+            if (navBox) {
+                if (tipe === 'hari-ini') {
+                    navBox.classList.remove('hidden');
+                } else {
+                    navBox.classList.add('hidden');
+                }
+            }
+
+            window.prosesKalkulasiDanRenderRiwayat();
+        };
+
+        // 4. Geser Hari (Prev / Next Day)
+        window.geserTanggalRiwayat = function(arah) {
+            const tanggalBaru = new Date(window.riwayatState.tanggalAcuan);
+            tanggalBaru.setDate(tanggalBaru.getDate() + arah);
+            
+            // Proteksi agar tidak bisa memajukan tanggal melampaui hari ini
+            if (tanggalBaru > new Date()) return;
+
+            window.riwayatState.tanggalAcuan = tanggalBaru;
+            window.prosesKalkulasiDanRenderRiwayat();
+        };
+
+        // 5. Toggle Panel Dropdown Filter Kustom Kategori
+        window.toggleFilterKustomTipe = function() {
+            const panel = document.getElementById('panel-filter-kustom');
+            if (panel) panel.classList.toggle('hidden');
+        };
+
+        window.setFilterKategori = function(kat) {
+            window.riwayatState.kategoriTerpilih = kat;
+            
+            const badge = document.getElementById('badge-filter-aktif');
+            if (badge) {
+                if (kat === 'semua') {
+                    badge.classList.add('hidden');
+                } else {
+                    badge.innerText = `Kategori: ${kat.toUpperCase()}`;
+                    badge.classList.remove('hidden');
+                }
+            }
+            
+            window.toggleFilterKustomTipe();
+            window.prosesKalkulasiDanRenderRiwayat();
+        };
+
+        // 6. Inti Logika Penyaringan Data & Render ke HTML (Gopay Style List)
+        window.prosesKalkulasiDanRenderRiwayat = function() {
+            const container = document.getElementById('container-list-riwayat');
+            if (!container) return;
+
+            let dataHasilFilter = [...window.riwayatState.dataMentahLokal];
+            const hariIni = new Date();
+
+            // ── STEP A: Urutkan Berdasarkan Waktu Transaksi Terbaru ──
+            dataHasilFilter.sort((a, b) => {
+                const waktuA = a.waktuTransaksi ? new Date(a.waktuTransaksi) : new Date(0);
+                const waktuB = b.waktuTransaksi ? new Date(b.waktuTransaksi) : new Date(0);
+                return waktuB - waktuA;
+            });
+
+            // ── STEP B: Filter Rentang Waktu GoPay ──
+            if (window.riwayatState.filterCepat === 'hari-ini') {
+                const targetStr = window.riwayatState.tanggalAcuan.toDateString();
+                dataHasilFilter = dataHasilFilter.filter(item => {
+                    if (!item.waktuTransaksi) return false;
+                    return new Date(item.waktuTransaksi).toDateString() === targetStr;
+                });
+
+                // Update teks info tanggal di header navigasi
+                const namaHariIndo = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+                document.getElementById('riwayat-hari-teks').innerText = namaHariIndo[window.riwayatState.tanggalAcuan.getDay()];
+                
+                const dd = String(window.riwayatState.tanggalAcuan.getDate()).padStart(2, '0');
+                const mm = String(window.riwayatState.tanggalAcuan.getMonth() + 1).padStart(2, '0');
+                const yyyy = window.riwayatState.tanggalAcuan.getFullYear();
+                document.getElementById('riwayat-tanggal-teks').innerText = `${dd}/${mm}/${yyyy}`;
+
+            } else if (window.riwayatState.filterCepat === '7-hari') {
+                const batas7Hari = new Date();
+                batas7Hari.setDate(hariIni.getDate() - 7);
+                dataHasilFilter = dataHasilFilter.filter(item => item.waktuTransaksi && new Date(item.waktuTransaksi) >= batas7Hari);
+
+            } else if (window.riwayatState.filterCepat === '1-bulan') {
+                const batas1Bulan = new Date();
+                batas1Bulan.setMonth(hariIni.getMonth() - 1);
+                dataHasilFilter = dataHasilFilter.filter(item => item.waktuTransaksi && new Date(item.waktuTransaksi) >= batas1Bulan);
+
+            } else if (window.riwayatState.filterCepat === '6-bulan') {
+                const batas6Bulan = new Date();
+                batas6Bulan.setMonth(hariIni.getMonth() - 6);
+                dataHasilFilter = dataHasilFilter.filter(item => item.waktuTransaksi && new Date(item.waktuTransaksi) >= batas6Bulan);
+            }
+
+            // ── STEP C: Filter Berdasarkan Jenis Kategori Kustom ──
+            if (window.riwayatState.kategoriTerpilih !== 'semua') {
+                dataHasilFilter = dataHasilFilter.filter(item => {
+                    const kat = (item.kategori || "").toLowerCase();
+                    if (window.riwayatState.kategoriTerpilih === 'slip') return kat.includes('slip') || kat.includes('gaji');
+                    if (window.riwayatState.kategoriTerpilih === 'mutasi') return kat.includes('mutasi');
+                    if (window.riwayatState.kategoriTerpilih === 'pengeluaran') return !kat.includes('mutasi') && !kat.includes('slip') && !kat.includes('gaji');
+                    return true;
+                });
+            }
+
+            // ── STEP D: Gambar List ke Komponen HTML ──
+            if (dataHasilFilter.length === 0) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-16 text-center">
+                        <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-2">
+                            <i class="fas fa-receipt text-gray-300 text-2xl"></i>
+                        </div>
+                        <p class="text-xs font-bold text-gray-700">Belum ada aktivitas</p>
+                        <p class="text-[10px] text-gray-400 max-w-[200px] mt-0.5">Transaksi pada periode atau filter kategori ini akan muncul di sini.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let htmlKoleksi = `<div class="divide-y divide-gray-100 rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">`;
+
+            dataHasilFilter.forEach(item => {
+                // Konfigurasi ikon & warna berwujud sirkular mini khas GoPay
+                let ikonHtml = `<div class="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold"><i class="fas fa-wallet"></i></div>`;
+                let nominalText = "Rp 0";
+                let warnaNominal = "text-gray-800";
+                
+                const kategori = (item.kategori || "").toLowerCase();
+                const pendapatan = parseInt(item.pendapatan || 0, 10);
+                const potongan = parseInt(item.potongan || 0, 10);
+                const keterangan = item.keterangan || "Transaksi Sistem";
+
+                // Parsing Tanggal & Jam untuk sub-header item
+                let stringWaktuKecil = "";
+                if (item.waktuTransaksi) {
+                    const dObj = new Date(item.waktuTransaksi);
+                    const opsiTgl = { day: '2-digit', month: 'short', year: 'numeric' };
+                    const jamStr = String(dObj.getHours()).padStart(2, '0') + ":" + String(dObj.getMinutes()).padStart(2, '0');
+                    stringWaktuKecil = `${dObj.toLocaleDateString('id-ID', opsiTgl)} - ${jamStr}`;
+                }
+
+                // Penentuan Style Berdasarkan Kategori Data
+                if (kategori.includes('slip') || kategori.includes('gaji') || pendapatan > 0) {
+                    // Gaya Transaksi Masuk / Pendapatan (Ikon Hijau / Biru Muda QRIS)
+                    ikonHtml = `<div class="w-9 h-9 rounded-full bg-cyan-50 text-cyan-600 flex items-center justify-center text-sm"><i class="fas fa-qrcode"></i></div>`;
+                    nominalText = `Rp ${pendapatan.toLocaleString('id-ID')}`;
+                    warnaNominal = "text-gray-800 font-bold";
+                } else if (kategori.includes('mutasi')) {
+                    // Gaya Alokasi Saldo / Mutasi Internal (Ikon Biru Tong Sampah / Dompet)
+                    ikonHtml = `<div class="w-9 h-9 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center text-sm"><i class="fas fa-exchange-alt"></i></div>`;
+                    nominalText = `Rp ${potongan.toLocaleString('id-ID')}`;
+                    warnaNominal = "text-gray-800 font-semibold";
+                } else {
+                    // Gaya Pengeluaran Umum (Ikon Merah Panah Atas)
+                    ikonHtml = `<div class="w-9 h-9 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center text-sm"><i class="fas fa-arrow-up"></i></div>`;
+                    nominalText = `Rp ${potongan.toLocaleString('id-ID')}`;
+                    warnaNominal = "text-gray-800 font-semibold";
+                }
+
+                htmlKoleksi += `
+                    <div class="p-3.5 flex items-center justify-between hover:bg-gray-50 transition cursor-pointer" onclick="alert('Detail Transaksi: ${keterangan}')">
+                        <div class="flex items-center space-x-3 max-w-[70%]">
+                            ${ikonHtml}
+                            <div class="truncate">
+                                <p class="text-[10px] text-gray-400 font-medium">${stringWaktuKecil}</p>
+                                <p class="text-xs font-bold text-gray-800 truncate mt-0.5">${keterangan}</p>
+                            </div>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <p class="text-xs ${warnaNominal}">${nominalText}</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            htmlKoleksi += `</div>`;
+            container.innerHTML = htmlKoleksi;
         };
     </script>
 </body>
