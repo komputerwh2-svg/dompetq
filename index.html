@@ -3733,149 +3733,169 @@
             const container = document.getElementById('container-list-riwayat');
             if (!container) return;
 
-            let dataHasilFilter = [...window.riwayatState.dataMentahLokal];
-            const hariIni = new Date();
+            // 1. Ambil data mentah dari global array
+            let dataHasilFilter = [...(window.riwayatState.dataMentahLokal || [])];
 
-            // ── STEP A: Urutkan Berdasarkan Waktu Transaksi Terbaru ──
-            dataHasilFilter.sort((a, b) => {
-                const waktuA = a.waktuTransaksi ? new Date(a.waktuTransaksi) : new Date(0);
-                const waktuB = b.waktuTransaksi ? new Date(b.waktuTransaksi) : new Date(0);
-                return waktuB - waktuA;
-            });
+            // ── STEP A: FILTER BERDASARKAN DURASI / TANGGAL ACUAN ──
+            const tglAcuan = new Date(window.riwayatState.tanggalAcuan);
+            const yyyy = tglAcuan.getFullYear();
+            const mm = String(tglAcuan.getMonth() + 1).padStart(2, '0');
+            const dd = String(tglAcuan.getDate()).padStart(2, '0');
+            const stringTanggalAcuan = `${dd}/${mm}/${yyyy}`; // Format: DD/MM/YYYY
 
-            // ── STEP B: Filter Rentang Waktu GoPay ──
-            if (window.riwayatState.filterCepat === 'hari-ini') {
-                const targetStr = window.riwayatState.tanggalAcuan.toDateString();
+            if (window.riwayatState.modeDurasi === 'hari-ini') {
+                // Tampilkan teks hari dan tanggal pada UI modal
+                const opsiHari = { weekday: 'long' };
+                if (document.getElementById('riwayat-hari-teks')) {
+                    document.getElementById('riwayat-hari-teks').innerText = tglAcuan.toLocaleDateString('id-ID', opsiHari);
+                }
+                if (document.getElementById('riwayat-tanggal-teks')) {
+                    document.getElementById('riwayat-tanggal-teks').innerText = stringTanggalAcuan;
+                }
+
+                // Filter data yang cocok dengan tanggal acuan saja
                 dataHasilFilter = dataHasilFilter.filter(item => {
-                    if (!item.waktuTransaksi) return false;
-                    return new Date(item.waktuTransaksi).toDateString() === targetStr;
+                    const tglItem = item.tanggalTampil || ""; 
+                    return tglItem === stringTanggalAcuan;
                 });
+            } else {
+                // Mode filter rentang (7 hari, 1 bulan, 6 bulan)
+                let batasHari = 7;
+                if (window.riwayatState.modeDurasi === '1-bulan') batasHari = 30;
+                if (window.riwayatState.modeDurasi === '6-bulan') batasHari = 180;
 
-                // Update teks info tanggal di header navigasi
-                const namaHariIndo = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-                document.getElementById('riwayat-hari-teks').innerText = namaHariIndo[window.riwayatState.tanggalAcuan.getDay()];
-                
-                const dd = String(window.riwayatState.tanggalAcuan.getDate()).padStart(2, '0');
-                const mm = String(window.riwayatState.tanggalAcuan.getMonth() + 1).padStart(2, '0');
-                const yyyy = window.riwayatState.tanggalAcuan.getFullYear();
-                document.getElementById('riwayat-tanggal-teks').innerText = `${dd}/${mm}/${yyyy}`;
+                const timestamptBatas = new Date(tglAcuan).getTime() - (batasHari * 24 * 60 * 60 * 1000);
 
-            } else if (window.riwayatState.filterCepat === '7-hari') {
-                const batas7Hari = new Date();
-                batas7Hari.setDate(hariIni.getDate() - 7);
-                dataHasilFilter = dataHasilFilter.filter(item => item.waktuTransaksi && new Date(item.waktuTransaksi) >= batas7Hari);
-
-            } else if (window.riwayatState.filterCepat === '1-bulan') {
-                const batas1Bulan = new Date();
-                batas1Bulan.setMonth(hariIni.getMonth() - 1);
-                dataHasilFilter = dataHasilFilter.filter(item => item.waktuTransaksi && new Date(item.waktuTransaksi) >= batas1Bulan);
-
-            } else if (window.riwayatState.filterCepat === '6-bulan') {
-                const batas6Bulan = new Date();
-                batas6Bulan.setMonth(hariIni.getMonth() - 6);
-                dataHasilFilter = dataHasilFilter.filter(item => item.waktuTransaksi && new Date(item.waktuTransaksi) >= batas6Bulan);
+                dataHasilFilter = dataHasilFilter.filter(item => {
+                    if (!item.tanggalMentah) return false;
+                    // Mengubah format tanggal mentah atau Firestore timestamp ke epoch milidetik
+                    const waktuItem = new Date(item.tanggalMentah).getTime();
+                    return waktuItem >= timestamptBatas && waktuItem <= tglAcuan.getTime();
+                });
             }
 
-            // ── STEP C: Filter Berdasarkan Jenis Kategori Kustom ──
+            // ── STEP B: FILTER BERDASARKAN JENIS KATEGORI PANEL (SINKRON DENGAN LOGIKA DASHBOARD) ──
             if (window.riwayatState.kategoriTerpilih !== 'semua') {
                 dataHasilFilter = dataHasilFilter.filter(item => {
+                    // Replikasi variabel penentu dari dashboard Anda
                     const kat = (item.kategori || "").toLowerCase();
-                    const pendapatan = parseInt(item.pendapatan || 0, 10);
+                    const isSlipDokumen = item.isSlipDokumen || kat.includes('slip') || kat.includes('gaji');
+                    const isMutasi = item.isMutasi || kat.includes('mutasi');
                     const potongan = parseInt(item.potongan || 0, 10);
-                    
+
                     if (window.riwayatState.kategoriTerpilih === 'slip') {
-                        // Slip gaji diidentifikasi dari teks kategori atau jika memiliki pendapatan > 0
-                        return kat.includes('slip') || kat.includes('gaji') || pendapatan > 0;
+                        return isSlipDokumen;
                     }
-                    
                     if (window.riwayatState.kategoriTerpilih === 'mutasi') {
-                        // Mutasi saldo diidentifikasi khusus dari prefix mutasi_
-                        return kat.includes('mutasi');
+                        return isMutasi;
                     }
-                    
                     if (window.riwayatState.kategoriTerpilih === 'pengeluaran') {
-                        // Pengeluaran manual adalah transaksi yang BUKAN mutasi dan BUKAN slip gaji
-                        const isSlip = kat.includes('slip') || kat.includes('gaji') || pendapatan > 0;
-                        const isMutasi = kat.includes('mutasi');
-                        return !isSlip && !isMutasi && potongan > 0;
+                        return !isSlipDokumen && !isMutasi && potongan > 0;
                     }
-                    
                     return true;
                 });
             }
 
-            // ── STEP D: Gambar List ke Komponen HTML ──
+            // ── STEP C: RENDER HTML DATA KE DALAM CONTAINER MODAL ──
             if (dataHasilFilter.length === 0) {
                 container.innerHTML = `
-                    <div class="flex flex-col items-center justify-center py-16 text-center">
-                        <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-2">
-                            <i class="fas fa-receipt text-gray-300 text-2xl"></i>
-                        </div>
-                        <p class="text-xs font-bold text-gray-700">Belum ada aktivitas</p>
-                        <p class="text-[10px] text-gray-400 max-w-[200px] mt-0.5">Transaksi pada periode atau filter kategori ini akan muncul di sini.</p>
+                    <div class="flex items-center justify-center py-12 text-gray-400 text-xs flex-col space-y-2 animate__animated animate__fadeIn">
+                        <i class="fas fa-receipt text-3xl text-gray-200"></i>
+                        <span class="font-bold text-gray-500">Belum ada aktivitas</span>
+                        <p class="text-[10px] text-gray-400 text-center px-6">Transaksi pada periode atau filter kategori ini akan muncul di sini.</p>
                     </div>
                 `;
                 return;
             }
 
-            let htmlKoleksi = `<div class="divide-y divide-gray-100 rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">`;
+            let htmlRiwayatSuntik = "";
+            let tanggalSebelumnya = "";
 
             dataHasilFilter.forEach(item => {
-                // Konfigurasi ikon & warna berwujud sirkular mini khas GoPay
-                let ikonHtml = `<div class="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold"><i class="fas fa-wallet"></i></div>`;
-                let nominalText = "Rp 0";
-                let warnaNominal = "text-gray-800";
+                // Ambil variabel dasar dari item data
+                const keterangan = item.keterangan || "Tanpa Keterangan";
+                const kategori = item.kategori || "Umum";
+                const namaUser = item.namaUser || "User";
+                const tanggalTampil = item.tanggalTampil || stringTanggalAcuan;
                 
-                const kategori = (item.kategori || "").toLowerCase();
                 const pendapatan = parseInt(item.pendapatan || 0, 10);
                 const potongan = parseInt(item.potongan || 0, 10);
-                const keterangan = item.keterangan || "Transaksi Sistem";
+                const netto = parseInt(item.netto || 0, 10);
 
-                // Parsing Tanggal & Jam untuk sub-header item
-                let stringWaktuKecil = "";
-                if (item.waktuTransaksi) {
-                    const dObj = new Date(item.waktuTransaksi);
-                    const opsiTgl = { day: '2-digit', month: 'short', year: 'numeric' };
-                    const jamStr = String(dObj.getHours()).padStart(2, '0') + ":" + String(dObj.getMinutes()).padStart(2, '0');
-                    stringWaktuKecil = `${dObj.toLocaleDateString('id-ID', opsiTgl)} - ${jamStr}`;
-                }
+                const kat = (item.kategori || "").toLowerCase();
+                const isSlipDokumen = item.isSlipDokumen || kat.includes('slip') || kat.includes('gaji');
+                const isMutasi = item.isMutasi || kat.includes('mutasi');
 
-                // Penentuan Style Berdasarkan Kategori Data
-                if (kategori.includes('slip') || kategori.includes('gaji') || pendapatan > 0) {
-                    // Gaya Transaksi Masuk / Pendapatan (Ikon Hijau / Biru Muda QRIS)
-                    ikonHtml = `<div class="w-9 h-9 rounded-full bg-cyan-50 text-cyan-600 flex items-center justify-center text-sm"><i class="fas fa-qrcode"></i></div>`;
-                    nominalText = `Rp ${pendapatan.toLocaleString('id-ID')}`;
-                    warnaNominal = "text-gray-800 font-bold";
-                } else if (kategori.includes('mutasi')) {
-                    // Gaya Alokasi Saldo / Mutasi Internal (Ikon Biru Tong Sampah / Dompet)
-                    ikonHtml = `<div class="w-9 h-9 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center text-sm"><i class="fas fa-exchange-alt"></i></div>`;
-                    nominalText = `Rp ${potongan.toLocaleString('id-ID')}`;
-                    warnaNominal = "text-gray-800 font-semibold";
+                // Logika penentu icon dan warna nominal (Sama persis dengan dashboard utama)
+                let iconClass = "fas fa-arrow-up"; 
+                let iconBg = "bg-emerald-50 text-emerald-600";
+                let warnaNominal = "text-emerald-600 font-black text-xs"; 
+                let teksNominal = "";
+                let jenisTransaksi = ""; 
+
+                if (isSlipDokumen) {
+                    iconClass = "fas fa-arrow-up";
+                    iconBg = "bg-emerald-50 text-emerald-600";
+                    const nominalTampil = netto > 0 ? netto : (pendapatan - potongan);
+                    teksNominal = `+Rp ${nominalTampil.toLocaleString('id-ID')}`;
+                    jenisTransaksi = "slip";
+                } else if (potongan > 0) {
+                    iconClass = isMutasi ? "fas fa-exchange-alt" : "fas fa-arrow-down";
+                    iconBg = isMutasi ? "bg-purple-50 text-purple-600" : "bg-rose-50 text-rose-600";
+                    warnaNominal = isMutasi ? "text-purple-600 font-black text-xs" : "text-rose-600 font-black text-xs";
+                    teksNominal = `-Rp ${potongan.toLocaleString('id-ID')}`;
+                    jenisTransaksi = isMutasi ? "mutasi" : "pengeluaran";
                 } else {
-                    // Gaya Pengeluaran Umum (Ikon Merah Panah Atas)
-                    ikonHtml = `<div class="w-9 h-9 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center text-sm"><i class="fas fa-arrow-up"></i></div>`;
-                    nominalText = `Rp ${potongan.toLocaleString('id-ID')}`;
-                    warnaNominal = "text-gray-800 font-semibold";
+                    teksNominal = `+Rp ${pendapatan.toLocaleString('id-ID')}`;
+                    warnaNominal = "text-emerald-600 font-black text-xs";
+                    jenisTransaksi = "pemasukan_manual";
                 }
 
-                htmlKoleksi += `
-                    <div class="p-3.5 flex items-center justify-between hover:bg-gray-50 transition cursor-pointer" onclick="alert('Detail Transaksi: ${keterangan}')">
-                        <div class="flex items-center space-x-3 max-w-[70%]">
-                            ${ikonHtml}
-                            <div class="truncate">
-                                <p class="text-[10px] text-gray-400 font-medium">${stringWaktuKecil}</p>
-                                <p class="text-xs font-bold text-gray-800 truncate mt-0.5">${keterangan}</p>
+                const idDokumen = item.id || "";
+
+                // Header Kelompok Harian (Ala GoPay style)
+                if (tanggalTampil !== tanggalSebelumnya) {
+                    htmlRiwayatSuntik += `
+                        <div class="pt-4 pb-1.5 first:pt-1 animate__animated animate__fadeIn">
+                            <span class="text-xs font-extrabold text-gray-900 tracking-wide">${tanggalTampil}</span>
+                        </div>
+                    `;
+                    tanggalSebelumnya = tanggalTampil; 
+                }
+
+                // Baris Detail Transaksi
+                htmlRiwayatSuntik += `
+                    <div class="flex items-center justify-between py-3 hover:bg-gray-50/50 px-2 -mx-2 rounded-xl transition gap-3 border-b border-gray-100/50 last:border-0 animate__animated animate__fadeInUp animate__faster">
+                        <div class="flex items-center space-x-3 min-w-0 flex-1">
+                            <div class="w-9 h-9 flex-shrink-0 rounded-full ${iconBg} flex items-center justify-center text-xs shadow-xs">
+                                <i class="${iconClass}"></i>
+                            </div>
+                            <div class="min-w-0 space-y-0.5">
+                                <p class="font-bold text-xs text-gray-800 uppercase truncate">${keterangan}</p>
+                                <p class="text-[10px] text-gray-400 truncate">${kategori} (${namaUser})</p>
+                                <div class="pt-0.5">
+                                    <span class="${warnaNominal}">${teksNominal}</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="text-right flex-shrink-0">
-                            <p class="text-xs ${warnaNominal}">${nominalText}</p>
+                        
+                        <div class="flex items-center space-x-1 flex-shrink-0">
+                            <button onclick="window.bukaModalEdit('${idDokumen}', '${jenisTransaksi}')" 
+                                    title="Ubah Data"
+                                    class="w-7 h-7 flex items-center justify-center text-orange-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all focus:outline-none">
+                                <i class="fas fa-edit text-[12px]"></i>
+                            </button>
+                            <button onclick="window.konfirmasiHapusTransaksi('${idDokumen}', '${jenisTransaksi}')" 
+                                    title="Hapus Data"
+                                    class="w-7 h-7 flex items-center justify-center text-rose-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all focus:outline-none">
+                                <i class="fas fa-trash-alt text-[12px]"></i>
+                            </button>
                         </div>
                     </div>
                 `;
             });
 
-            htmlKoleksi += `</div>`;
-            container.innerHTML = htmlKoleksi;
+            container.innerHTML = htmlRiwayatSuntik;
         };
     </script>
 </body>
