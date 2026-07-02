@@ -578,114 +578,117 @@
             </div>
         </div>
 
-        <div id="modal-pengeluaran-baru" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-start justify-center md:items-center hidden p-4 overflow-y-auto">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transform transition-all duration-300 flex flex-col max-h-[calc(100vh-6rem)] md:max-h-[85vh] my-auto">
-                <div class="bg-gradient-to-r from-red-700 to-red-800 px-5 py-3.5 flex justify-between items-center text-white shrink-0">
+        <div id="modal-pengeluaran-baru" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end justify-center sm:items-center hidden p-0 sm:p-4 overflow-y-auto">
+            <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 flex flex-col max-h-[92vh] sm:max-h-[85vh] my-auto">
+                
+                <div class="bg-gradient-to-r from-red-700 to-red-800 px-4 py-3.5 sm:px-5 flex justify-between items-center text-white shrink-0">
                     <div>
-                        <h3 class="font-bold text-base tracking-wide">Catat Pengeluaran Baru</h3>
+                        <h3 class="font-bold text-sm sm:text-base tracking-wide">Catat Pengeluaran Baru</h3>
                         <p class="text-[10px] text-red-200">Kurangi saldo utama untuk pos keuangan tertentu</p>
                     </div>
-                    <button onclick="window.tutupModalPengeluaran()" class="text-red-200 hover:text-white text-xl p-1">
+                    <button onclick="window.tutupModalPengeluaran()" class="text-red-200 hover:text-white text-xl p-1.5 focus:outline-none">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
 
-                <div class="p-5 bg-slate-50 space-y-4 overflow-y-auto flex-1">
-                    <div class="grid grid-cols-2 gap-3">
+                <div class="p-4 sm:p-5 bg-slate-50 space-y-4 overflow-y-auto flex-1 text-xs">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div class="space-y-1.5">
-                            <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">Kategori Pos:</label>
-                            <select id="out-kategori" class="w-full px-2.5 py-2 bg-white border border-gray-300 rounded-xl text-xs font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-red-500 cursor-pointer shadow-sm">
+                            <label class="block text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Kategori:</label>
+                            <select id="out-kategori" class="w-full px-3 py-2.5 sm:py-2 bg-white border border-gray-300 rounded-xl font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-red-500 cursor-pointer shadow-sm text-xs">
                                 <option value="belanja">Belanja Bulanan</option>
-                                <option value="tagihan">Tagihan & Listrik</option>
+                                <option value="tagihan">Tagihan & Pulsa</option>
                                 <option value="konsumsi">Makanan & Minuman</option>
-                                <option value="transportasi">Bensin & Transport</option>
-                                <option value="hiburan">Hiburan & Self Reward</option>
+                                <option value="transportasi">Bensin & Kendaraan</option>
+                                <option value="hiburan">Hiburan & Rekreasi</option>
                                 <option value="lainnya">Kebutuhan Lainnya</option>
                             </select>
                         </div>
                         <div class="space-y-1.5">
-                            <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">Periode Buku:</label>
-                            <input type="month" id="out-periode" class="w-full px-2.5 py-2 bg-white border border-gray-300 rounded-xl text-xs font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-red-500 cursor-pointer shadow-sm">
+                            <label class="block text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Periode Buku:</label>
+                            <input type="month" id="out-periode" class="w-full px-3 py-2.5 sm:py-2 bg-white border border-gray-300 rounded-xl font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-red-500 cursor-pointer shadow-sm text-xs">
                         </div>
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">Keterangan / Keperluan:</label>
-                        <input type="text" id="out-keterangan" placeholder="Contoh: Bayar Wi-Fi, Beli beras" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-red-500 shadow-sm">
+                        <label class="block text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Keterangan / Keperluan:</label>
+                        <input type="text" id="out-keterangan" placeholder="Contoh: Bayar Wi-Fi, Beli beras" class="w-full px-3 py-2.5 sm:py-2 bg-white border border-gray-300 rounded-xl font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-red-500 shadow-sm text-xs">
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider text-red-600">Nominal Pengeluaran (Rp):</label>
+                        <label class="block text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider text-red-600">Nominal Pengeluaran (Rp):</label>
                         <div class="relative flex items-center">
-                            <span class="absolute left-3.5 text-xs font-bold text-gray-400">Rp</span>
-                            <input type="number" id="out-nominal" placeholder="0" class="w-full pl-9 pr-4 py-2.5 bg-white border border-red-300 rounded-xl text-sm font-black text-red-700 outline-none focus:ring-2 focus:ring-red-500 shadow-sm">
+                            <span class="absolute left-3.5 font-bold text-gray-400 text-xs">Rp</span>
+                            <input type="number" id="out-nominal" placeholder="0" class="w-full pl-9 pr-4 py-2.5 bg-white border border-red-300 rounded-xl text-sm sm:text-base font-black text-red-700 outline-none focus:ring-2 focus:ring-red-500 shadow-sm">
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-gray-100 px-5 py-3 flex justify-between items-center border-t border-gray-200 shrink-0">
-                    <button onclick="window.tutupModalPengeluaran()" class="px-4 py-1.5 bg-gray-300 text-gray-700 font-medium rounded-xl text-xs hover:bg-gray-400 transition shadow-sm">
+                <div class="bg-gray-100 px-4 py-3 sm:px-5 flex justify-between items-center border-t border-gray-200 shrink-0 pb-5 sm:pb-3">
+                    <button onclick="window.tutupModalPengeluaran()" class="px-4 py-2 sm:py-1.5 bg-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-400 transition shadow-sm text-xs">
                         Batal
                     </button>
-                    <button onclick="window.simpanPengeluaranManual()" class="px-5 py-1.5 bg-red-600 text-white font-bold rounded-xl text-xs hover:bg-red-700 transition shadow-sm flex items-center gap-1.5">
+                    <button onclick="window.simpanPengeluaranManual()" class="px-5 py-2 sm:py-1.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition shadow-sm flex items-center gap-1.5 text-xs">
                         <i class="fas fa-save"></i> Simpan Pengeluaran
                     </button>
                 </div>
             </div>
         </div>
 
-        <div id="modal-mutasi-saldo" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-start justify-center md:items-center hidden p-4 overflow-y-auto">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transform transition-all duration-300 flex flex-col my-auto">
-                <div class="bg-gradient-to-r from-purple-700 to-purple-800 px-5 py-3.5 flex justify-between items-center text-white shrink-0">
+        <div id="modal-mutasi-saldo" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end justify-center sm:items-center hidden p-0 sm:p-4 overflow-y-auto">
+            <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 flex flex-col max-h-[92vh] sm:max-h-[85vh] my-auto">
+                
+                <div class="bg-gradient-to-r from-purple-700 to-purple-800 px-4 py-3.5 sm:px-5 flex justify-between items-center text-white shrink-0">
                     <div>
-                        <h3 class="font-bold text-base tracking-wide">Mutasi / Alokasi Saldo</h3>
+                        <h3 class="font-bold text-sm sm:text-base tracking-wide">Mutasi / Alokasi Saldo</h3>
                         <p class="text-[10px] text-purple-200">Pindahkan saldo utama ke sub-pos keuangan</p>
                     </div>
-                    <button onclick="window.tutupModalMutasi()" class="text-purple-200 hover:text-white text-xl p-1">
+                    <button onclick="window.tutupModalMutasi()" class="text-purple-200 hover:text-white text-xl p-1.5 focus:outline-none">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
 
-                <div class="p-5 bg-slate-50 space-y-4">
-                    <div class="grid grid-cols-2 gap-3">
+                <div class="p-4 sm:p-5 bg-slate-50 space-y-4 overflow-y-auto flex-1 text-xs">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div class="space-y-1.5">
-                            <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">Dari Dompet:</label>
-                            <input type="text" value="Saldo Utama" disabled class="w-full px-2.5 py-2 bg-gray-100 border border-gray-200 rounded-xl text-xs font-bold text-gray-500 outline-none shadow-inner cursor-not-allowed">
+                            <label class="block text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Dari Dompet:</label>
+                            <input type="text" value="Saldo Utama" disabled class="w-full px-3 py-2.5 sm:py-2 bg-gray-100 border border-gray-200 rounded-xl font-bold text-gray-500 outline-none shadow-inner cursor-not-allowed text-xs">
                         </div>
                         <div class="space-y-1.5">
-                            <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">Ke Target Pos:</label>
-                            <select id="mutasi-tujuan" class="w-full px-2.5 py-2 bg-white border border-gray-300 rounded-xl text-xs font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer shadow-sm">
-                                <option value="tabungan">Kantong Tabungan</option>
+                            <label class="block text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Ke Target Pos:</label>
+                            <select id="mutasi-tujuan" class="w-full px-3 py-2.5 sm:py-2 bg-white border border-gray-300 rounded-xl font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer shadow-sm text-xs">
+                                <option value="tabungan1">Kantong Tabungan Utama</option>
+                                <option value="tabungan2">Kantong Tabungan Darurat</option>
                                 <option value="servis">Dana Servis Kendaraan</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-3">
-                        <div class="col-span-1 space-y-1.5">
-                            <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">Periode Buku:</label>
-                            <input type="month" id="mutasi-periode" class="w-full px-2.5 py-2 bg-white border border-gray-300 rounded-xl text-xs font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer shadow-sm">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="sm:col-span-1 space-y-1.5">
+                            <label class="block text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Periode Buku:</label>
+                            <input type="month" id="mutasi-periode" class="w-full px-3 py-2.5 sm:py-2 bg-white border border-gray-300 rounded-xl font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer shadow-sm text-xs">
                         </div>
-                        <div class="col-span-2 space-y-1.5">
-                            <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">Keterangan / Memo:</label>
-                            <input type="text" id="mutasi-keterangan" placeholder="Contoh: Tabungan bulanan, Sisihan servis" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-purple-500 shadow-sm">
+                        <div class="sm:col-span-2 space-y-1.5">
+                            <label class="block text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Keterangan:</label>
+                            <input type="text" id="mutasi-keterangan" placeholder="Contoh: Tabungan bulanan, Sisihan servis" class="w-full px-3 py-2.5 sm:py-2 bg-white border border-gray-300 rounded-xl font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-purple-500 shadow-sm text-xs">
                         </div>
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider text-purple-600">Nominal yang Ditransfer (Rp):</label>
+                        <label class="block text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider text-purple-600">Nominal yang Ditransfer:</label>
                         <div class="relative flex items-center">
-                            <span class="absolute left-3.5 text-xs font-bold text-gray-400">Rp</span>
-                            <input type="number" id="mutasi-nominal" placeholder="0" class="w-full pl-9 pr-4 py-2.5 bg-white border border-purple-300 rounded-xl text-sm font-black text-purple-700 outline-none focus:ring-2 focus:ring-purple-500 shadow-sm">
+                            <span class="absolute left-3.5 font-bold text-gray-400 text-xs">Rp</span>
+                            <input type="number" id="mutasi-nominal" placeholder="0" class="w-full pl-9 pr-4 py-2.5 bg-white border border-purple-300 rounded-xl text-sm sm:text-base font-black text-purple-700 outline-none focus:ring-2 focus:ring-purple-500 shadow-sm">
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-gray-100 px-5 py-3 flex justify-between items-center border-t border-gray-200 shrink-0">
-                    <button onclick="window.tutupModalMutasi()" class="px-4 py-1.5 bg-gray-300 text-gray-700 font-medium rounded-xl text-xs hover:bg-gray-400 transition shadow-sm">
+                <div class="bg-gray-100 px-4 py-3 sm:px-5 flex justify-between items-center border-t border-gray-200 shrink-0 pb-5 sm:pb-3">
+                    <button onclick="window.tutupModalMutasi()" class="px-4 py-2 sm:py-1.5 bg-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-400 transition shadow-sm text-xs">
                         Batal
                     </button>
-                    <button onclick="window.simpanMutasiSaldo()" class="px-5 py-1.5 bg-purple-600 text-white font-bold rounded-xl text-xs hover:bg-purple-700 transition shadow-sm flex items-center gap-1.5">
+                    <button onclick="window.simpanMutasiSaldo()" class="px-5 py-2 sm:py-1.5 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition shadow-sm flex items-center gap-1.5 text-xs">
                         <i class="fas fa-paper-plane"></i> Proses Mutasi
                     </button>
                 </div>
@@ -2638,35 +2641,41 @@
 
                             // ✨ RENDER BARIS RIWAYAT TRANSAKSI
                             if (counterItem < 5) {
-                                let iconClass = "fas fa-arrow-down";
+                                // Gunakan logika ikon 'fas' konsisten yang telah kita perbaiki sebelumnya
+                                let iconClass = "fas fa-arrow-up"; // Default pemasukan masukan
                                 let iconBg = "bg-emerald-50 text-emerald-600";
-                                let warnaNominal = "text-emerald-600 font-black text-xs";
+                                let warnaNominal = "text-emerald-600 font-black text-xs md:text-sm"; // Ukuran teks sedikit dinamis
                                 let teksNominal = "";
 
                                 if (isSlipDokumen) {
+                                    iconClass = "fas fa-arrow-up";
+                                    iconBg = "bg-emerald-50 text-emerald-600";
                                     const nominalTampil = netto > 0 ? netto : (pendapatan - potongan);
                                     teksNominal = `+Rp ${nominalTampil.toLocaleString('id-ID')}`;
                                 } else if (potongan > 0) {
-                                    iconClass = isMutasi ? "fas fa-exchange-alt" : "fas fa-arrow-up";
+                                    iconClass = isMutasi ? "fas fa-exchange-alt" : "fas fa-arrow-down";
                                     iconBg = isMutasi ? "bg-purple-50 text-purple-600" : "bg-rose-50 text-rose-600";
-                                    warnaNominal = isMutasi ? "text-purple-600 font-black text-xs" : "text-gray-900 font-black text-xs";
+                                    warnaNominal = isMutasi ? "text-purple-600 font-black text-xs md:text-sm" : "text-rose-600 font-black text-xs md:text-sm";
                                     teksNominal = `-Rp ${potongan.toLocaleString('id-ID')}`;
                                 } else {
                                     teksNominal = `+Rp ${pendapatan.toLocaleString('id-ID')}`;
                                 }
 
+                                // ✨ HTML BARU DENGAN RESPONSIVE LAYOUT (Anti Tabrakan di Layar Sempit)
                                 htmlRiwayatSuntik += `
-                                    <div class="flex items-center justify-between py-3.5 hover:bg-gray-50/50 px-2 -mx-2 rounded-xl transition">
-                                        <div class="flex items-center space-x-3">
-                                            <div class="w-9 h-9 rounded-full ${iconBg} flex items-center justify-center text-xs shadow-xs">
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between py-3.5 hover:bg-gray-50/50 px-2 -mx-2 rounded-xl transition gap-2 sm:gap-4">
+                                        <div class="flex items-center space-x-3 min-w-0">
+                                            <div class="w-9 h-9 flex-shrink-0 rounded-full ${iconBg} flex items-center justify-center text-xs shadow-xs">
                                                 <i class="${iconClass}"></i>
                                             </div>
-                                            <div>
-                                                <p class="font-bold text-xs text-gray-900 uppercase">${keterangan}</p>
-                                                <p class="text-[10px] text-gray-400">${tanggalTampil} • ${kategori} (${namaUser})</p>
+                                            <div class="min-w-0">
+                                                <p class="font-bold text-xs text-gray-900 uppercase truncate">${keterangan}</p>
+                                                <p class="text-[10px] text-gray-400 truncate">${tanggalTampil} • ${kategori} (${namaUser})</p>
                                             </div>
                                         </div>
-                                        <span class="${warnaNominal}">${teksNominal}</span>
+                                        <div class="pl-12 sm:pl-0 sm:text-right flex-shrink-0">
+                                            <span class="${warnaNominal}">${teksNominal}</span>
+                                        </div>
                                     </div>
                                 `;
                                 counterItem++;
@@ -2893,17 +2902,20 @@
                         adaData = true;
                         const f = item.fields;
                         
-                        // Ambil variabel dari database safely sesuai struktur gambar arsip Anda
                         const pendapatan = parseInt(f.pendapatan?.integerValue || f.pendapatan?.stringValue || 0);
                         const potongan = parseInt(f.potongan?.integerValue || f.potongan?.stringValue || 0);
-                        const totalNetto = parseInt(f.totalBersihNetto?.integerValue || f.totalBersihNetto?.stringValue || 0);
                         
-                        // FIX CRITICAL: Ambil rujukan gambar menggunakan key "referenceKeyImage" sesuai Firestore Anda
+                        // ✨ REVISI DI SINI: Deteksi nominal bersih pembulatan. 
+                        // Jika data lama belum punya field pembulatan baru, sistem otomatis membulatkan ke ratusan terdekat secara aman.
+                        let totalNetto = parseInt(f.totalBersihNetto?.integerValue || f.totalBersihNetto?.stringValue || 0);
+                        if (totalNetto === 0 && (pendapatan - potongan) > 0) {
+                            totalNetto = Math.floor((pendapatan - potongan) / 100) * 100;
+                        }
+                        
                         const referenceKeyImage = f.referenceKeyImage?.stringValue || '';
 
                         akumulasiTotalBersih += totalNetto;
 
-                        // Set Icon warna pembeda kategori
                         let iconKat = 'fa-wallet text-blue-600 bg-blue-50';
                         if (item.kat === 'ksp') iconKat = 'fa-hand-holding-usd text-amber-600 bg-amber-50';
                         if (item.kat === 'thr') iconKat = 'fa-gift text-purple-600 bg-purple-50';
@@ -2928,8 +2940,9 @@
                                     <div class="text-right font-medium text-gray-700">Rp ${pendapatan.toLocaleString('id-ID')}</div>
                                     <div>Potongan:</div>
                                     <div class="text-right font-medium text-red-600">-Rp ${potongan.toLocaleString('id-ID')}</div>
-                                    <div class="font-bold text-gray-800">Pendapatan Bersih:</div>
-                                    <div class="text-right font-bold text-emerald-600">Rp ${totalNetto.toLocaleString('id-ID')}</div>
+                                    
+                                    <div class="font-bold text-gray-800">Netto Diterima:</div>
+                                    <div class="text-right font-bold text-blue-600">Rp ${totalNetto.toLocaleString('id-ID')}</div>
                                 </div>
                                 
                                 ${referenceKeyImage ? `
