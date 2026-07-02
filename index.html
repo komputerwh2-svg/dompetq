@@ -3736,19 +3736,40 @@
             let dataHasilFilter = [...(window.riwayatState.dataMentahLokal || [])];
             const hariIni = new Date();
 
+            // Fungsi pembantu untuk mengubah Date/String/Timestamp menjadi string standard "YYYY-MM-DD"
+            const dapatkanFormatFormatISO = function(inputWaktu) {
+                if (!inputWaktu) return "";
+                // Jika berupa object Timestamp Firestore (punya properti seconds atau toDate)
+                let d = null;
+                if (typeof inputWaktu.toDate === 'function') {
+                    d = inputWaktu.toDate();
+                } else if (inputWaktu.seconds) {
+                    d = new Date(inputWaktu.seconds * 1000);
+                } else {
+                    d = new Date(inputWaktu);
+                }
+                
+                if (isNaN(d.getTime())) return ""; // Cek jika invalid date
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const r = String(d.getDate()).padStart(2, '0');
+                return `${y}-${m}-${r}`;
+            };
+
             // ── STEP A: Urutkan Berdasarkan Waktu Transaksi Terbaru ──
             dataHasilFilter.sort((a, b) => {
-                const waktuA = a.waktuTransaksi ? new Date(a.waktuTransaksi) : new Date(0);
-                const waktuB = b.waktuTransaksi ? new Date(b.waktuTransaksi) : new Date(0);
+                const waktuA = a.waktuTransaksi ? (a.waktuTransaksi.seconds ? a.waktuTransaksi.seconds * 1000 : new Date(a.waktuTransaksi).getTime()) : 0;
+                const waktuB = b.waktuTransaksi ? (b.waktuTransaksi.seconds ? b.waktuTransaksi.seconds * 1000 : new Date(b.waktuTransaksi).getTime()) : 0;
                 return waktuB - waktuA;
             });
 
-            // ── STEP B: Filter Rentang Waktu GoPay Berdasarkan Properti state Yang Benar ──
+            // ── STEP B: Filter Rentang Waktu GoPay Menggunakan Format ISO String Aman ──
             if (window.riwayatState.filterCepat === 'hari-ini') {
-                const targetStr = window.riwayatState.tanggalAcuan.toDateString();
+                const targetTanggalISO = dapatkanFormatFormatISO(window.riwayatState.tanggalAcuan);
+                
                 dataHasilFilter = dataHasilFilter.filter(item => {
                     if (!item.waktuTransaksi) return false;
-                    return new Date(item.waktuTransaksi).toDateString() === targetStr;
+                    return dapatkanFormatFormatISO(item.waktuTransaksi) === targetTanggalISO;
                 });
 
                 // Update teks info tanggal di header navigasi modal
@@ -3764,20 +3785,25 @@
                     document.getElementById('riwayat-tanggal-teks').innerText = `${dd}/${mm}/${yyyy}`;
                 }
 
-            } else if (window.riwayatState.filterCepat === '7-hari') {
-                const batas7Hari = new Date();
-                batas7Hari.setDate(hariIni.getDate() - 7);
-                dataHasilFilter = dataHasilFilter.filter(item => item.waktuTransaksi && new Date(item.waktuTransaksi) >= batas7Hari);
+            } else {
+                // Logika rentang untuk 7 hari, 1 bulan, dan 6 bulan
+                let batasMundur = new Date();
+                if (window.riwayatState.filterCepat === '7-hari') {
+                    batasMundur.setDate(hariIni.getDate() - 7);
+                } else if (window.riwayatState.filterCepat === '1-bulan') {
+                    batasMundur.setMonth(hariIni.getMonth() - 1);
+                } else if (window.riwayatState.filterCepat === '6-bulan') {
+                    batasMundur.setMonth(hariIni.getMonth() - 6);
+                }
+                
+                // Reset jam ke 00:00:00 untuk pembandingan rentang hari murni
+                batasMundur.setHours(0, 0, 0, 0);
 
-            } else if (window.riwayatState.filterCepat === '1-bulan') {
-                const batas1Bulan = new Date();
-                batas1Bulan.setMonth(hariIni.getMonth() - 1);
-                dataHasilFilter = dataHasilFilter.filter(item => item.waktuTransaksi && new Date(item.waktuTransaksi) >= batas1Bulan);
-
-            } else if (window.riwayatState.filterCepat === '6-bulan') {
-                const batas6Bulan = new Date();
-                batas6Bulan.setMonth(hariIni.getMonth() - 6);
-                dataHasilFilter = dataHasilFilter.filter(item => item.waktuTransaksi && new Date(item.waktuTransaksi) >= batas6Bulan);
+                dataHasilFilter = dataHasilFilter.filter(item => {
+                    if (!item.waktuTransaksi) return false;
+                    const tglItem = item.waktuTransaksi.seconds ? new Date(item.waktuTransaksi.seconds * 1000) : new Date(item.waktuTransaksi);
+                    return tglItem >= batasMundur;
+                });
             }
 
             // ── STEP C: Filter Berdasarkan Jenis Kategori Kustom ──
@@ -3836,7 +3862,7 @@
                 // Parsing Tanggal & Jam untuk sub-header item
                 let stringWaktuKecil = "";
                 if (item.waktuTransaksi) {
-                    const dObj = new Date(item.waktuTransaksi);
+                    const dObj = item.waktuTransaksi.seconds ? new Date(item.waktuTransaksi.seconds * 1000) : new Date(item.waktuTransaksi);
                     const opsiTgl = { day: '2-digit', month: 'short', year: 'numeric' };
                     const jamStr = String(dObj.getHours()).padStart(2, '0') + ":" + String(dObj.getMinutes()).padStart(2, '0');
                     stringWaktuKecil = `${dObj.toLocaleDateString('id-ID', opsiTgl)} - ${jamStr}`;
