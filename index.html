@@ -2425,20 +2425,20 @@
             const pendapatan = parseInt(document.getElementById('ocr-pendapatan').value) || 0;
             const potongan = parseInt(document.getElementById('ocr-potongan').value) || 0;
             
-            // Hitung netto murni rumus matematika dasar
+            // Hitung netto murni rumus matematika dasar (Contoh: 4.741.936)
             const nettoAsli = pendapatan - potongan;
             
             // Injeksi ke input Netto Asli bawaan sistem
             document.getElementById('ocr-bersih').value = nettoAsli;
 
-            // ✨ LOGIKA OTOMATIS: Bulatkan ke bawah ke ribuan terdekat
-            // Contoh: 4.842.253 akan dikurangi sisa ratusannya menjadi 4.842.000
+            // ✨ LOGIKA BARU: Bulatkan ke bawah ke RATUSAN terdekat (Membuang 2 digit terakhir)
+            // Contoh: 4.741.936 / 100 = 47419.36 -> Math.floor menjadi 47419 -> dikali 100 = 4.741.900
             let hasilPembulatan = 0;
             if (nettoAsli > 0) {
-                hasilPembulatan = Math.floor(nettoAsli / 1000) * 1000;
+                hasilPembulatan = Math.floor(nettoAsli / 100) * 100;
             }
 
-            // Injeksi otomatis ke kolom pembulatan biar user tinggal save (bisa diedit jika mau)
+            // Injeksi otomatis ke kolom pembulatan baru
             document.getElementById('ocr-netto-pembulatan').value = hasilPembulatan;
         };
 
@@ -2572,7 +2572,6 @@
                 let totalPengeluaran = 0; 
                 let totalSaldoBulanLalu = 0;
                 
-                // Variabel penampung HTML baris riwayat transaksi
                 let htmlRiwayatSuntik = "";
 
                 totalSaldoBulanLalu = await window.periksaDanAmankanSaldoBulanLalu(userToken, projectId, formatPeriodeLaluClean);
@@ -2591,7 +2590,6 @@
                     const dataJson = await respon.json();
                     const documents = dataJson.documents || [];
 
-                    // Urutkan dokumen berdasarkan waktuTransaksi desc (Terbaru di atas) jika field tersedia
                     documents.sort((a, b) => {
                         const timeA = new Date(a.fields?.waktuTransaksi?.timestampValue || 0);
                         const timeB = new Date(b.fields?.waktuTransaksi?.timestampValue || 0);
@@ -2608,11 +2606,12 @@
                             
                             const pendapatan = parseInt(fields.pendapatan?.integerValue || fields.pendapatan?.stringValue || 0);
                             const potongan = parseInt(fields.potongan?.integerValue || fields.potongan?.stringValue || 0);
-                            const kategori = (fields.kategori?.stringValue || "Umum").toUpperCase();
+                            const netto = parseInt(fields.totalBersihNetto?.integerValue || fields.totalBersihNetto?.stringValue || 0);
+                            const kategoriRaw = fields.kategori?.stringValue || "umum";
+                            const kategori = kategoriRaw.toUpperCase();
                             const keterangan = fields.keterangan?.stringValue || "Transaksi Tanpa Memo";
                             const namaUser = fields.namaUser?.stringValue || "system";
                             
-                            // Format tanggal tampilan riwayat
                             const tanggalRaw = fields.waktuTransaksi?.timestampValue;
                             let tanggalTampil = "Bulan Ini";
                             if (tanggalRaw) {
@@ -2620,28 +2619,40 @@
                                 tanggalTampil = new Date(tanggalRaw).toLocaleDateString('id-ID', optTgl);
                             }
 
-                            // Logika Kalkulasi
-                            if (fields.kategori?.stringValue?.startsWith("mutasi_")) {
-                                totalPengeluaran += potongan; 
+                            // 🚀 REVISI LOGIKA KALKULASI PINTAR (ANTI DOUBLE-CUT)
+                            const isSlipDokumen = ["gaji", "thr", "ksp"].includes(kategoriRaw.toLowerCase());
+                            const isMutasi = kategoriRaw.toLowerCase().startsWith("mutasi_");
+
+                            if (isSlipDokumen) {
+                                // Jika slip dokumen (Gaji/THR/KSP), gunakan nominal Netto hasil pembulatan sebagai Pemasukan.
+                                // Potongan bawaan slip diabaikan dari akumulasi pengeluaran dashboard.
+                                totalPemasukan += netto > 0 ? netto : (pendapatan - potongan);
+                            } else if (isMutasi) {
+                                // Jika transaksi berupa transfer/mutasi keluar internal
+                                totalPengeluaran += potongan;
                             } else {
+                                // Jika transaksi umum manual
                                 totalPemasukan += pendapatan;
                                 totalPengeluaran += potongan;
                             }
 
-                            // ✨ RENDER BARIS RIWAYAT TRANSAKSI (Maksimal tampilkan 5 item terbaru di home)
+                            // ✨ RENDER BARIS RIWAYAT TRANSAKSI
                             if (counterItem < 5) {
-                                let iconClass = "fa-arrow-down";
+                                let iconClass = "fas fa-arrow-down";
                                 let iconBg = "bg-emerald-50 text-emerald-600";
                                 let warnaNominal = "text-emerald-600 font-black text-xs";
-                                let teksNominal = `+Rp ${pendapatan.toLocaleString('id-ID')}`;
+                                let teksNominal = "";
 
-                                if (potongan > 0) {
-                                    // Cek jika tipenya mutasi internal atau pengeluaran murni
-                                    const isMutasi = fields.kategori?.stringValue?.startsWith("mutasi_");
-                                    iconClass = isMutasi ? "fas fa-exchange-alt" : "fa-arrow-up";
+                                if (isSlipDokumen) {
+                                    const nominalTampil = netto > 0 ? netto : (pendapatan - potongan);
+                                    teksNominal = `+Rp ${nominalTampil.toLocaleString('id-ID')}`;
+                                } else if (potongan > 0) {
+                                    iconClass = isMutasi ? "fas fa-exchange-alt" : "fas fa-arrow-up";
                                     iconBg = isMutasi ? "bg-purple-50 text-purple-600" : "bg-rose-50 text-rose-600";
                                     warnaNominal = isMutasi ? "text-purple-600 font-black text-xs" : "text-gray-900 font-black text-xs";
                                     teksNominal = `-Rp ${potongan.toLocaleString('id-ID')}`;
+                                } else {
+                                    teksNominal = `+Rp ${pendapatan.toLocaleString('id-ID')}`;
                                 }
 
                                 htmlRiwayatSuntik += `
@@ -2651,7 +2662,7 @@
                                                 <i class="${iconClass}"></i>
                                             </div>
                                             <div>
-                                                <p class="font-bold text-xs text-gray-900">${keterangan}</p>
+                                                <p class="font-bold text-xs text-gray-900 uppercase">${keterangan}</p>
                                                 <p class="text-[10px] text-gray-400">${tanggalTampil} • ${kategori} (${namaUser})</p>
                                             </div>
                                         </div>
@@ -2663,7 +2674,6 @@
                         }
                     });
 
-                    // Jika setelah diloop ternyata tidak ada transaksi sama sekali di bulan ini
                     if (htmlRiwayatSuntik === "") {
                         htmlRiwayatSuntik = `
                             <div class="text-center py-8 text-gray-400">
@@ -2675,10 +2685,8 @@
                     }
                 }
 
-                // Jalankan Rumus Utama
                 const sisaSaldoTersedia = (totalPemasukan + totalSaldoBulanLalu) - totalPengeluaran;
 
-                // INJEKSI TARGET ID KEUANGAN
                 const elLabelBulan = document.getElementById('label-rekap-bulan');
                 if (elLabelBulan) elLabelBulan.innerText = `SALDO DOMPET BULAN ${periodeBulanSekarang.toUpperCase()}`;
 
@@ -2694,11 +2702,9 @@
                 const elPengeluaran = document.getElementById('txt-pengeluaran');
                 if (elPengeluaran) elPengeluaran.innerText = `Rp ${totalPengeluaran.toLocaleString('id-ID')}`;
 
-                // ✨ INJEKSI HASIL RENDER RIWAYAT BARU
                 const elContainerRiwayat = document.getElementById('container-riwayat-transaksi');
                 if (elContainerRiwayat) elContainerRiwayat.innerHTML = htmlRiwayatSuntik;
 
-                // BUKA OVERLAY LOCK UTAMA & RIWAYAT
                 const overlaySaldo = document.getElementById('auth-lock-overlay');
                 if (overlaySaldo) {
                     overlaySaldo.classList.add('hidden');
