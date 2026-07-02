@@ -760,11 +760,21 @@
                                 </div>
                             </div>
 
-                            <div class="pt-2 border-t border-gray-200">
-                                <label id="label-bersih" class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Total Saldo Diterima (Netto)</label>
-                                <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-blue-700 text-xs font-black">Rp</span>
-                                    <input type="number" id="ocr-bersih" readonly class="w-full pl-8 pr-3 py-1.5 bg-blue-50/50 border border-blue-200 rounded-lg text-sm font-black text-blue-700 outline-none">
+                            <div class="pt-2 border-t border-gray-200 grid grid-cols-2 gap-2">
+                                <div>
+                                    <label id="label-bersih" class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Netto Sistem</label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-gray-400 text-[10px] font-bold">Rp</span>
+                                        <input type="number" id="ocr-bersih" readonly class="w-full pl-7 pr-2 py-1 bg-gray-100 border border-gray-200 rounded-lg text-xs font-semibold text-gray-500 outline-none cursor-not-allowed">
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-[9px] font-bold text-blue-600 uppercase tracking-wider mb-1">Hasil Pembulatan</label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-blue-700 text-xs font-black">Rp</span>
+                                        <input type="number" id="ocr-netto-pembulatan" class="w-full pl-7 pr-2 py-1 bg-blue-50 border border-blue-200 rounded-lg text-xs font-black text-blue-700 outline-none focus:ring-1 focus:ring-blue-500">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1843,8 +1853,8 @@
                 // Memicu sinkronisasi penghitungan ulang angka dashboard agar pengeluaran langsung memotong saldo
                 if (typeof window.inisialisasiAplikasi === 'function') {
                     await window.inisialisasiAplikasi();
-                } else if (typeof window.muatDataDashboard === 'function') {
-                    await window.muatDataDashboard();
+                } else if (typeof window.muatRekapFinansialDashboard === 'function') {
+                    await window.muatRekapFinansialDashboard();
                 }
 
             } catch (error) {
@@ -2248,51 +2258,69 @@
         }
 
         // =================================================================
-        // FUNGSIONALITAS AKHIR: SIMPAN DATA FLAT (FIXED AUTH FOR GITHUB PAGES)
+        // FUNGSIONALITAS AKHIR: SIMPAN DATA FLAT (INTEGRASI ATURAN GESER BULAN BUKU)
         // =================================================================
         window.simpanDataOcr = async function() {
             const jenisKategori = document.getElementById('jenis-slip').value;
             const pendapatan = parseInt(document.getElementById('ocr-pendapatan').value) || 0;
             const potongan = parseInt(document.getElementById('ocr-potongan').value) || 0;
-            const netto = parseInt(document.getElementById('ocr-bersih').value) || 0;
+            // ✨ AMBIL DARI KOLOM PEMBULATAN BARU SEBAGAI SALDO REALTIME
+            const netto = parseInt(document.getElementById('ocr-netto-pembulatan').value) || 0;
 
             // --- PARSING PERIODE DARI <input type="month"> SECARA DINAMIS ---
             const inputPeriode = document.getElementById('ocr-periode');
-            let periodeTeks = "Januari 2026"; // Fallback default jika kosong
-            let formatPeriodeClean = "januari_2026";
+            let periodeAsliTeks = "Juni 2026"; // Nilai asal usul dokumen
+            
+            let bulanAsliIndex = 5; // Default Juni (0-11)
+            let tahunAsliAngka = 2026;
+
+            const namaBulanIndo = [
+                "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+            ];
 
             if (inputPeriode && inputPeriode.value) {
-                // inputPeriode.value menghasilkan format "YYYY-MM" (Contoh: "2026-02")
+                // inputPeriode.value menghasilkan format "YYYY-MM" (Contoh: "2026-06")
                 const [tahun, bulan] = inputPeriode.value.split('-');
-                
-                // Array nama bulan untuk format teks Firestore
-                const namaBulanIndo = [
-                    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-                    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-                ];
-                
-                const indexBulan = parseInt(bulan, 10) - 1;
-                if (indexBulan >= 0 && indexBulan <= 11) {
-                    // Hasil: "Februari 2026"
-                    periodeTeks = `${namaBulanIndo[indexBulan]} ${tahun}`; 
-                    // Hasil: "februari_2026"
-                    formatPeriodeClean = `${namaBulanIndo[indexBulan].toLowerCase()}_${tahun}`;
-                }
+                tahunAsliAngka = parseInt(tahun, 10);
+                bulanAsliIndex = parseInt(bulan, 10) - 1;
+                periodeAsliTeks = `${namaBulanIndo[bulanAsliIndex]} ${tahunAsliAngka}`;
             } else {
                 // Alternatif jika input kosong, coba intip data-attribute lama
                 const backupPeriode = document.getElementById('ocr-bersih').getAttribute('data-extracted-periode');
                 if (backupPeriode) {
-                    periodeTeks = backupPeriode;
-                    formatPeriodeClean = periodeTeks.trim().toLowerCase().replace(/\s+/g, '_');
+                    periodeAsliTeks = backupPeriode;
+                    // Coba deteksi index bulan dari string cadangan
+                    namaBulanIndo.forEach((bln, idx) => {
+                        if (backupPeriode.toLowerCase().includes(bln.toLowerCase())) bulanAsliIndex = idx;
+                    });
+                    const matchThn = backupPeriode.match(/\d{4}/);
+                    if (matchThn) tahunAsliAngka = parseInt(matchThn[0], 10);
                 }
             }
+
+            // 🚀 LOGIKA PINTAR ATURAN MAIN: Geser +1 Bulan untuk Target Buku Finansial
+            let bulanTargetIndex = bulanAsliIndex + 1;
+            let tahunTargetAngka = tahunAsliAngka;
+
+            if (bulanTargetIndex > 11) { 
+                // Jika slip asli bulan Desember, maka pembukuan maju ke Januari tahun berikutnya
+                bulanTargetIndex = 0;
+                tahunTargetAngka += 1;
+            }
+
+            // Hasil akhir alokasi periode baru (Contoh: "Juli 2026" & "juli_2026")
+            let periodeBukuTeks = `${namaBulanIndo[bulanTargetIndex]} ${tahunTargetAngka}`;
+            let formatPeriodeClean = `${namaBulanIndo[bulanTargetIndex].toLowerCase()}_${tahunTargetAngka}`;
+
+            console.log(`✨ [Aturan Main Slip] Slip Asli: ${periodeAsliTeks} ⏩ Dialokasikan Realtime ke Buku: ${periodeBukuTeks}`);
 
             if (pendapatan <= 0) {
                 tampilAlert("Gagal menyimpan! Isian nominal data tidak valid.", "warning");
                 return;
             }
 
-            // 1. VALIDASI WAJIB LOGIN (KARENA LIVE DI GITHUB PAGES)
+            // 1. VALIDASI WAJIB LOGIN
             if (!window.auth || !window.auth.currentUser) {
                 tampilAlert("Sesi login tidak ditemukan. Silakan login ulang dengan Google.", "error");
                 return;
@@ -2306,11 +2334,9 @@
 
             try {
                 tampilAlert("Mengambil token keamanan Firebase...", "info");
-                
-                // AMBIL TOKEN ASLI USER YANG SEDANG LOGIN
                 const userToken = await userAktif.getIdToken(true);
 
-                // FORMAT KEY ID UNIK: kategori_periode (Contoh: gaji_februari_2026)
+                // FORMAT KEY ID UNIK BARU: kategori_periode_buku (Contoh: gaji_juli_2026)
                 const formatKategoriClean = jenisKategori.trim().toLowerCase();
                 const keyTransaksi = `${formatKategoriClean}_${formatPeriodeClean}`;
 
@@ -2319,39 +2345,37 @@
                     ? window.firebaseConfig.databaseURL.replace(/^https?:\/\//, '').replace(/\/$/, '')
                     : "dompetq-app-default-rtdb.asia-southeast1.firebasedatabase.app";
 
-                // --- PROSES 1: SIMPAN KE FIREBASE REALTIME DATABASE ---
+                // --- PROSES 1: SIMPAN GAMBAR KE FIREBASE REALTIME DATABASE ---
                 if (typeof globalCompressedImageBase64 !== 'undefined' && globalCompressedImageBase64) {
                     let endpointRtdb = `https://${rtdbHost}/${keyTransaksi}.json?auth=${userToken}`;
                     
                     try {
-                        const responRtdb = await fetch(endpointRtdb, {
+                        await fetch(endpointRtdb, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 tipeSlip: jenisKategori,
                                 berkasGambar: globalCompressedImageBase64,
                                 diunggahPada: new Date().toISOString(),
-                                namaUser: namaUserSistem
+                                namaUser: namaUserSistem,
+                                keteranganAsli: `Slip Asli Periode ${periodeAsliTeks}`
                             })
                         });
-
-                        if (!responRtdb.ok) {
-                            throw new Error(`RTDB Gagal: ${responRtdb.status} - ${responRtdb.statusText}`);
-                        }
                         console.log(`Gambar sukses disimpan di RTDB: /${keyTransaksi}`);
                     } catch (rtdbErr) {
                         console.error("Gagal simpan gambar ke RTDB:", rtdbErr);
-                        throw rtdbErr;
                     }
                 }
 
-                // --- PROSES 2: SIMPAN KE CLOUD FIRESTORE ---
+                // --- PROSES 2: SIMPAN REKAP SALDO KE CLOUD FIRESTORE ---
                 const endpointFirestore = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/rekap_finansial/${keyTransaksi}`;
 
                 const payloadFirestore = {
                     fields: {
                         kategori: { stringValue: jenisKategori },
-                        periode: { stringValue: periodeTeks }, // Tersimpan rapi: "Februari 2026"
+                        // Catat info asli slip di kolom keterangan agar pelacakan arsip tetap mudah
+                        keterangan: { stringValue: `Pemasukan Slip ${jenisKategori.toUpperCase()} (${periodeAsliTeks})` }, 
+                        periode: { stringValue: periodeBukuTeks }, // Tersimpan maju 1 bulan: "Juli 2026"
                         pendapatan: { integerValue: pendapatan.toString() },
                         potongan: { integerValue: potongan.toString() },
                         totalBersihNetto: { integerValue: netto.toString() },
@@ -2366,7 +2390,6 @@
                     'Authorization': `Bearer ${userToken}`
                 };
 
-                console.log(`Mengirim rekap flat ke Firestore (PATCH) dengan Otorisasi User.`);
                 const responFirestore = await fetch(endpointFirestore, {
                     method: 'PATCH',
                     headers: headersFirestore,
@@ -2378,20 +2401,18 @@
                     throw new Error(`Firestore Error: ${responFirestore.status} - ${errTxt}`);
                 }
                 
-                console.log(`Data rekap sukses disimpan di Firestore: rekap_finansial/${keyTransaksi}`);
-
                 // --- BERHASIL ---
-                tampilAlert(`Sukses! Rekapitulasi ${jenisKategori.toUpperCase()} periode ${periodeTeks} berhasil dibukukan.`, "success");
+                tampilAlert(`Sukses! ${jenisKategori.toUpperCase()} (${periodeAsliTeks}) dialokasikan ke Kas Bulan ${periodeBukuTeks}.`, "success");
                 
-                if (typeof window.tutupModal === 'function') {
-                    window.tutupModal();
-                }
+                // Cari fungsi penutup modal ocr bawaan Anda (sesuaikan id/nama fungsi penutup Anda)
+                const modalOcr = document.getElementById('modal-ocr');
+                if (modalOcr) modalOcr.classList.add('hidden');
 
-                console.log("[DompetQ Sync] Memicu kalkulasi ulang angka dashboard...");
-                if (typeof window.inisialisasiAplikasi === 'function') {
+                console.log("[DompetQ Sync] Memperbarui visual realtime angka dashboard & riwayat...");
+                if (typeof window.muatRekapFinansialDashboard === 'function') {
+                    await window.muatRekapFinansialDashboard(userAktif.uid);
+                } else if (typeof window.inisialisasiAplikasi === 'function') {
                     await window.inisialisasiAplikasi();
-                } else if (typeof window.muatDataDashboard === 'function') {
-                    await window.muatDataDashboard();
                 }
 
             } catch (error) {
@@ -2401,9 +2422,24 @@
         };
 
         window.hitungNetto = function() {
-            const pendapatan = parseFloat(document.getElementById('ocr-pendapatan').value) || 0;
-            const potongan = parseFloat(document.getElementById('ocr-potongan').value) || 0;
-            document.getElementById('ocr-bersih').value = pendapatan - potongan;
+            const pendapatan = parseInt(document.getElementById('ocr-pendapatan').value) || 0;
+            const potongan = parseInt(document.getElementById('ocr-potongan').value) || 0;
+            
+            // Hitung netto murni rumus matematika dasar
+            const nettoAsli = pendapatan - potongan;
+            
+            // Injeksi ke input Netto Asli bawaan sistem
+            document.getElementById('ocr-bersih').value = nettoAsli;
+
+            // ✨ LOGIKA OTOMATIS: Bulatkan ke bawah ke ribuan terdekat
+            // Contoh: 4.842.253 akan dikurangi sisa ratusannya menjadi 4.842.000
+            let hasilPembulatan = 0;
+            if (nettoAsli > 0) {
+                hasilPembulatan = Math.floor(nettoAsli / 1000) * 1000;
+            }
+
+            // Injeksi otomatis ke kolom pembulatan biar user tinggal save (bisa diedit jika mau)
+            document.getElementById('ocr-netto-pembulatan').value = hasilPembulatan;
         };
 
         // Fungsi Reset & Tutup Modal Universal
@@ -2616,7 +2652,7 @@
                                             </div>
                                             <div>
                                                 <p class="font-bold text-xs text-gray-900">${keterangan}</p>
-                                                <p class="text-[10px] text-gray-400">${tanggalTampil} • Kategori: ${kategori} (${namaUser})</p>
+                                                <p class="text-[10px] text-gray-400">${tanggalTampil} • ${kategori} (${namaUser})</p>
                                             </div>
                                         </div>
                                         <span class="${warnaNominal}">${teksNominal}</span>
