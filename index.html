@@ -619,7 +619,7 @@
                         <label class="block text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider text-red-600">Nominal Pengeluaran:</label>
                         <div class="relative flex items-center">
                             <span class="absolute left-3.5 font-bold text-gray-400 text-xs">Rp</span>
-                            <input type="number" id="out-nominal" placeholder="0" class="w-full pl-9 pr-4 py-2.5 bg-white border border-red-300 rounded-xl text-sm sm:text-base font-black text-red-700 outline-none focus:ring-2 focus:ring-red-500 shadow-sm">
+                            <input type="text" id="out-nominal" oninput="window.formatInputRibuan(this)" placeholder="0" class="w-full pl-9 pr-4 py-2.5 bg-white border border-red-300 rounded-xl text-sm sm:text-base font-black text-red-700 outline-none focus:ring-2 focus:ring-red-500 shadow-sm">
                         </div>
                     </div>
                 </div>
@@ -679,7 +679,7 @@
                         <label class="block text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider text-purple-600">Nominal yang Ditransfer:</label>
                         <div class="relative flex items-center">
                             <span class="absolute left-3.5 font-bold text-gray-400 text-xs">Rp</span>
-                            <input type="number" id="mutasi-nominal" placeholder="0" class="w-full pl-9 pr-4 py-2.5 bg-white border border-purple-300 rounded-xl text-sm sm:text-base font-black text-purple-700 outline-none focus:ring-2 focus:ring-purple-500 shadow-sm">
+                            <input type="text" id="mutasi-nominal" oninput="window.formatInputRibuan(this)" placeholder="0" class="w-full pl-9 pr-4 py-2.5 bg-white border border-purple-300 rounded-xl text-sm sm:text-base font-black text-purple-700 outline-none focus:ring-2 focus:ring-purple-500 shadow-sm">
                         </div>
                     </div>
                 </div>
@@ -751,7 +751,7 @@
                                 <label id="label-pendapatan" class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Pendapatan</label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 text-xs font-bold">Rp</span>
-                                    <input type="number" id="ocr-pendapatan" oninput="hitungNetto()" class="w-full pl-8 pr-3 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-gray-800 outline-none focus:ring-1 focus:ring-blue-500">
+                                    <input type="text" id="ocr-pendapatan" oninput="hitungNetto()" class="w-full pl-8 pr-3 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-gray-800 outline-none focus:ring-1 focus:ring-blue-500">
                                 </div>
                             </div>
 
@@ -759,7 +759,7 @@
                                 <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Potongan</label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 text-xs font-bold">Rp</span>
-                                    <input type="number" id="ocr-potongan" oninput="hitungNetto()" class="w-full pl-8 pr-3 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-rose-600 outline-none focus:ring-1 focus:ring-rose-500">
+                                    <input type="text" id="ocr-potongan" oninput="hitungNetto()" class="w-full pl-8 pr-3 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-rose-600 outline-none focus:ring-1 focus:ring-rose-500">
                                 </div>
                             </div>
 
@@ -768,7 +768,7 @@
                                     <label id="label-bersih" class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Netto Sistem</label>
                                     <div class="relative">
                                         <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-gray-400 text-[10px] font-bold">Rp</span>
-                                        <input type="number" id="ocr-bersih" readonly class="w-full pl-7 pr-2 py-1 bg-gray-100 border border-gray-200 rounded-lg text-xs font-semibold text-gray-500 outline-none cursor-not-allowed">
+                                        <input type="text" id="ocr-bersih" oninput="window.formatInputRibuan(this)" readonly class="w-full pl-7 pr-2 py-1 bg-gray-100 border border-gray-200 rounded-lg text-xs font-semibold text-gray-500 outline-none cursor-not-allowed">
                                     </div>
                                 </div>
                                 
@@ -776,7 +776,7 @@
                                     <label class="block text-[9px] font-bold text-blue-600 uppercase tracking-wider mb-1">Hasil Pembulatan</label>
                                     <div class="relative">
                                         <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-blue-700 text-xs font-black">Rp</span>
-                                        <input type="number" id="ocr-netto-pembulatan" class="w-full pl-7 pr-2 py-1 bg-blue-50 border border-blue-200 rounded-lg text-xs font-black text-blue-700 outline-none focus:ring-1 focus:ring-blue-500">
+                                        <input type="text" id="ocr-netto-pembulatan" oninput="window.formatInputRibuan(this)" class="w-full pl-7 pr-2 py-1 bg-blue-50 border border-blue-200 rounded-lg text-xs font-black text-blue-700 outline-none focus:ring-1 focus:ring-blue-500">
                                     </div>
                                 </div>
                             </div>
@@ -1307,6 +1307,21 @@
             return angka < 0 ? `-${format}` : format;
         }
 
+        // 1. Fungsi penampil separator saat diketik user
+        window.formatInputRibuan = function(elemen) {
+            let angkaMurni = elemen.value.replace(/[^0-9]/g, '');
+            if (angkaMurni === "") { elemen.value = ""; return; }
+            elemen.value = parseInt(angkaMurni, 10).toLocaleString('id-ID');
+        };
+
+        // 2. Fungsi pembersih separator sebelum dikirim ke Firebase database
+        window.ambilAngkaMurni = function(idElemen) {
+            const elemen = document.getElementById(idElemen);
+            if (!elemen) return 0;
+            let nilaiBersih = elemen.value.replace(/[^0-9]/g, '');
+            return parseInt(nilaiBersih, 10) || 0;
+        };
+
         // Variabel status global untuk memantau status login
         let userSudahLogin = false;
 
@@ -1777,7 +1792,9 @@
         window.simpanPengeluaranManual = async function() {
             const kategori = document.getElementById('out-kategori').value;
             const keterangan = document.getElementById('out-keterangan').value.trim();
-            const nominal = parseInt(document.getElementById('out-nominal').value) || 0;
+            
+            // ─── PERUBAHAN DISINI: Menggunakan fungsi penapis angka murni dari string teks bertitik ───
+            const nominal = window.ambilAngkaMurni('out-nominal');
             const inputPeriode = document.getElementById('out-periode').value;
 
             if (nominal <= 0 || !keterangan) {
@@ -1816,7 +1833,7 @@
                 tampilAlert("Mengamankan jalur data Firebase...", "info");
                 const userToken = await userAktif.getIdToken(true);
 
-                // Kunci ID Unik Pengeluaran di Firestore: out_kategori_bulan_tahun (Contoh: out_belanja_februari_2026)
+                // Kunci ID Unik Pengeluaran di Firestore: out_kategori_bulan_tahun
                 const keyTransaksi = `out_${kategori}_${formatPeriodeClean}`;
                 const projectId = window.firebaseConfig?.projectId || "dompetq-app";
 
@@ -1827,9 +1844,9 @@
                         kategori: { stringValue: kategori },
                         keterangan: { stringValue: keterangan },
                         periode: { stringValue: periodeTeks },
-                        pendapatan: { integerValue: "0" }, // Pengeluaran tidak menambah pendapatan gross
-                        potongan: { integerValue: nominal.toString() }, // Nominal masuk ke kolom potongan/beban pengeluaran
-                        totalBersihNetto: { integerValue: `-${nominal}` }, // Minus karena mengurangi saldo
+                        pendapatan: { integerValue: "0" }, 
+                        potongan: { integerValue: nominal.toString() }, // Terkirim angka bersih string ("100000")
+                        totalBersihNetto: { integerValue: `-${nominal}` }, // Terkirim angka bersih negatif ("-100000")
                         referenceKeyImage: { stringValue: "MANUAL_INPUT" },
                         waktuTransaksi: { timestampValue: new Date().toISOString() },
                         namaUser: { stringValue: namaUserSistem }
@@ -1893,7 +1910,9 @@
         window.simpanMutasiSaldo = async function() {
             const tujuan = document.getElementById('mutasi-tujuan').value;
             const keterangan = document.getElementById('mutasi-keterangan').value.trim();
-            const nominal = parseInt(document.getElementById('mutasi-nominal').value) || 0;
+            
+            // ─── PERUBAHAN UTAMA: Mengambil nominal bersih tanpa separator titik/koma ───
+            const nominal = window.ambilAngkaMurni('mutasi-nominal');
             const inputPeriode = document.getElementById('mutasi-periode').value;
 
             if (nominal <= 0 || !keterangan) {
@@ -1932,24 +1951,20 @@
                 tampilAlert("Mendaftarkan mutasi ke server...", "info");
                 const userToken = await userAktif.getIdToken(true);
 
-                // Kunci ID Unik di Firestore: mutasi_tujuan_periode (Contoh: mutasi_tabungan_juli_2026)
+                // Kunci ID Unik di Firestore: mutasi_tujuan_periode
                 const keyTransaksi = `mutasi_${tujuan}_${formatPeriodeClean}`;
                 const projectId = window.firebaseConfig?.projectId || "dompetq-app";
 
                 const endpointFirestore = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/rekap_finansial/${keyTransaksi}`;
 
-                // STRUKTUR DATA MUTASI:
-                // Nominal masuk ke kolom 'potongan' karena mengurangi saldo utama,
-                // namun diberi penanda kustom referenceKeyImage: "MUTASI_TABUNGAN" / "MUTASI_SERVIS"
-                // agar logika dashboard tabungan/servis Anda nanti bisa menghitungnya sebagai pemasukan pos mereka.
                 const payloadFirestore = {
                     fields: {
                         kategori: { stringValue: `mutasi_${tujuan}` },
                         keterangan: { stringValue: keterangan },
                         periode: { stringValue: periodeTeks },
                         pendapatan: { integerValue: "0" }, 
-                        potongan: { integerValue: nominal.toString() }, // Memotong saldo utama
-                        totalBersihNetto: { integerValue: `-${nominal}` }, // Hasil akhir mengurangi saldo
+                        potongan: { integerValue: nominal.toString() }, // Nilai integer bersih yang aman untuk Firestore
+                        totalBersihNetto: { integerValue: `-${nominal}` }, 
                         referenceKeyImage: { stringValue: `MUTASI_${tujuan.toUpperCase()}` }, 
                         waktuTransaksi: { timestampValue: new Date().toISOString() },
                         namaUser: { stringValue: namaUserSistem }
@@ -1970,14 +1985,15 @@
                     throw new Error(`Firestore Error: ${errTxt}`);
                 }
 
+                // Menampilkan alert sukses dengan format rupiah yang rapi pada teks alert
                 tampilAlert(`Sukses! Saldo dialokasikan ke ${tujuan === 'tabungan' ? 'Target Tabungan' : 'Dana Servis'} sebesar Rp ${nominal.toLocaleString('id-ID')}`, "success");
                 window.tutupModalMutasi();
 
                 // Trigger kalkulasi ulang dashboard
                 if (typeof window.inisialisasiAplikasi === 'function') {
                     await window.inisialisasiAplikasi();
-                } else if (typeof window.muatDataDashboard === 'function') {
-                    await window.muatDataDashboard();
+                } else if (typeof window.muatRekapFinansialDashboard === 'function') {
+                    await window.muatRekapFinansialDashboard();
                 }
 
             } catch (error) {
@@ -2425,24 +2441,43 @@
         };
 
         window.hitungNetto = function() {
-            const pendapatan = parseInt(document.getElementById('ocr-pendapatan').value) || 0;
-            const potongan = parseInt(document.getElementById('ocr-potongan').value) || 0;
+            // 1. Ambil elemen input
+            const elPendapatan = document.getElementById('ocr-pendapatan');
+            const elPotongan = document.getElementById('ocr-potongan');
+
+            // 2. Bersihkan karakter non-angka & format visual input secara realtime saat diketik
+            if (elPendapatan && document.activeElement === elPendapatan) {
+                let murni = elPendapatan.value.replace(/[^0-9]/g, '');
+                elPendapatan.value = murni === "" ? "" : parseInt(murni, 10).toLocaleString('id-ID');
+            }
+            if (elPotongan && document.activeElement === elPotongan) {
+                let murni = elPotongan.value.replace(/[^0-9]/g, '');
+                elPotongan.value = murni === "" ? "" : parseInt(murni, 10).toLocaleString('id-ID');
+            }
+
+            // 3. Ambil nilai angka murni (tanpa titik) untuk kalkulasi matematika sistem
+            const pendapatan = elPendapatan ? (parseInt(elPendapatan.value.replace(/[^0-9]/g, ''), 10) || 0) : 0;
+            const potongan = elPotongan ? (parseInt(elPotongan.value.replace(/[^0-9]/g, ''), 10) || 0) : 0;
             
-            // Hitung netto murni rumus matematika dasar (Contoh: 4.741.936)
+            // 4. Hitung netto murni menggunakan rumus matematika dasar
             const nettoAsli = pendapatan - potongan;
             
-            // Injeksi ke input Netto Asli bawaan sistem
-            document.getElementById('ocr-bersih').value = nettoAsli;
-
-            // ✨ LOGIKA BARU: Bulatkan ke bawah ke RATUSAN terdekat (Membuang 2 digit terakhir)
-            // Contoh: 4.741.936 / 100 = 47419.36 -> Math.floor menjadi 47419 -> dikali 100 = 4.741.900
+            // 5. Pembulatan ke bawah ke RATUSAN terdekat (Membuang 2 digit terakhir)
             let hasilPembulatan = 0;
             if (nettoAsli > 0) {
                 hasilPembulatan = Math.floor(nettoAsli / 100) * 100;
             }
 
-            // Injeksi otomatis ke kolom pembulatan baru
-            document.getElementById('ocr-netto-pembulatan').value = hasilPembulatan;
+            // 6. Injeksi hasil kalkulasi ke input dengan format ber-separator ribuan (.toLocaleString)
+            // Gunakan pengkondisian tanda minus jika hasil netto asli di bawah 0 (negatif)
+            if (nettoAsli < 0) {
+                const nettoPositif = Math.abs(nettoAsli);
+                document.getElementById('ocr-bersih').value = `-${nettoPositif.toLocaleString('id-ID')}`;
+            } else {
+                document.getElementById('ocr-bersih').value = nettoAsli.toLocaleString('id-ID');
+            }
+            
+            document.getElementById('ocr-netto-pembulatan').value = hasilPembulatan === 0 ? "0" : hasilPembulatan.toLocaleString('id-ID');
         };
 
         // Fungsi Reset & Tutup Modal Universal
@@ -2695,13 +2730,13 @@
                                         <div class="flex items-center space-x-1 flex-shrink-0">
                                             <button onclick="window.bukaModalEdit('${idDokumen}', '${jenisTransaksi}')" 
                                                     title="Ubah Data"
-                                                    class="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all focus:outline-none">
-                                                <i class="fas fa-edit text-[11px]"></i>
+                                                    class="w-7 h-7 flex items-center justify-center text-orange-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all focus:outline-none">
+                                                <i class="fas fa-edit text-[12px]"></i>
                                             </button>
                                             <button onclick="window.konfirmasiHapusTransaksi('${idDokumen}', '${jenisTransaksi}')" 
                                                     title="Hapus Data"
-                                                    class="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all focus:outline-none">
-                                                <i class="fas fa-trash-alt text-[11px]"></i>
+                                                    class="w-7 h-7 flex items-center justify-center text-rose-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all focus:outline-none">
+                                                <i class="fas fa-trash-alt text-[12px]"></i>
                                             </button>
                                         </div>
                                     </div>
@@ -2759,6 +2794,213 @@
 
             } catch (error) {
                 console.error("❌ Terjadi kesalahan kalkulasi dashboard saldo:", error);
+            }
+        };
+
+
+        // ─── FUNGSI DINAMIS UNTUK MEMBUKA & SUBMIT EDIT DATA ───
+        window.bukaModalEdit = async function(idDokumen, jenisTransaksi) {
+            console.log(`Mempersiapkan edit data untuk ID: ${idDokumen} (${jenisTransaksi})`);
+            
+            if (!window.auth || !window.auth.currentUser) {
+                alert("❌ Sesi aktif habis. Silakan login kembali.");
+                return;
+            }
+
+            try {
+                const userToken = await window.auth.currentUser.getIdToken();
+                const projectId = window.firebaseConfig?.projectId || "dompetq-app";
+                
+                // 1. Ambil data dokumen terbaru dari Firestore
+                const urlGet = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/rekap_finansial/${idDokumen}`;
+                const respon = await fetch(urlGet, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${userToken}` }
+                });
+
+                if (!respon.ok) {
+                    throw new Error("Gagal mengambil data terupdate dari server.");
+                }
+
+                const dataJson = await respon.json();
+                const fields = dataJson.fields || {};
+
+                // Simpan metadata ke global agar bisa digunakan saat proses simpan/update
+                window.idDokumenSedangDiedit = idDokumen;
+                window.jenisTransaksiSedangDiedit = jenisTransaksi;
+
+                // 2. Cabangkan Alur Form Sesuai Jenis Transaksi
+                if (jenisTransaksi === 'slip') {
+                    // ─── ALUR SLIP (HAPUS LALU RE-UPLOAD OCR) ───
+                    const konfirmasiSlip = confirm("Untuk mengedit dokumen slip, data lama akan dihapus dan Anda akan diarahkan ke modal OCR Slip Gaji untuk upload ulang. Lanjutkan?");
+                    if (!konfirmasiSlip) return;
+
+                    // Hapus data lama terlebih dahulu
+                    const urlDelete = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/rekap_finansial/${idDokumen}`;
+                    const responDel = await fetch(urlDelete, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${userToken}` }
+                    });
+
+                    if (responDel.ok) {
+                        // Jalankan fungsi hitung ulang dashboard
+                        await window.muatRekapFinansialDashboard(window.currentDeveloperUid);
+                        
+                        // Buka modal OCR Slip Gaji (Sesuaikan ID modal OCR milik Anda jika berbeda)
+                        const modalOcr = document.getElementById('modal-ocr-slip') || document.getElementById('modal-upload-slip');
+                        if (modalOcr) {
+                            modalOcr.classList.remove('hidden');
+                            if(modalOcr.style.display) modalOcr.style.display = 'flex';
+                            alert("Data lama berhasil dihapus. Silakan lakukan upload ulang pada modal OCR yang telah terbuka.");
+                        } else {
+                            alert("Data lama terhapus, namun modal OCR tidak ditemukan. Silakan buka Akses Cepat -> Upload Slip.");
+                        }
+                    } else {
+                        alert("❌ Gagal menghapus data slip lama.");
+                    }
+
+                } else if (jenisTransaksi === 'pengeluaran') {
+                    // ─── ALUR PENGELUARAN (TAMPILKAN KE MODAL PENGELUARAN) ───
+                    const kategoriRaw = fields.kategori?.stringValue || "lainnya";
+                    const periodeRaw = fields.periode?.stringValue || ""; // Format text (ex: "Januari 2026")
+                    const keterangan = fields.keterangan?.stringValue || "";
+                    const nominal = parseInt(fields.potongan?.integerValue || fields.potongan?.stringValue || 0);
+
+                    // Set data ke elemen form input modal pengeluaran yang sudah kita perbaiki
+                    if (document.getElementById('out-kategori')) document.getElementById('out-kategori').value = kategoriRaw.toLowerCase();
+                    if (document.getElementById('out-keterangan')) document.getElementById('out-keterangan').value = keterangan;
+                    if (document.getElementById('out-nominal')) document.getElementById('out-nominal').value = nominal;
+                    
+                    // Mengubah teks bulan (ex: "Januari 2026") menjadi format YYYY-MM untuk input type="month"
+                    if (document.getElementById('out-periode') && periodeRaw) {
+                        document.getElementById('out-periode').value = window.konversiTeksKeMonthInput(periodeRaw);
+                    }
+
+                    // Buka Modal Pengeluaran Baru yang responsif
+                    const modalPengeluaran = document.getElementById('modal-pengeluaran-baru');
+                    if (modalPengeluaran) {
+                        modalPengeluaran.classList.remove('hidden');
+                        modalPengeluaran.style.display = 'flex';
+                        
+                        // Siasat: Ubah text tombol simpan modal menjadi "Perbarui Pengeluaran" secara dinamis
+                        const btnSimpan = modalPengeluaran.querySelector('button[onclick*="simpanPengeluaranManual"]');
+                        if (btnSimpan) {
+                            btnSimpan.innerHTML = `<i class="fas fa-save"></i> Perbarui Data`;
+                            btnSimpan.setAttribute('onclick', `window.prosesUpdateTransaksiUmum('${idDokumen}', 'pengeluaran')`);
+                        }
+                    }
+
+                } else if (jenisTransaksi === 'mutasi') {
+                    // ─── ALUR MUTASI (TAMPILKAN KE MODAL MUTASI) ───
+                    const kategoriRaw = fields.kategori?.stringValue || ""; // ex: "mutasi_tabungan1"
+                    const targetPos = kategoriRaw.replace("mutasi_", ""); 
+                    const periodeRaw = fields.periode?.stringValue || "";
+                    const keterangan = fields.keterangan?.stringValue || "";
+                    const nominal = parseInt(fields.potongan?.integerValue || fields.potongan?.stringValue || 0);
+
+                    // Set data ke elemen form input modal mutasi saldo
+                    if (document.getElementById('mutasi-tujuan')) document.getElementById('mutasi-tujuan').value = targetPos;
+                    if (document.getElementById('mutasi-keterangan')) document.getElementById('mutasi-keterangan').value = keterangan;
+                    if (document.getElementById('mutasi-nominal')) document.getElementById('mutasi-nominal').value = nominal;
+                    
+                    if (document.getElementById('mutasi-periode') && periodeRaw) {
+                        document.getElementById('mutasi-periode').value = window.konversiTeksKeMonthInput(periodeRaw);
+                    }
+
+                    // Buka Modal Mutasi Saldo
+                    const modalMutasi = document.getElementById('modal-mutasi-saldo');
+                    if (modalMutasi) {
+                        modalMutasi.classList.remove('hidden');
+                        modalMutasi.style.display = 'flex';
+
+                        // Ubah text tombol simpan mutasi menjadi "Perbarui Mutasi"
+                        const btnSimpan = modalMutasi.querySelector('button[onclick*="simpanMutasiSaldo"]');
+                        if (btnSimpan) {
+                            btnSimpan.innerHTML = `<i class="fas fa-paper-plane"></i> Perbarui Mutasi`;
+                            btnSimpan.setAttribute('onclick', `window.prosesUpdateTransaksiUmum('${idDokumen}', 'mutasi')`);
+                        }
+                    }
+                }
+
+            } catch (error) {
+                console.error("❌ Gagal memuat detail edit data:", error);
+                alert("Gagal mengambil rincian data transaksi.");
+            }
+        };
+
+        // ─── FUNGSI HELPER: KONVERSI TEKS BULAN INDONESIA KE FORMAT INPUT MONTH (YYYY-MM) ───
+        window.konversiTeksKeMonthInput = function(teksPeriode) {
+            try {
+                // TeksPeriode berbentuk: "Januari 2026" atau "Februari 2026"
+                const part = teksPeriode.trim().split(" ");
+                if (part.length < 2) return "";
+                
+                const namaBulan = part[0].toLowerCase();
+                const tahun = part[1];
+                
+                const listBulan = {
+                    januari: "01", februari: "02", maret: "03", april: "04", mei: "05", juni: "06",
+                    juli: "07", agustus: "08", september: "09", oktober: "10", november: "11", desember: "12"
+                };
+                
+                const kodeBulan = listBulan[namaBulan] || "01";
+                return `${tahun}-${kodeBulan}`;
+            } catch(e) {
+                return "";
+            }
+        };
+
+
+        // ─── FUNGSI UTAMA UNTUK HAPUS DATA & KEMBALIKAN SALDO ───
+        window.konfirmasiHapusTransaksi = async function(idDokumen, jenisTransaksi) {
+            // Tampilkan konfirmasi pop-up yang bersih ke user
+            const konfirmasi = confirm("Apakah Anda yakin ingin menghapus transaksi ini? Saldo akan otomatis disesuaikan kembali.");
+            if (!konfirmasi) return;
+
+            if (!window.auth || !window.auth.currentUser) {
+                alert("❌ Sesi aktif habis. Silakan login kembali.");
+                return;
+            }
+
+            try {
+                // Tampilkan indikator loading (opsional jika ada)
+                console.log(`Memulai proses penghapusan dokumen: ${idDokumen}...`);
+                
+                const userToken = await window.auth.currentUser.getIdToken();
+                const projectId = window.firebaseConfig?.projectId || "dompetq-app";
+                
+                // Endpoint REST API Firestore untuk menghapus dokumen spesifik
+                const deleteUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/rekap_finansial/${idDokumen}`;
+
+                const respon = await fetch(deleteUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${userToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (respon.ok) {
+                    console.log(`✅ Dokumen ${idDokumen} berhasil dihapus dari database.`);
+                    
+                    // ✨ TRIGER ULANG KANVAS UTAMA
+                    // Memanggil kembali fungsi rekap finansial agar dashboard menghitung ulang saldo tanpa item yang dihapus
+                    if (typeof window.muatRekapFinansialDashboard === 'function') {
+                        await window.muatRekapFinansialDashboard(window.currentDeveloperUid);
+                        alert("🎉 Transaksi berhasil dihapus! Saldo Anda telah otomatis disinkronkan kembali.");
+                    } else {
+                        // Fallback jika nama fungsi window sedikit berbeda di lingkungan lokal Anda
+                        window.location.reload(); 
+                    }
+                } else {
+                    const errData = await respon.json();
+                    console.error("Gagal menghapus dokumen:", errData);
+                    alert(`❌ Gagal menghapus data: ${errData.error?.message || "Kesalahan server"}`);
+                }
+
+            } catch (error) {
+                console.error("❌ Terjadi kesalahan sistem saat menghapus data:", error);
+                alert("❌ Gagal terhubung ke server. Periksa koneksi internet Anda.");
             }
         };
 
