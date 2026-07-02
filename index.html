@@ -616,7 +616,7 @@
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="block text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider text-red-600">Nominal Pengeluaran (Rp):</label>
+                        <label class="block text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider text-red-600">Nominal Pengeluaran:</label>
                         <div class="relative flex items-center">
                             <span class="absolute left-3.5 font-bold text-gray-400 text-xs">Rp</span>
                             <input type="number" id="out-nominal" placeholder="0" class="w-full pl-9 pr-4 py-2.5 bg-white border border-red-300 rounded-xl text-sm sm:text-base font-black text-red-700 outline-none focus:ring-2 focus:ring-red-500 shadow-sm">
@@ -2576,6 +2576,7 @@
                 let totalSaldoBulanLalu = 0;
                 
                 let htmlRiwayatSuntik = "";
+                let tanggalSebelumnya = ""; // ✨ Pelacak tanggal kelompok harian ala GoPay
 
                 totalSaldoBulanLalu = await window.periksaDanAmankanSaldoBulanLalu(userToken, projectId, formatPeriodeLaluClean);
 
@@ -2593,6 +2594,7 @@
                     const dataJson = await respon.json();
                     const documents = dataJson.documents || [];
 
+                    // Urutkan transaksi dari waktu terbaru (descending) agar pengelompokan harian runtut
                     documents.sort((a, b) => {
                         const timeA = new Date(a.fields?.waktuTransaksi?.timestampValue || 0);
                         const timeB = new Date(b.fields?.waktuTransaksi?.timestampValue || 0);
@@ -2627,54 +2629,80 @@
                             const isMutasi = kategoriRaw.toLowerCase().startsWith("mutasi_");
 
                             if (isSlipDokumen) {
-                                // Jika slip dokumen (Gaji/THR/KSP), gunakan nominal Netto hasil pembulatan sebagai Pemasukan.
-                                // Potongan bawaan slip diabaikan dari akumulasi pengeluaran dashboard.
                                 totalPemasukan += netto > 0 ? netto : (pendapatan - potongan);
                             } else if (isMutasi) {
-                                // Jika transaksi berupa transfer/mutasi keluar internal
                                 totalPengeluaran += potongan;
                             } else {
-                                // Jika transaksi umum manual
                                 totalPemasukan += pendapatan;
                                 totalPengeluaran += potongan;
                             }
 
-                            // ✨ RENDER BARIS RIWAYAT TRANSAKSI
+                            // ✨ RENDER BARIS RIWAYAT TRANSAKSI (MAKSIMAL 5 ITEM DI DASHBOARD)
                             if (counterItem < 5) {
-                                // Gunakan logika ikon 'fas' konsisten yang telah kita perbaiki sebelumnya
-                                let iconClass = "fas fa-arrow-up"; // Default pemasukan masukan
+                                let iconClass = "fas fa-arrow-up"; 
                                 let iconBg = "bg-emerald-50 text-emerald-600";
-                                let warnaNominal = "text-emerald-600 font-black text-xs md:text-sm"; // Ukuran teks sedikit dinamis
+                                let warnaNominal = "text-emerald-600 font-black text-xs"; 
                                 let teksNominal = "";
+                                let jenisTransaksi = ""; 
 
                                 if (isSlipDokumen) {
                                     iconClass = "fas fa-arrow-up";
                                     iconBg = "bg-emerald-50 text-emerald-600";
                                     const nominalTampil = netto > 0 ? netto : (pendapatan - potongan);
                                     teksNominal = `+Rp ${nominalTampil.toLocaleString('id-ID')}`;
+                                    jenisTransaksi = "slip";
                                 } else if (potongan > 0) {
                                     iconClass = isMutasi ? "fas fa-exchange-alt" : "fas fa-arrow-down";
                                     iconBg = isMutasi ? "bg-purple-50 text-purple-600" : "bg-rose-50 text-rose-600";
-                                    warnaNominal = isMutasi ? "text-purple-600 font-black text-xs md:text-sm" : "text-rose-600 font-black text-xs md:text-sm";
+                                    warnaNominal = isMutasi ? "text-purple-600 font-black text-xs" : "text-rose-600 font-black text-xs";
                                     teksNominal = `-Rp ${potongan.toLocaleString('id-ID')}`;
+                                    jenisTransaksi = isMutasi ? "mutasi" : "pengeluaran";
                                 } else {
                                     teksNominal = `+Rp ${pendapatan.toLocaleString('id-ID')}`;
+                                    jenisTransaksi = "pemasukan_manual";
                                 }
 
-                                // ✨ HTML BARU DENGAN RESPONSIVE LAYOUT (Anti Tabrakan di Layar Sempit)
+                                // Mengambil ID dokumen Firestore secara aman untuk parameter aksi
+                                const namaPath = doc.name || "";
+                                const idDokumen = namaPath.split('/').pop() || "";
+
+                                // ─── 1. KELOMPOK HARIAN (ALA GOPAY) ───
+                                if (tanggalTampil !== tanggalSebelumnya) {
+                                    htmlRiwayatSuntik += `
+                                        <div class="pt-4 pb-1.5 first:pt-1">
+                                            <span class="text-xs font-extrabold text-gray-900 tracking-wide">${tanggalTampil}</span>
+                                        </div>
+                                    `;
+                                    tanggalSebelumnya = tanggalTampil; 
+                                }
+
+                                // ─── 2. BARIS DETAIL TRANSAKSI, NOMINAL DI BAWAH, AKSI DI KANAN ───
                                 htmlRiwayatSuntik += `
-                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between py-3.5 hover:bg-gray-50/50 px-2 -mx-2 rounded-xl transition gap-2 sm:gap-4">
-                                        <div class="flex items-center space-x-3 min-w-0">
+                                    <div class="flex items-center justify-between py-3 hover:bg-gray-50/50 px-2 -mx-2 rounded-xl transition gap-3 border-b border-gray-100/50 last:border-0">
+                                        <div class="flex items-center space-x-3 min-w-0 flex-1">
                                             <div class="w-9 h-9 flex-shrink-0 rounded-full ${iconBg} flex items-center justify-center text-xs shadow-xs">
                                                 <i class="${iconClass}"></i>
                                             </div>
-                                            <div class="min-w-0">
-                                                <p class="font-bold text-xs text-gray-900 uppercase truncate">${keterangan}</p>
-                                                <p class="text-[10px] text-gray-400 truncate">${tanggalTampil} • ${kategori} (${namaUser})</p>
+                                            <div class="min-w-0 space-y-0.5">
+                                                <p class="font-bold text-xs text-gray-800 uppercase truncate">${keterangan}</p>
+                                                <p class="text-[10px] text-gray-400 truncate">${kategori} (${namaUser})</p>
+                                                <div class="pt-0.5">
+                                                    <span class="${warnaNominal}">${teksNominal}</span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="pl-12 sm:pl-0 sm:text-right flex-shrink-0">
-                                            <span class="${warnaNominal}">${teksNominal}</span>
+                                        
+                                        <div class="flex items-center space-x-1 flex-shrink-0">
+                                            <button onclick="window.bukaModalEdit('${idDokumen}', '${jenisTransaksi}')" 
+                                                    title="Ubah Data"
+                                                    class="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all focus:outline-none">
+                                                <i class="fas fa-edit text-[11px]"></i>
+                                            </button>
+                                            <button onclick="window.konfirmasiHapusTransaksi('${idDokumen}', '${jenisTransaksi}')" 
+                                                    title="Hapus Data"
+                                                    class="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all focus:outline-none">
+                                                <i class="fas fa-trash-alt text-[11px]"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 `;
