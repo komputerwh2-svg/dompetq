@@ -414,18 +414,19 @@
 
         <!-- MODAL RIWAYAT AKTIVITAS (GOPAY STYLE) -->
         <div id="modal-arsip-riwayat" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center hidden p-4">
-            <div class="bg-gray-50 w-full max-w-md h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate__animated animate__fadeInUp animate__faster">
+            <!-- PERUBAHAN DISINI: Mengubah h-[90vh] menjadi h-[75vh] atau max-h-[75vh] agar melayang pas di atas navbar -->
+            <div class="bg-white w-full max-w-md h-[72vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden mb-16 animate__animated animate__fadeInUp animate__faster">
                 
                 <!-- HEADER MODAL -->
                 <div class="p-4 bg-white border-b border-gray-100 flex items-center justify-between">
                     <div class="flex items-center space-x-3">
-                        <button onclick="window.closeArsipModal()" class="text-gray-700 hover:bg-gray-100 p-2 rounded-full transition">
-                            <i class="fas fa-times text-lg"></i>
-                        </button>
                         <div>
                             <h2 class="text-base font-bold text-gray-800">Riwayat Aktivitas</h2>
                         </div>
                     </div>
+                    <button onclick="window.closeArsipModal()" class="text-gray-700 hover:bg-gray-100 p-2 rounded-full transition">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
                 </div>
 
                 <!-- AREA KONTROL & FILTER (SCROLLABLE ATAS) -->
@@ -3611,12 +3612,23 @@
                 modal.classList.remove('hidden');
                 modal.style.display = 'flex';
                 
-                // Ambil data mutasi yang sudah diload di dashboard utama aplikasi Anda
-                // Catatan: Sesuaikan 'window.arrayRekapFinansialGlobal' dengan nama variabel array dashboard Anda
                 window.riwayatState.dataMentahLokal = window.arrayRekapFinansialGlobal || [];
+                window.riwayatState.tanggalAcuan = new Date(); 
                 
-                window.riwayatState.tanggalAcuan = new Date(); // Reset ke hari ini
-                window.setFilterCepat('hari-ini'); // Default filter bawaan GoPay
+                // Reset filter kategori ke 'semua' secara default tiap kali dibuka
+                window.riwayatState.kategoriTerpilih = 'semua';
+                const btnSemua = document.querySelector(`button[onclick*="setFilterKategori('semua')"]`);
+                if (btnSemua) btnSemua.className = "py-1.5 px-2 text-center rounded-lg bg-emerald-600 text-white font-bold transition";
+                
+                // Reset tombol filter lainnya ke normal
+                ['slip', 'pengeluaran', 'mutasi'].forEach(k => {
+                    const btn = document.querySelector(`button[onclick*="setFilterKategori('${k}')"]`);
+                    if (btn) btn.className = "py-1.5 px-2 text-center rounded-lg bg-gray-100 text-gray-600 font-medium hover:bg-gray-200 transition";
+                });
+                
+                if (document.getElementById('badge-filter-aktif')) document.getElementById('badge-filter-aktif').classList.add('hidden');
+
+                window.setFilterCepat('hari-ini'); 
             }
         };
 
@@ -3680,17 +3692,39 @@
         window.setFilterKategori = function(kat) {
             window.riwayatState.kategoriTerpilih = kat;
             
+            // ─── UPDATE VISUAL TOMBOL AKTIF DI PANEL FILTER ───
+            const daftarKategori = ['semua', 'slip', 'pengeluaran', 'mutasi'];
+            daftarKategori.forEach(k => {
+                // Mencari elemen tombol di dalam panel secara dinamis berdasarkan fungsi onclick-nya
+                const btn = document.querySelector(`button[onclick*="setFilterKategori('${k}')"]`);
+                if (btn) {
+                    if (k === kat) {
+                        // Style Aktif (Emerald/Hijau GoPay)
+                        btn.className = "py-1.5 px-2 text-center rounded-lg bg-emerald-600 text-white font-bold transition";
+                    } else {
+                        // Style Tidak Aktif
+                        btn.className = "py-1.5 px-2 text-center rounded-lg bg-gray-100 text-gray-600 font-medium hover:bg-gray-200 transition";
+                    }
+                }
+            });
+            
+            // Kelola Badge Indikator di bawah tombol utama
             const badge = document.getElementById('badge-filter-aktif');
             if (badge) {
                 if (kat === 'semua') {
                     badge.classList.add('hidden');
                 } else {
-                    badge.innerText = `Kategori: ${kat.toUpperCase()}`;
+                    let teksBadge = kat === 'slip' ? 'Slip Gaji' : (kat === 'pengeluaran' ? 'Pengeluaran' : 'Mutasi Saldo');
+                    badge.innerHTML = `<i class="fas fa-filter text-blue-500 mr-1"></i> ${teksBadge}`;
                     badge.classList.remove('hidden');
                 }
             }
             
-            window.toggleFilterKustomTipe();
+            // Sembunyikan kembali panel dropdown setelah memilih
+            const panel = document.getElementById('panel-filter-kustom');
+            if (panel) panel.classList.add('hidden');
+            
+            // Jalankan penyaringan ulang data
             window.prosesKalkulasiDanRenderRiwayat();
         };
 
@@ -3746,9 +3780,26 @@
             if (window.riwayatState.kategoriTerpilih !== 'semua') {
                 dataHasilFilter = dataHasilFilter.filter(item => {
                     const kat = (item.kategori || "").toLowerCase();
-                    if (window.riwayatState.kategoriTerpilih === 'slip') return kat.includes('slip') || kat.includes('gaji');
-                    if (window.riwayatState.kategoriTerpilih === 'mutasi') return kat.includes('mutasi');
-                    if (window.riwayatState.kategoriTerpilih === 'pengeluaran') return !kat.includes('mutasi') && !kat.includes('slip') && !kat.includes('gaji');
+                    const pendapatan = parseInt(item.pendapatan || 0, 10);
+                    const potongan = parseInt(item.potongan || 0, 10);
+                    
+                    if (window.riwayatState.kategoriTerpilih === 'slip') {
+                        // Slip gaji diidentifikasi dari teks kategori atau jika memiliki pendapatan > 0
+                        return kat.includes('slip') || kat.includes('gaji') || pendapatan > 0;
+                    }
+                    
+                    if (window.riwayatState.kategoriTerpilih === 'mutasi') {
+                        // Mutasi saldo diidentifikasi khusus dari prefix mutasi_
+                        return kat.includes('mutasi');
+                    }
+                    
+                    if (window.riwayatState.kategoriTerpilih === 'pengeluaran') {
+                        // Pengeluaran manual adalah transaksi yang BUKAN mutasi dan BUKAN slip gaji
+                        const isSlip = kat.includes('slip') || kat.includes('gaji') || pendapatan > 0;
+                        const isMutasi = kat.includes('mutasi');
+                        return !isSlip && !isMutasi && potongan > 0;
+                    }
+                    
                     return true;
                 });
             }
