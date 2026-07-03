@@ -4237,7 +4237,7 @@
         };
 
 
-        // KONTEN UTAMA TAB TABUNGAN: Render Konten Dinamis Tabungan Utama & Darurat
+        // KONTEN UTAMA TAB TABUNGAN: Render Konten Dinamis Tabungan Utama & Darurat via REST API
         window.renderKontenTabTabungan = async function() {
             const containerRiwayat = document.getElementById('container-riwayat-mutasi-tabungan');
             
@@ -4254,23 +4254,41 @@
                 periodeTeksTampilan = tglAktif.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
             }
 
-            // 2. Ambil Target Batas Dinamis Langsung dari Cloud Firestore
+            // 2. Ambil Target Batas Dinamis Langsung dari Cloud Firestore via REST API
             let limitTargetUtama = window.targetUtama || 5000000; // fallback default awal
             let limitTargetDarurat = window.targetDarurat || 2000000; // fallback default awal
 
+            const projectId = window.firebaseConfig?.projectId || "dompetq-app";
+            const userAktif = window.auth?.currentUser;
+            let userToken = "";
+
+            if (userAktif) {
+                try {
+                    userToken = await userAktif.getIdToken(false);
+                } catch (tokenErr) {
+                    console.warn("Gagal mengambil idToken:", tokenErr);
+                }
+            }
+
+            const headersRest = userToken ? { 'Authorization': `Bearer ${userToken}` } : {};
+
             try {
-                const snapTarget = await getDoc(doc(db, "pengaturan_aplikasi", "target_tabungan"));
-                if (snapTarget.exists()) {
-                    const dataTarget = snapTarget.data();
-                    limitTargetUtama = dataTarget.targetUtama || limitTargetUtama;
-                    limitTargetDarurat = dataTarget.targetDarurat || limitTargetDarurat;
-                    
-                    // Sinkronkan ke variabel global agar sejalan dengan komponen modal target
-                    window.targetUtama = limitTargetUtama;
-                    window.targetDarurat = limitTargetDarurat;
+                const urlTarget = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/pengaturan_aplikasi/target_tabungan`;
+                const responTarget = await fetch(urlTarget, { method: 'GET', headers: headersRest });
+                
+                if (responTarget.ok) {
+                    const resData = await responTarget.json();
+                    if (resData.fields) {
+                        limitTargetUtama = parseInt(resData.fields.targetUtama?.integerValue || resData.fields.targetUtama?.stringValue || limitTargetUtama, 10);
+                        limitTargetDarurat = parseInt(resData.fields.targetDarurat?.integerValue || resData.fields.targetDarurat?.stringValue || limitTargetDarurat, 10);
+                        
+                        // Sinkronkan ke variabel global
+                        window.targetUtama = limitTargetUtama;
+                        window.targetDarurat = limitTargetDarurat;
+                    }
                 }
             } catch (err) {
-                console.warn("Gagal memuat konfigurasi target dari cloud, menggunakan nilai lokal/default.", err);
+                console.warn("Gagal memuat konfigurasi target dari cloud via REST, menggunakan nilai lokal/default.", err);
             }
 
             // Inisialisasi variabel akumulasi saldo
@@ -4279,39 +4297,60 @@
             let gabunganTransaksiMutasiBulanIni = [];
 
             try {
-                // 3. Ambil Semua Dokumen dalam Koleksi 'rekap_financal' untuk Menghitung Saldo Kumulatif
-                const querySnapshot = await getDocs(collection(db, "rekap_financal"));
+                // 3. Ambil Semua Dokumen dalam Koleksi 'rekap_finansial' via REST API untuk Menghitung Saldo Kumulatif
+                const urlKoleksi = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/rekap_finansial?pageSize=100`;
+                const responKoleksi = await fetch(urlKoleksi, { method: 'GET', headers: headersRest });
                 
-                querySnapshot.forEach((doc) => {
-                    const idDokumen = doc.id;
-                    const data = doc.data();
-                    const netto = parseInt(data.totalBersihNetto || 0, 10);
+                if (responKoleksi.ok) {
+                    const dataKoleksi = await responKoleksi.json();
+                    const documents = dataKoleksi.documents || [];
 
-                    // Akumulasikan saldo dari SEMUA periode berdasarkan pola nama dokumen
-                    if (idDokumen.startsWith("mutasi_tabungan1_")) {
-                        saldoUtama += netto;
-                        
-                        // Jika dokumen ini milik bulan aktif saat ini, masukkan ke list riwayat bawah
-                        if (idDokumen === `mutasi_tabungan1_${bulanTahunFormat}`) {
-                            gabunganTransaksiMutasiBulanIni.push({ id: idDokumen, ...data });
+                    documents.forEach((doc) => {
+                        // Ekstrak ID Dokumen dari string path penuh
+                        const parts = doc.name.split('/');
+                        const idDokumen = parts[parts.length - 1];
+                        const fields = doc.fields || {};
+
+                        const netto = parseInt(fields.totalBersihNetto?.integerValue || fields.totalBersihNetto?.stringValue || 0, 10);
+
+                        // Normalisasi struktur data REST JSON agar seragam saat proses render loop
+                        const dataNormal = {
+                            kategori: fields.kategori?.stringValue || "mutasi",
+                            keterangan: fields.keterangan?.stringValue || "Transaksi Tabungan",
+                            periode: fields.periode?.stringValue || "",
+                            pendapatan: parseInt(fields.pendapatan?.integerValue || fields.pendapatan?.stringValue || 0, 10),
+                            potongan: parseInt(fields.potongan?.integerValue || fields.potongan?.stringValue || 0, 10),
+                            totalBersihNetto: netto,
+                            waktuTransaksi: fields.waktuTransaksi?.timestampValue || new Date().toISOString(),
+                            namaUser: fields.namaUser?.stringValue || ""
+                        };
+
+                        // Akumulasikan saldo dari SEMUA periode berdasarkan pola nama dokumen
+                        if (idDokumen.startsWith("mutasi_tabungan1_")) {
+                            saldoUtama += netto;
+                            
+                            // Jika dokumen ini milik bulan aktif saat ini, masukkan ke list riwayat bawah
+                            if (idDokumen === `mutasi_tabungan1_${bulanTahunFormat}`) {
+                                gabunganTransaksiMutasiBulanIni.push({ id: idDokumen, ...dataNormal });
+                            }
+                        } 
+                        else if (idDokumen.startsWith("mutasi_tabungan2_")) {
+                            saldoDarurat += netto;
+                            
+                            // Jika dokumen ini milik bulan aktif saat ini, masukkan ke list riwayat bawah
+                            if (idDokumen === `mutasi_tabungan2_${bulanTahunFormat}`) {
+                                gabunganTransaksiMutasiBulanIni.push({ id: idDokumen, ...dataNormal });
+                            }
                         }
-                    } 
-                    else if (idDokumen.startsWith("mutasi_tabungan2_")) {
-                        saldoDarurat += netto;
-                        
-                        // Jika dokumen ini milik bulan aktif saat ini, masukkan ke list riwayat bawah
-                        if (idDokumen === `mutasi_tabungan2_${bulanTahunFormat}`) {
-                            gabunganTransaksiMutasiBulanIni.push({ id: idDokumen, ...data });
-                        }
-                    }
-                });
+                    });
+                }
 
                 // Setel ke variabel global agar bisa dibaca secara real-time oleh fungsi proteksi penarikan saldo
                 window.saldoUtama = saldoUtama;
                 window.saldoDarurat = saldoDarurat;
 
             } catch (error) {
-                console.error("Gagal mengambil data tabungan akumulatif dari Firestore: ", error);
+                console.error("Gagal mengambil data tabungan akumulatif dari Firestore REST API: ", error);
             }
 
             // 4. Hitung Persentase Kemajuan Target (Berdasarkan Saldo Akumulasi Seluruh Periode)
@@ -4342,22 +4381,14 @@
                 return;
             }
 
-            // Helper konversi waktu transaksi ke milidetik untuk pengurutan
-            const dapatkanWaktuMilidetik = (waktu) => {
-                if (!waktu) return 0;
-                if (typeof waktu.toDate === 'function') return waktu.toDate().getTime();
-                if (waktu.seconds) return waktu.seconds * 1000;
-                return new Date(waktu).getTime();
-            };
-
-            // Urutkan transaksi dari yang terbaru berdasarkan waktuTransaksi
-            gabunganTransaksiMutasiBulanIni.sort((a, b) => dapatkanWaktuMilidetik(b.waktuTransaksi) - dapatkanWaktuMilidetik(a.waktuTransaksi));
+            // Urutkan transaksi dari yang terbaru berdasarkan string ISO timestamp waktuTransaksi
+            gabunganTransaksiMutasiBulanIni.sort((a, b) => new Date(b.waktuTransaksi).getTime() - new Date(a.waktuTransaksi).getTime());
 
             // Pengelompokan Berdasarkan Tanggal Teks Tampilan Indonesia
             const kelompokTanggal = {};
             gabunganTransaksiMutasiBulanIni.forEach(item => {
                 if (!item.waktuTransaksi) return;
-                const dObj = item.waktuTransaksi.seconds ? new Date(item.waktuTransaksi.seconds * 1000) : new Date(item.waktuTransaksi);
+                const dObj = new Date(item.waktuTransaksi);
                 const tglStr = dObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
                 
                 if (!kelompokTanggal[tglStr]) {
@@ -4376,10 +4407,10 @@
                 `;
 
                 kelompokTanggal[tanggal].forEach(item => {
-                    const nominalMasuk = parseInt(item.pendapatan || 0, 10);
-                    const nominalKeluar = parseInt(item.potongan || 0, 10);
-                    const keterangan = item.keterangan || "Transaksi Tabungan";
-                    const kategori = item.kategori || "mutasi";
+                    const nominalMasuk = item.pendapatan;
+                    const nominalKeluar = item.potongan;
+                    const keterangan = item.keterangan;
+                    const kategori = item.kategori;
                     
                     let ikonHtml = "";
                     let textNominal = "";
@@ -4490,14 +4521,14 @@
         // Panggil fungsi inisialisasi agar tanggal langsung terisi hari ini saat script dimuat
         window.inisialisasiTanggalMutasi();
 
-        // Fungsi Eksekusi Alur Mutasi Berdasarkan Pilihan Asal & Tujuan (Tersimpan ke Firestore)
+        // Fungsi Eksekusi Alur Mutasi Berdasarkan Pilihan Asal & Tujuan (REST API Firestore Sync)
         window.eksekusiSimpanMutasi = async function(event) {
             event.preventDefault();
 
             const tanggalInput = document.getElementById('mutasi-tanggal').value;
             const asal = document.getElementById('mutasi-asal').value;
             const tujuan = document.getElementById('mutasi-tujuan').value;
-            const keterangan = document.getElementById('mutasi-ket-tabungan').value;
+            const keteranganInput = document.getElementById('mutasi-ket-tabungan').value;
             
             // Ambil angka asli dari input display (hilangkan karakter non-angka/titik separator)
             const rawNominal = document.getElementById('mutasi-nominal-display').value.replace(/[^0-9]/g, "");
@@ -4517,6 +4548,19 @@
                 return;
             }
 
+            // 1. VALIDASI WAJIB LOGIN & AMBIL TOKEN KEAMANAN
+            if (!window.auth || !window.auth.currentUser) {
+                if (typeof tampilAlert === 'function') tampilAlert("Sesi login tidak ditemukan. Silakan login ulang.", "error");
+                else alert("Sesi login tidak ditemukan. Silakan login ulang.");
+                return;
+            }
+
+            const userAktif = window.auth.currentUser;
+            let namaUserSistem = "iwashia"; // default fallback
+            if (userAktif.email && userAktif.email.includes("@")) {
+                namaUserSistem = userAktif.email.split('@')[0];
+            }
+
             // --- GENERATE BULAN TAHUN UNTUK FIRESTORE ---
             const tglObj = new Date(tanggalInput);
             const namaBulanIndo = tglObj.toLocaleString('id-ID', { month: 'long' }).toLowerCase();
@@ -4524,89 +4568,123 @@
             const bulanTahunFormat = `${namaBulanIndo}_${tahun}`;
             const periodeTeks = tglObj.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
 
-            // Tentukan referensi objek timestamp Firestore
-            const waktuTransaksi = serverTimestamp ? serverTimestamp() : new Date();
+            const projectId = window.firebaseConfig?.projectId || "dompetq-app";
 
             try {
-                // --- PROSES SIMPAN DATA MUTASI KE FIRESTORE ---
+                if (typeof tampilAlert === 'function') tampilAlert("Menyinkronkan data mutasi ke cloud...", "info");
+                const userToken = await userAktif.getIdToken(true);
+                const headersRest = {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${userToken}`
+                };
+
+                // Saldo lokal acuan sebelum mutasi dijalankan
+                let targetSaldoUtamaLokal = window.saldoUtama || 0;
+                let targetSaldoDaruratLokal = window.saldoDarurat || 0;
+
+                // Objek penampung fetch async
+                let aksiKirimFirestore = [];
+
+                // --- SKENARIO PEMROSESAN REST API FIRESTORE MAP ---
                 
-                // Skenario A: Jika Dana Keluar dari Tabungan Utama
-                if (asal === 'utama') {
-                    const docRef = doc(db, "rekap_financal", `mutasi_tabungan1_${bulanTahunFormat}`);
-                    await setDoc(docRef, {
-                        kategori: "mutasi_tabungan1",
-                        keterangan: `Mutasi Keluar: ${keterangan}`,
-                        namaUser: window.dompetQState?.namaUser || "iwashia",
-                        pendapatan: 0,
-                        potongan: increment ? increment(nominal) : nominal, // Menggunakan increment Firestore jika tersedia
-                        totalBersihNetto: increment ? increment(-nominal) : -nominal,
-                        periode: periodeTeks,
-                        referenceKeyImage: "MUTASI_TABUNGAN1",
-                        waktuTransaksi: waktuTransaksi
-                    }, { merge: true });
-                }
-                // Skenario B: Jika Dana Keluar dari Dana Darurat
-                else if (asal === 'darurat') {
-                    const docRef = doc(db, "rekap_financal", `mutasi_tabungan2_${bulanTahunFormat}`);
-                    await setDoc(docRef, {
-                        kategori: "mutasi_tabungan2",
-                        keterangan: `Mutasi Keluar: ${keterangan}`,
-                        namaUser: window.dompetQState?.namaUser || "iwashia",
-                        pendapatan: 0,
-                        potongan: increment ? increment(nominal) : nominal,
-                        totalBersihNetto: increment ? increment(-nominal) : -nominal,
-                        periode: periodeTeks,
-                        referenceKeyImage: "MUTASI_TABUNGAN2",
-                        waktuTransaksi: waktuTransaksi
-                    }, { merge: true });
+                // Skenario A & C: Penanganan Mutasi Tabungan Utama
+                if (asal === 'utama' || tujuan === 'utama') {
+                    const keyTransaksi = `mutasi_tabungan1_${bulanTahunFormat}`;
+                    const endpointFirestore = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/rekap_finansial/${keyTransaksi}`;
+                    
+                    let finalPendapatan = 0;
+                    let finalPotongan = 0;
+                    let teksKeterangan = "";
+
+                    if (asal === 'utama') {
+                        finalPotongan = nominal;
+                        teksKeterangan = `Mutasi Keluar: ${keteranganInput}`;
+                        targetSaldoUtamaLokal -= nominal; // Akumulasi lokal mutasi keluar
+                    } else {
+                        finalPendapatan = nominal;
+                        teksKeterangan = `Mutasi Masuk: ${keteranganInput}`;
+                        targetSaldoUtamaLokal += nominal; // Akumulasi lokal mutasi masuk
+                    }
+
+                    const payloadFirestore = {
+                        fields: {
+                            kategori: { stringValue: "mutasi_tabungan1" },
+                            keterangan: { stringValue: teksKeterangan },
+                            namaUser: { stringValue: namaUserSistem },
+                            pendapatan: { integerValue: finalPendapatan.toString() },
+                            potongan: { integerValue: finalPotongan.toString() },
+                            totalBersihNetto: { integerValue: (finalPendapatan - finalPotongan).toString() },
+                            periode: { stringValue: periodeTeks },
+                            referenceKeyImage: { stringValue: "MUTASI_TABUNGAN1" },
+                            waktuTransaksi: { timestampValue: new Date().toISOString() }
+                        }
+                    };
+
+                    aksiKirimFirestore.push(
+                        fetch(endpointFirestore, { method: 'PATCH', headers: headersRest, body: JSON.stringify(payloadFirestore) })
+                    );
                 }
 
-                // Skenario C: Jika Dana Masuk ke Tabungan Utama
-                if (tujuan === 'utama') {
-                    const docRef = doc(db, "rekap_financal", `mutasi_tabungan1_${bulanTahunFormat}`);
-                    await setDoc(docRef, {
-                        kategori: "mutasi_tabungan1",
-                        keterangan: `Mutasi Masuk: ${keterangan}`,
-                        namaUser: window.dompetQState?.namaUser || "iwashia",
-                        pendapatan: increment ? increment(nominal) : nominal,
-                        potongan: 0,
-                        totalBersihNetto: increment ? increment(nominal) : nominal,
-                        periode: periodeTeks,
-                        referenceKeyImage: "MUTASI_TABUNGAN1",
-                        waktuTransaksi: waktuTransaksi
-                    }, { merge: true });
-                }
-                // Skenario D: Jika Dana Masuk ke Dana Darurat
-                else if (tujuan === 'darurat') {
-                    const docRef = doc(db, "rekap_financal", `mutasi_tabungan2_${bulanTahunFormat}`);
-                    await setDoc(docRef, {
-                        kategori: "mutasi_tabungan2",
-                        keterangan: `Mutasi Masuk: ${keterangan}`,
-                        namaUser: window.dompetQState?.namaUser || "iwashia",
-                        pendapatan: increment ? increment(nominal) : nominal,
-                        potongan: 0,
-                        totalBersihNetto: increment ? increment(nominal) : nominal,
-                        periode: periodeTeks,
-                        referenceKeyImage: "MUTASI_TABUNGAN2",
-                        waktuTransaksi: waktuTransaksi
-                    }, { merge: true });
+                // Skenario B & D: Penanganan Mutasi Dana Darurat
+                if (asal === 'darurat' || tujuan === 'darurat') {
+                    const keyTransaksi = `mutasi_tabungan2_${bulanTahunFormat}`;
+                    const endpointFirestore = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/rekap_finansial/${keyTransaksi}`;
+                    
+                    let finalPendapatan = 0;
+                    let finalPotongan = 0;
+                    let teksKeterangan = "";
+
+                    if (asal === 'darurat') {
+                        finalPotongan = nominal;
+                        teksKeterangan = `Mutasi Keluar: ${keteranganInput}`;
+                        targetSaldoDaruratLokal -= nominal; // Akumulasi lokal mutasi keluar
+                    } else {
+                        finalPendapatan = nominal;
+                        teksKeterangan = `Mutasi Masuk: ${keteranganInput}`;
+                        targetSaldoDaruratLokal += nominal; // Akumulasi lokal mutasi masuk
+                    }
+
+                    const payloadFirestore = {
+                        fields: {
+                            kategori: { stringValue: "mutasi_tabungan2" },
+                            keterangan: { stringValue: teksKeterangan },
+                            namaUser: { stringValue: namaUserSistem },
+                            pendapatan: { integerValue: finalPendapatan.toString() },
+                            potongan: { integerValue: finalPotongan.toString() },
+                            totalBersihNetto: { integerValue: (finalPendapatan - finalPotongan).toString() },
+                            periode: { stringValue: periodeTeks },
+                            referenceKeyImage: { stringValue: "MUTASI_TABUNGAN2" },
+                            waktuTransaksi: { timestampValue: new Date().toISOString() }
+                        }
+                    };
+
+                    aksiKirimFirestore.push(
+                        fetch(endpointFirestore, { method: 'PATCH', headers: headersRest, body: JSON.stringify(payloadFirestore) })
+                    );
                 }
 
-                // --- UPDATE VARIABEL LOKAL (Jika Firestore Berhasil) ---
+                // Eksekusi pengiriman data ke Cloud Firestore
+                const hasilRespon = await Promise.all(aksiKirimFirestore);
+                for (const respon of hasilRespon) {
+                    if (!respon.ok) {
+                        const errTxt = await respon.text();
+                        throw new Error(`Firestore REST Error: ${respon.status} - ${errTxt}`);
+                    }
+                }
+
+                // --- UPDATE VARIABEL LOKAL DAN GLOBAL (Jika API Berhasil) ---
                 if (asal === 'dompet' && typeof saldoDompet !== 'undefined') saldoDompet -= nominal;
-                if (asal === 'utama' && typeof saldoUtama !== 'undefined') saldoUtama -= nominal;
-                if (asal === 'darurat' && typeof saldoDarurat !== 'undefined') saldoDarurat -= nominal;
-
                 if (tujuan === 'dompet' && typeof saldoDompet !== 'undefined') saldoDompet += nominal;
-                if (tujuan === 'utama' && typeof saldoUtama !== 'undefined') saldoUtama += nominal;
-                if (tujuan === 'darurat' && typeof saldoDarurat !== 'undefined') saldoDarurat += nominal;
 
-                // --- SELESAI PROSES ---
-                const pesanSukses = `Mutasi Berhasil!\nDana sebesar Rp ${nominal.toLocaleString("id-ID")} dipindahkan dan dicatat ke Cloud Firestore.`;
-                if (typeof tampilAlert === 'function') tampilAlert(pesanSukses);
+                window.saldoUtama = targetSaldoUtamaLokal;
+                window.saldoDarurat = targetSaldoDaruratLokal;
+
+                // --- SELESAI PROSES & FEEDBACK ---
+                const pesanSukses = `Mutasi Berhasil!\nDana sebesar Rp ${nominal.toLocaleString("id-ID")} dipindahkan dan dicatat ke Cloud Firestore via REST API.`;
+                if (typeof tampilAlert === 'function') tampilAlert(pesanSukses, "success");
                 else alert(pesanSukses);
 
-                // Refresh konten tabungan & dashboard visual agar langsung tersinkronisasi
+                // Refresh konten tabungan & dashboard visual agar langsung sinkron tanpa reload halaman
                 if (typeof renderKontenTabTabungan === 'function') await renderKontenTabTabungan();
                 if (typeof renderDashboard === 'function') renderDashboard();
                 if (typeof simpanDataKeStorage === 'function') simpanDataKeStorage();
@@ -4619,8 +4697,9 @@
                 document.getElementById('modal-form-mutasi-tabungan').classList.add('hidden');
 
             } catch (error) {
-                console.error("Gagal menyimpan data mutasi ke Firestore: ", error);
-                alert("Terjadi kesalahan sistem saat menyimpan mutasi ke cloud.");
+                console.error("Gagal menyimpan data mutasi ke Firestore REST API: ", error);
+                if (typeof tampilAlert === 'function') tampilAlert(`Gagal Sinkronisasi Mutasi: ${error.message}`, "error");
+                else alert("Terjadi kesalahan sistem saat menyimpan mutasi ke cloud.");
             }
         };
 
@@ -4637,13 +4716,13 @@
         // Panggil fungsi inisialisasi agar tanggal langsung terisi hari ini saat script dimuat
         window.inisialisasiTanggalTarik();
 
-        // Fungsi Eksekusi Penarikan Saldo Tabungan (Tersimpan ke Cloud Firestore)
+        // Fungsi Eksekusi Penarikan Saldo Tabungan (REST API Firestore Sync)
         window.eksekusiTarikSaldo = async function(event) {
             event.preventDefault();
 
             const tanggalInput = document.getElementById('tarik-tanggal').value;
             const sumber = document.getElementById('tarik-sumber-tabungan').value;
-            const keterangan = document.getElementById('tarik-ket-tabungan').value;
+            const keteranganInput = document.getElementById('tarik-ket-tabungan').value;
             
             // Konversi string format ribuan ke angka murni
             const rawNominal = document.getElementById('tarik-nominal-display').value.replace(/[^0-9]/g, "");
@@ -4651,21 +4730,38 @@
 
             // Proteksi 1: Validasi nominal angka valid
             if (nominal <= 0) {
-                if (typeof tampilAlert === 'function') tampilAlert("Masukkan nominal penarikan yang valid!");
+                if (typeof tampilAlert === 'function') tampilAlert("Masukkan nominal penarikan yang valid!", "error");
                 else alert("Masukkan nominal penarikan yang valid!");
                 return;
             }
 
+            // Ambil nilai saldo real-time dari window state (sinkron dengan renderKontenTabTabungan)
+            const sUtamaAktif = window.saldoUtama || 0;
+            const sDaruratAktif = window.saldoDarurat || 0;
+
             // Proteksi 2: Cek ketersediaan saldo dari pos tabungan yang dipilih (Validasi Lokal)
             let saldoCukup = true;
-            if (sumber === 'utama' && typeof saldoUtama !== 'undefined' && saldoUtama < nominal) saldoCukup = false;
-            if (sumber === 'darurat' && typeof saldoDarurat !== 'undefined' && saldoDarurat < nominal) saldoCukup = false;
+            if (sumber === 'utama' && sUtamaAktif < nominal) saldoCukup = false;
+            if (sumber === 'darurat' && sDaruratAktif < nominal) saldoCukup = false;
 
             if (!saldoCukup) {
                 const pesanGagal = `Maaf, saldo Tabungan ${sumber === 'utama' ? 'Utama' : 'Darurat'} tidak mencukupi untuk penarikan ini!`;
-                if (typeof tampilAlert === 'function') tampilAlert(pesanGagal);
+                if (typeof tampilAlert === 'function') tampilAlert(pesanGagal, "error");
                 else alert(pesanGagal);
                 return;
+            }
+
+            // 1. VALIDASI UTAMA SESI LOGIN & REST CONFIG
+            if (!window.auth || !window.auth.currentUser) {
+                if (typeof tampilAlert === 'function') tampilAlert("Sesi login berakhir. Silakan login ulang.", "error");
+                else alert("Sesi login berakhir. Silakan login ulang.");
+                return;
+            }
+
+            const userAktif = window.auth.currentUser;
+            let namaUserSistem = "iwashia"; // default fallback
+            if (userAktif.email && userAktif.email.includes("@")) {
+                namaUserSistem = userAktif.email.split('@')[0];
             }
 
             // --- GENERATE NOMENKLATUR BULAN TAHUN DOKUMEN FIRESTORE ---
@@ -4675,8 +4771,7 @@
             const bulanTahunFormat = `${namaBulanIndo}_${tahun}`;
             const periodeTeks = tglObj.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
 
-            // Gunakan serverTimestamp Firestore jika tersedia, jika tidak pakai JavaScript Date
-            const waktuTransaksi = typeof serverTimestamp === 'function' ? serverTimestamp() : new Date();
+            const projectId = window.firebaseConfig?.projectId || "dompetq-app";
 
             // Tentukan target ID Dokumen dan Kategori berdasarkan pilihan sumber tabungan
             let idDokumen = "";
@@ -4694,27 +4789,48 @@
             }
 
             try {
-                // --- PROSES UPDATE / SIMPAN DATA KE CLOUD FIRESTORE ---
-                const docRef = doc(db, "rekap_financal", idDokumen);
+                if (typeof tampilAlert === 'function') tampilAlert("Memproses penarikan saldo dari cloud...", "info");
+                
+                const userToken = await userAktif.getIdToken(true);
+                const headersRest = {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${userToken}`
+                };
 
-                await setDoc(docRef, {
-                    kategori: kategoriNama,
-                    keterangan: keterangan, // Menyimpan deskripsi keperluan penarikan
-                    namaUser: window.dompetQState?.namaUser || "iwashia",
-                    pendapatan: 0,
-                    // Jika ada fungsi increment bawaan Firebase, gunakan agar kalkulasi concurrent aman
-                    potongan: typeof increment === 'function' ? increment(nominal) : nominal,
-                    totalBersihNetto: typeof increment === 'function' ? increment(-nominal) : -nominal,
-                    periode: periodeTeks,
-                    referenceKeyImage: referenceKey,
-                    waktuTransaksi: waktuTransaksi
-                }, { merge: true });
+                const endpointFirestore = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/rekap_finansial/${idDokumen}`;
 
-                // --- UPDATE STATE VARIABEL LOKAL (Jika Firebase Sukses) ---
-                if (sumber === 'utama' && typeof saldoUtama !== 'undefined') {
-                    saldoUtama -= nominal;
-                } else if (sumber === 'darurat' && typeof saldoDarurat !== 'undefined') {
-                    saldoDarurat -= nominal;
+                // Payload terstruktur menyesuaikan REST API mapping data fields
+                const payloadFirestore = {
+                    fields: {
+                        kategori: { stringValue: kategoriNama },
+                        keterangan: { stringValue: keteranganInput },
+                        namaUser: { stringValue: namaUserSistem },
+                        pendapatan: { integerValue: "0" },
+                        potongan: { integerValue: nominal.toString() },
+                        totalBersihNetto: { integerValue: (-nominal).toString() },
+                        periode: { stringValue: periodeTeks },
+                        referenceKeyImage: { stringValue: referenceKey },
+                        waktuTransaksi: { timestampValue: new Date().toISOString() }
+                    }
+                };
+
+                // --- PROSES UPDATE / SIMPAN DATA KE CLOUD FIRESTORE VIA REST API ---
+                const responRest = await fetch(endpointFirestore, {
+                    method: 'PATCH',
+                    headers: headersRest,
+                    body: JSON.stringify(payloadFirestore)
+                });
+
+                if (!responRest.ok) {
+                    const errTxt = await responRest.text();
+                    throw new Error(`Firestore REST Error: ${responRest.status} - ${errTxt}`);
+                }
+
+                // --- UPDATE STATE VARIABEL LOKAL & GLOBAL (Jika Firebase REST Sukses) ---
+                if (sumber === 'utama') {
+                    window.saldoUtama = sUtamaAktif - nominal;
+                } else if (sumber === 'darurat') {
+                    window.saldoDarurat = sDaruratAktif - nominal;
                 }
 
                 // Jalankan alur cadangan riwayat array lokal jika struktur lama masih dipakai
@@ -4724,17 +4840,17 @@
                         tanggal: tanggalInput,
                         tipe: 'keluar',
                         kategori: `Tarik Tabungan (${sumber === 'utama' ? 'Utama' : 'Darurat'})`,
-                        keterangan: keterangan,
+                        keterangan: keteranganInput,
                         nominal: nominal
                     });
                 }
 
-                // --- SELESAI PROSES ---
-                const pesanSukses = `Penarikan Berhasil!\nSaldo Tabungan ${sumber === 'utama' ? 'Utama' : 'Darurat'} terpotong sebesar Rp ${nominal.toLocaleString("id-ID")} dan tercatat ke cloud.`;
-                if (typeof tampilAlert === 'function') tampilAlert(pesanSukses);
+                // --- SELESAI PROSES & REFRESH UI ---
+                const pesanSukses = `Penarikan Berhasil!\nSaldo Tabungan ${sumber === 'utama' ? 'Utama' : 'Darurat'} terpotong sebesar Rp ${nominal.toLocaleString("id-ID")} dan tercatat via REST API.`;
+                if (typeof tampilAlert === 'function') tampilAlert(pesanSukses, "success");
                 else alert(pesanSukses);
 
-                // Memicu sinkronisasi instan grafik progress bar dan mutasi list bawah
+                // Memicu sinkronisasi instan grafik progress bar dan mutasi list bawah tanpa reload
                 if (typeof renderKontenTabTabungan === 'function') await renderKontenTabTabungan();
                 if (typeof renderDashboard === 'function') renderDashboard();
                 if (typeof simpanDataKeStorage === 'function') simpanDataKeStorage();
@@ -4747,8 +4863,9 @@
                 document.getElementById('modal-form-tarik-tabungan').classList.add('hidden');
 
             } catch (error) {
-                console.error("Gagal menyimpan penarikan saldo ke Firestore: ", error);
-                alert("Terjadi masalah jaringan, gagal menyinkronkan data penarikan ke server cloud.");
+                console.error("Gagal menyimpan penarikan saldo ke Firestore REST API: ", error);
+                if (typeof tampilAlert === 'function') tampilAlert(`Gagal Tarik Saldo: ${error.message}`, "error");
+                else alert("Terjadi masalah jaringan, gagal menyinkronkan data penarikan ke server cloud.");
             }
         };
 
@@ -4769,7 +4886,7 @@
         // Jalankan otomatis saat awal agar elemen tanggal langsung terisi
         window.inisialisasiTanggalTarget();
 
-        // Fungsi Eksekusi Simpan Target & Sinkronisasi Ke Cloud Firestore
+        // Fungsi Eksekusi Simpan Target & Sinkronisasi Ke Cloud Firestore (REST API Sync)
         window.eksekusiSimpanTarget = async function(event) {
             event.preventDefault();
 
@@ -4784,23 +4901,58 @@
 
             // Proteksi: Validasi input target tidak boleh bernilai negatif atau nol
             if (nominalUtama <= 0 || nominalDarurat <= 0) {
-                if (typeof tampilAlert === 'function') tampilAlert("Masukkan nominal target yang valid (lebih dari 0)!");
+                if (typeof tampilAlert === 'function') tampilAlert("Masukkan nominal target yang valid (lebih dari 0)!", "error");
                 else alert("Masukkan nominal target yang valid (lebih dari 0)!");
                 return;
             }
 
+            // 1. VALIDASI UTAMA SESI LOGIN & REST CONFIG
+            if (!window.auth || !window.auth.currentUser) {
+                if (typeof tampilAlert === 'function') tampilAlert("Sesi login berakhir. Silakan login ulang.", "error");
+                else alert("Sesi login berakhir. Silakan login ulang.");
+                return;
+            }
+
+            const userAktif = window.auth.currentUser;
+            let namaUserSistem = "iwashia"; // default fallback
+            if (userAktif.email && userAktif.email.includes("@")) {
+                namaUserSistem = userAktif.email.split('@')[0];
+            }
+
+            const projectId = window.firebaseConfig?.projectId || "dompetq-app";
+            const endpointFirestore = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/pengaturan_aplikasi/target_tabungan`;
+
             try {
-                // --- PROSES SIMPAN KE CLOUD FIRESTORE ---
-                // Menyimpan ke koleksi 'pengaturan_aplikasi' dengan id dokumen 'target_tabungan'
-                const docRefTarget = doc(db, "pengaturan_aplikasi", "target_tabungan");
-                
-                await setDoc(docRefTarget, {
-                    targetUtama: nominalUtama,
-                    targetDarurat: nominalDarurat,
-                    terakhirDiperbarui: tanggal,
-                    namaUser: window.dompetQState?.namaUser || "iwashia",
-                    waktuServer: typeof serverTimestamp === 'function' ? serverTimestamp() : new Date()
-                }, { merge: true });
+                if (typeof tampilAlert === 'function') tampilAlert("Menyimpan target baru ke cloud...", "info");
+
+                const userToken = await userAktif.getIdToken(true);
+                const headersRest = {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${userToken}`
+                };
+
+                // Payload terstruktur menyesuaikan REST API mapping data fields untuk Firestore
+                const payloadFirestore = {
+                    fields: {
+                        targetUtama: { integerValue: nominalUtama.toString() },
+                        targetDarurat: { integerValue: nominalDarurat.toString() },
+                        terakhirDiperbarui: { stringValue: tanggal },
+                        namaUser: { stringValue: namaUserSistem },
+                        waktuServer: { timestampValue: new Date().toISOString() }
+                    }
+                };
+
+                // --- PROSES SIMPAN KE CLOUD FIRESTORE VIA REST API ---
+                const responRest = await fetch(endpointFirestore, {
+                    method: 'PATCH',
+                    headers: headersRest,
+                    body: JSON.stringify(payloadFirestore)
+                });
+
+                if (!responRest.ok) {
+                    const errTxt = await responRest.text();
+                    throw new Error(`Firestore REST Error: ${responRest.status} - ${errTxt}`);
+                }
 
                 // Perbarui juga variabel global di aplikasi agar sinkronisasi instan tanpa reload halaman
                 window.targetUtama = nominalUtama;
@@ -4808,8 +4960,8 @@
 
                 // --- SINKRONISASI PROGRESS BAR & TEKS PANEL ---
                 // Mengambil saldo real-time saat ini yang sudah dihitung oleh aplikasi Anda
-                const nominalSaldoUtama = typeof saldoUtama !== 'undefined' ? saldoUtama : 0;
-                const nominalSaldoDarurat = typeof saldoDarurat !== 'undefined' ? saldoDarurat : 0;
+                const nominalSaldoUtama = typeof window.saldoUtama !== 'undefined' ? window.saldoUtama : 0;
+                const nominalSaldoDarurat = typeof window.saldoDarurat !== 'undefined' ? window.saldoDarurat : 0;
 
                 // Hitung persentase pemenuhan target (maksimal 100%)
                 const persenUtama = window.targetUtama > 0 ? Math.min(Math.round((Math.max(0, nominalSaldoUtama) / window.targetUtama) * 100), 100) : 0;
@@ -4824,9 +4976,9 @@
                 if(document.getElementById('tabungan-darurat-persen')) document.getElementById('tabungan-darurat-persen').innerText = `${persenDarurat}%`;
                 if(document.getElementById('tabungan-darurat-bar')) document.getElementById('tabungan-darurat-bar').style.width = `${persenDarurat}%`;
 
-                // --- SELESAI PROSES ---
-                const pesanSukses = `Target Berhasil Diperbarui!\nTarget Utama: Rp ${window.targetUtama.toLocaleString("id-ID")}\nTarget Darurat: Rp ${window.targetDarurat.toLocaleString("id-ID")}\nData berhasil disinkronkan ke Cloud Firestore.`;
-                if (typeof tampilAlert === 'function') tampilAlert(pesanSukses);
+                // --- SELESAI PROSES & FEEDBACK ---
+                const pesanSukses = `Target Berhasil Diperbarui!\nTarget Utama: Rp ${window.targetUtama.toLocaleString("id-ID")}\nTarget Darurat: Rp ${window.targetDarurat.toLocaleString("id-ID")}\nData berhasil disinkronkan via REST API.`;
+                if (typeof tampilAlert === 'function') tampilAlert(pesanSukses, "success");
                 else alert(pesanSukses);
 
                 // Panggil fungsi render utama dashboard Anda agar visual grafik & teks langsung berubah seketika
@@ -4842,8 +4994,9 @@
                 document.getElementById('modal-form-target-tabungan').classList.add('hidden');
 
             } catch (error) {
-                console.error("Gagal menyimpan data target ke Firestore: ", error);
-                alert("Terjadi kesalahan jaringan, gagal menyimpan target baru ke cloud.");
+                console.error("Gagal menyimpan data target ke Firestore REST API: ", error);
+                if (typeof tampilAlert === 'function') tampilAlert(`Gagal Simpan Target: ${error.message}`, "error");
+                else alert("Terjadi kesalahan jaringan, gagal menyimpan target baru ke cloud.");
             }
         };
     </script>
