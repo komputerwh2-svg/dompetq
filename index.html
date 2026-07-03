@@ -294,19 +294,76 @@
 
             </div>
 
-            <div id="tabungan" class="tab-content space-y-4 w-full">
-                <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-xs w-full">
-                    <h3 class="text-md font-bold text-gray-900 mb-3">Target Tabungan</h3>
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-xs font-bold">
-                            <span class="text-gray-700">Dana Darurat Efektif</span>
-                            <span class="text-blue-600">70%</span>
+            <div id="tabungan" class="tab-content space-y-5 w-full animate__animated animate__fadeIn">
+    
+                <!-- ── 1. TOP SECTION: 2 PANEL KARTU TABUNGAN (GRID) ── -->
+                <div class="grid grid-cols-2 gap-3.5 w-full">
+                    <!-- Panel Tabungan Utama -->
+                    <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center space-x-2 mb-2">
+                                <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+                                    <i class="fas fa-university"></i>
+                                </div>
+                                <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Tabungan Utama</span>
+                            </div>
+                            <h4 class="text-sm font-black text-gray-900" id="tabungan-utama-saldo">Rp 0</h4>
+                            <p class="text-[9px] text-gray-400 mt-0.5" id="tabungan-utama-target">Target: Rp 0</p>
                         </div>
-                        <div class="w-full bg-gray-100 rounded-full h-1.5">
-                            <div class="bg-blue-600 h-1.5 rounded-full" style="width: 70%"></div>
+                        
+                        <div class="space-y-1 mt-4">
+                            <div class="flex justify-between text-[10px] font-bold">
+                                <span class="text-gray-400">Progres</span>
+                                <span class="text-blue-600" id="tabungan-utama-persen">0%</span>
+                            </div>
+                            <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                <div id="tabungan-utama-bar" class="bg-blue-600 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel Tabungan Darurat -->
+                    <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center space-x-2 mb-2">
+                                <div class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-xs">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Dana Darurat</span>
+                            </div>
+                            <h4 class="text-sm font-black text-gray-900" id="tabungan-darurat-saldo">Rp 0</h4>
+                            <p class="text-[9px] text-gray-400 mt-0.5" id="tabungan-darurat-target">Target: Rp 0</p>
+                        </div>
+                        
+                        <div class="space-y-1 mt-4">
+                            <div class="flex justify-between text-[10px] font-bold">
+                                <span class="text-gray-400">Progres</span>
+                                <span class="text-rose-600" id="tabungan-darurat-persen">0%</span>
+                            </div>
+                            <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                <div id="tabungan-darurat-bar" class="bg-rose-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- ── 2. BOTTOM SECTION: PANEL RIWAYAT MUTASI GRUP PER TANGGAL ── -->
+                <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-xs w-full">
+                    <div class="flex items-center justify-between mb-3.5 px-0.5">
+                        <h3 class="text-xs font-black text-gray-800 uppercase tracking-wider">Riwayat Tabungan & Mutasi</h3>
+                        <i class="fas fa-exchange-alt text-gray-400 text-xs"></i>
+                    </div>
+
+                    <!-- Kontainer List Riwayat Kelompok Tanggal -->
+                    <div id="container-riwayat-mutasi-tabungan" class="space-y-4">
+                        <!-- Data dinamis akan dimasukkan oleh fungsi JavaScript di bawah -->
+                        <div class="flex flex-col items-center justify-center py-8 text-center text-gray-400">
+                            <i class="fas fa-receipt text-xl mb-1.5 text-gray-300"></i>
+                            <p class="text-[10px] font-bold">Memuat data transaksi...</p>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <div id="servis" class="tab-content w-full">
@@ -603,51 +660,54 @@
             </div>
         </div>
 
-        <div id="modal-pilihan-transaksi" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center hidden p-4">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden transform transition-all duration-300">
-                <div class="bg-gradient-to-r from-slate-800 to-slate-900 px-5 py-4 flex justify-between items-center text-white">
-                    <div>
-                        <h3 class="font-bold text-sm tracking-wide">Pilih Jenis Catatan</h3>
-                        <p class="text-[10px] text-slate-400">Tentukan tipe transaksi yang ingin dibukukan</p>
+        <!-- MODAL PILIHAN TRANSAKSI REKAP (GRID MENDATAR KE SAMPING - KEMBAR IDENTIK) -->
+        <div id="modal-pilihan-transaksi" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-xs transition-opacity duration-300 p-4">
+            <!-- Kontainer Panel Melayang -->
+            <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-xl transform transition-all duration-300 scale-100 animate__animated animate__zoomIn animate__fast">
+                
+                <!-- Header Modal -->
+                <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-6 h-6 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <h3 class="text-xs font-black text-gray-800 uppercase tracking-wider">Pilih Jenis Catatan</h3>
                     </div>
-                    <button onclick="window.tutupPilihanTransaksi()" class="text-gray-400 hover:text-white text-lg p-1">
-                        <i class="fas fa-times"></i>
+                    <button onclick="window.tutupPilihanTransaksi()" class="w-6 h-6 rounded-full bg-gray-100 text-gray-400 hover:text-gray-600 flex items-center justify-center transition">
+                        <i class="fas fa-times text-xs"></i>
                     </button>
                 </div>
-                
-                <div class="p-5 bg-slate-50 space-y-3">
-                    <button onclick="window.pilihTransaksiMasuk()" class="w-full flex items-center gap-4 bg-white p-3.5 rounded-xl border border-gray-200 hover:border-blue-500 hover:bg-blue-50/30 transition text-left shadow-xs group">
-                        <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center text-green-600 font-bold text-lg shrink-0 group-hover:scale-105 transition">
+
+                <!-- Menu Pilihan (Grid 3 Kolom Mendatar Samping) -->
+                <div class="grid grid-cols-3 gap-2 py-2">
+                    
+                    <!-- Tombol Pilihan 1: Transaksi Masuk -->
+                    <button onclick="window.pilihTransaksiMasuk()" class="flex flex-col items-center justify-center p-3 bg-emerald-50/60 hover:bg-emerald-50 border border-emerald-100 rounded-2xl text-center group transition">
+                        <div class="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-xs shadow-sm group-hover:scale-105 transition-transform">
                             <i class="fas fa-file-invoice-dollar"></i>
                         </div>
-                        <div class="flex-1">
-                            <h4 class="font-bold text-xs text-gray-800">Transaksi Masuk (Pemasukan)</h4>
-                            <p class="text-[10px] text-gray-400 mt-0.5">Scan otomatis Slip Gaji, THR, KSP</p>
-                        </div>
-                        <i class="fas fa-chevron-right text-gray-300 group-hover:text-blue-500 text-xs transition"></i>
+                        <span class="text-[11px] font-black text-emerald-800 mt-2">Masuk</span>
+                        <span class="text-[8px] text-emerald-600 mt-0.5 leading-tight">Pemasukan & Slip Gaji</span>
                     </button>
 
-                    <button onclick="window.pilihTransaksiKeluar()" class="w-full flex items-center gap-4 bg-white p-3.5 rounded-xl border border-gray-200 hover:border-red-500 hover:bg-red-50/30 transition text-left shadow-xs group">
-                        <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center text-red-600 font-bold text-lg shrink-0 group-hover:scale-105 transition">
+                    <!-- Tombol Pilihan 2: Transaksi Keluar -->
+                    <button onclick="window.pilihTransaksiKeluar()" class="flex flex-col items-center justify-center p-3 bg-rose-50/60 hover:bg-rose-50 border border-rose-100 rounded-2xl text-center group transition">
+                        <div class="w-9 h-9 rounded-xl bg-rose-500 text-white flex items-center justify-center text-xs shadow-sm group-hover:scale-105 transition-transform">
                             <i class="fas fa-wallet"></i>
                         </div>
-                        <div class="flex-1">
-                            <h4 class="font-bold text-xs text-gray-800">Transaksi Keluar (Pengeluaran)</h4>
-                            <p class="text-[10px] text-gray-400 mt-0.5">Catat manual pengeluaran rutin, belanja, tagihan, dll</p>
-                        </div>
-                        <i class="fas fa-chevron-right text-gray-300 group-hover:text-red-500 text-xs transition"></i>
+                        <span class="text-[11px] font-black text-rose-800 mt-2">Keluar</span>
+                        <span class="text-[8px] text-rose-600 mt-0.5 leading-tight">Catat Pengeluaran Rutin</span>
                     </button>
 
-                    <button onclick="window.pilihTransaksiMutasi()" class="w-full flex items-center gap-4 bg-white p-3.5 rounded-xl border border-gray-200 hover:border-purple-500 hover:bg-purple-50/30 transition text-left shadow-xs group">
-                        <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-lg shrink-0 group-hover:scale-105 transition">
+                    <!-- Tombol Pilihan 3: Transfer / Mutasi Saldo -->
+                    <button onclick="window.pilihTransaksiMutasi()" class="flex flex-col items-center justify-center p-3 bg-purple-50/60 hover:bg-purple-50 border border-purple-100 rounded-2xl text-center group transition">
+                        <div class="w-9 h-9 rounded-xl bg-purple-500 text-white flex items-center justify-center text-xs shadow-sm group-hover:scale-105 transition-transform">
                             <i class="fas fa-exchange-alt"></i>
                         </div>
-                        <div class="flex-1">
-                            <h4 class="font-bold text-xs text-gray-800">Transfer / Mutasi Saldo</h4>
-                            <p class="text-[10px] text-gray-400 mt-0.5">Pindahkan dompet utama ke pos Target Tabungan / Servis</p>
-                        </div>
-                        <i class="fas fa-chevron-right text-gray-300 group-hover:text-purple-500 text-xs transition"></i>
+                        <span class="text-[11px] font-black text-purple-800 mt-2">Mutasi</span>
+                        <span class="text-[8px] text-purple-600 mt-0.5 leading-tight">Pindahan Antar Tabungan</span>
                     </button>
+
                 </div>
             </div>
         </div>
@@ -899,6 +959,258 @@
                         Tutup Pratinjau
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- MODAL PILIHAN TRANSAKSI TABUNGAN (MELAYANG DI TENGAH & ROUNDED SEMUA SISI) -->
+        <div id="modal-pilihan-tabungan" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-xs transition-opacity duration-300 p-4">
+            <!-- Kontainer Panel Melayang (Membulat Sempurna di Semua Sudut) -->
+            <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-xl transform transition-all duration-300 scale-100 animate__animated animate__zoomIn animate__fast">
+                
+                <!-- Header Modal -->
+                <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-6 h-6 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <h3 class="text-xs font-black text-gray-800 uppercase tracking-wider">Pilih Transaksi Tabungan</h3>
+                    </div>
+                    <button onclick="document.getElementById('modal-pilihan-tabungan').classList.add('hidden')" class="w-6 h-6 rounded-full bg-gray-100 text-gray-400 hover:text-gray-600 flex items-center justify-center transition">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Menu Pilihan (Grid 3 Kolom - Desain Asli Anda Tetap Dipertahankan) -->
+                <div class="grid grid-cols-3 gap-2 py-2">
+                    
+                    <!-- Tombol Pilihan 1: Mutasi Masuk / Antar Tabungan -->
+                    <button onclick="window.aksiBukaFormTabungan('mutasi_masuk')" class="flex flex-col items-center justify-center p-3 bg-emerald-50/60 hover:bg-emerald-50 border border-emerald-100 rounded-2xl text-center group transition">
+                        <div class="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-xs shadow-sm group-hover:scale-105 transition-transform">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <span class="text-[11px] font-black text-emerald-800 mt-2">Mutasi</span>
+                        <span class="text-[8px] text-emerald-600 mt-0.5 leading-tight">Mutasi Saldo Tabungan</span>
+                    </button>
+
+                    <!-- Tombol Pilihan 2: Transaksi Keluar -->
+                    <button onclick="window.aksiBukaFormTabungan('transaksi_keluar')" class="flex flex-col items-center justify-center p-3 bg-purple-50/60 hover:bg-purple-50 border border-purple-100 rounded-2xl text-center group transition">
+                        <div class="w-9 h-9 rounded-xl bg-purple-500 text-white flex items-center justify-center text-xs shadow-sm group-hover:scale-105 transition-transform">
+                            <i class="fas fa-external-link-alt"></i>
+                        </div>
+                        <span class="text-[11px] font-black text-purple-800 mt-2">Tarik Saldo</span>
+                        <span class="text-[8px] text-purple-600 mt-0.5 leading-tight">Dana Keluar Keperluan</span>
+                    </button>
+
+                    <!-- Tombol Pilihan 3: Buat / Ubah Target Tabungan -->
+                    <button onclick="window.aksiBukaFormTabungan('atur_target')" class="flex flex-col items-center justify-center p-3 bg-blue-50/60 hover:bg-blue-50 border border-blue-100 rounded-2xl text-center group transition">
+                        <div class="w-9 h-9 rounded-xl bg-blue-500 text-white flex items-center justify-center text-xs shadow-sm group-hover:scale-105 transition-transform">
+                            <i class="fas fa-bullseye"></i>
+                        </div>
+                        <span class="text-[11px] font-black text-blue-800 mt-2">Atur Target</span>
+                        <span class="text-[8px] text-blue-600 mt-0.5 leading-tight">Ubah Batasan Target</span>
+                    </button>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL MUTASI DANA INTERNAL (MENGGUNAKAN FUNGSI FORMAT RIBAAN LAMA) -->
+        <div id="modal-form-mutasi-tabungan" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-xs transition-opacity duration-300 p-4">
+            <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-xl transform transition-all duration-300 scale-100 animate__animated animate__zoomIn animate__fast">
+                
+                <!-- Header -->
+                <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-6 h-6 rounded-md bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-black text-gray-800 uppercase tracking-wider">Mutasi Saldo / Dana</h3>
+                            <p class="text-[9px] text-gray-400 font-medium">Pindahkan dana antar pos / dompet internal</p>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('modal-form-mutasi-tabungan').classList.add('hidden')" class="w-6 h-6 rounded-full bg-gray-100 text-gray-400 hover:text-gray-600 flex items-center justify-center transition">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Form Input -->
+                <form id="form-mutasi-tabungan" class="space-y-3" onsubmit="window.eksekusiSimpanMutasi(event)">
+                    
+                    <!-- Tanggal Transaksi -->
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Tanggal Transaksi</label>
+                        <input type="date" id="mutasi-tanggal" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 focus:outline-none focus:border-emerald-500 transition" required>
+                    </div>
+
+                    <!-- Grid Asal & Tujuan -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <!-- Mutasi Dari (Asal) -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Mutasi Dari</label>
+                            <select id="mutasi-asal" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-2 text-xs font-semibold text-gray-700 focus:outline-none focus:border-emerald-500 transition">
+                                <option value="dompet">💳 Dompet Utama</option>
+                                <option value="utama">🏦 Tabungan Utama</option>
+                                <option value="darurat">🚨 Tabungan Darurat</option>
+                            </select>
+                        </div>
+
+                        <!-- Untuk (Tujuan) -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Untuk (Tujuan)</label>
+                            <select id="mutasi-tujuan" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-2 text-xs font-semibold text-gray-700 focus:outline-none focus:border-emerald-500 transition">
+                                <option value="utama" selected>🏦 Tabungan Utama</option>
+                                <option value="darurat">🚨 Tabungan Darurat</option>
+                                <option value="dompet">💳 Dompet Utama</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Keterangan -->
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Keterangan / Catatan</label>
+                        <input type="text" id="mutasi-ket-tabungan" placeholder="Contoh: Sisihan gaji, pindah saldo" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 placeholder-gray-400 focus:outline-none focus:border-emerald-500 transition" required>
+                    </div>
+
+                    <!-- Nominal (Menggunakan Fungsi Format Ribuan Lama Anda) -->
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Nominal Mutasi Tabungan</label>
+                        <input type="text" id="mutasi-nominal-display" placeholder="0" oninput="window.formatInputRibuan(this)" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-gray-800 placeholder-gray-400 focus:outline-none focus:border-emerald-500 transition" required>
+                    </div>
+
+                    <!-- Tombol Aksi (Batal & Simpan Sejajar) -->
+                    <div class="grid grid-cols-2 gap-2 pt-2">
+                        <button type="button" onclick="document.getElementById('modal-form-mutasi-tabungan').classList.add('hidden')" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-2.5 rounded-xl text-xs transition">
+                            Batal
+                        </button>
+                        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md">
+                            Simpan Mutasi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+        <!-- ================================================================== -->
+        <!-- 2. MODAL TARIK SALDO / PENGELUARAN TABUNGAN                       -->
+        <!-- ================================================================== -->
+        <div id="modal-form-tarik-tabungan" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-xs transition-opacity duration-300 p-4">
+            <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-xl transform transition-all duration-300 scale-100 animate__animated animate__zoomIn animate__fast">
+                
+                <!-- Header -->
+                <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-6 h-6 rounded-md bg-purple-50 text-purple-600 flex items-center justify-center text-xs">
+                            <i class="fas fa-external-link-alt"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-black text-gray-800 uppercase tracking-wider">Tarik Saldo Tabungan</h3>
+                            <p class="text-[9px] text-gray-400 font-medium">Mencatat pengeluaran yang diambil dari pos tabungan</p>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('modal-form-tarik-tabungan').classList.add('hidden')" class="w-6 h-6 rounded-full bg-gray-100 text-gray-400 hover:text-gray-600 flex items-center justify-center transition">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Form Input -->
+                <form id="form-tarik-tabungan" class="space-y-3" onsubmit="window.eksekusiTarikSaldo(event)">
+                    
+                    <!-- Tanggal Transaksi -->
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Tanggal Tarik</label>
+                        <input type="date" id="tarik-tanggal" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 focus:outline-none focus:border-purple-500 transition" required>
+                    </div>
+
+                    <!-- Sumber Dana -->
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Sumber Tabungan</label>
+                        <select id="tarik-sumber-tabungan" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 focus:outline-none focus:border-purple-500 transition">
+                            <option value="utama">🏦 Tabungan Utama</option>
+                            <option value="darurat">🚨 Tabungan Darurat</option>
+                        </select>
+                    </div>
+
+                    <!-- Keterangan Keperluan -->
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Keterangan / Keperluan</label>
+                        <input type="text" id="tarik-ket-tabungan" placeholder="Contoh: Beli keperluan mendesak" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 placeholder-gray-400 focus:outline-none focus:border-purple-500 transition" required>
+                    </div>
+
+                    <!-- Nominal Keluar (Menggunakan format ribuan yang sudah ada) -->
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Nominal Tarik Tabungan</label>
+                        <input type="text" id="tarik-nominal-display" placeholder="0" oninput="window.formatInputRibuan(this)" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-gray-800 placeholder-gray-400 focus:outline-none focus:border-purple-500 transition" required>
+                    </div>
+
+                    <!-- Tombol Aksi -->
+                    <div class="grid grid-cols-2 gap-2 pt-2">
+                        <button type="button" onclick="document.getElementById('modal-form-tarik-tabungan').classList.add('hidden')" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-2.5 rounded-xl text-xs transition">
+                            Batal
+                        </button>
+                        <button type="submit" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md">
+                            Tarik Tabungan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+        <!-- ================================================================== -->
+        <!-- 3. MODAL ATUR TARGET / BATASAN DANA                               -->
+        <!-- ================================================================== -->
+        <div id="modal-form-target-tabungan" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-xs transition-opacity duration-300 p-4">
+            <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-xl transform transition-all duration-300 scale-100 animate__animated animate__zoomIn animate__fast">
+                
+                <!-- Header -->
+                <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-6 h-6 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+                            <i class="fas fa-bullseye"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-black text-gray-800 uppercase tracking-wider">Atur Target Batasan Dana</h3>
+                            <p class="text-[9px] text-gray-400 font-medium">Tentukan limit target capaian tabungan Anda</p>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('modal-form-target-tabungan').classList.add('hidden')" class="w-6 h-6 rounded-full bg-gray-100 text-gray-400 hover:text-gray-600 flex items-center justify-center transition">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Form Input -->
+                <form id="form-target-tabungan" class="space-y-3" onsubmit="window.eksekusiSimpanTarget(event)">
+                    
+                    <!-- Tanggal Perubahan / Pembaruan Target -->
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Tanggal Pembaruan</label>
+                        <input type="date" id="target-tanggal" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 focus:outline-none focus:border-blue-500 transition" required>
+                    </div>
+
+                    <!-- Target Tabungan Utama (Format Ribuan) -->
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Target Tabungan Utama (Rp)</label>
+                        <input type="text" id="target-nominal-utama-display" placeholder="0" oninput="window.formatInputRibuan(this)" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-gray-800 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition" required>
+                    </div>
+
+                    <!-- Target Tabungan Darurat (Format Ribuan) -->
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Target Tabungan Darurat (Rp)</label>
+                        <input type="text" id="target-nominal-darurat-display" placeholder="0" oninput="window.formatInputRibuan(this)" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-gray-800 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition" required>
+                    </div>
+
+                    <!-- Tombol Aksi (Batal & Simpan Sejajar) -->
+                    <div class="grid grid-cols-2 gap-2 pt-2">
+                        <button type="button" onclick="document.getElementById('modal-form-target-tabungan').classList.add('hidden')" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-2.5 rounded-xl text-xs transition">
+                            Batal
+                        </button>
+                        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md">
+                            Perbarui Target
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -1791,10 +2103,13 @@
                     break;
                     
                 case 'tabungan':
-                    if (typeof openTambahTabunganModal === 'function') {
-                        openTambahTabunganModal();
+                    // 🏦 GERBANG TABUNGAN: Membuka Modal Pilihan Menu Khusus Tabungan (3 Pilihan)
+                    const modalPilihanTabungan = document.getElementById("modal-pilihan-tabungan");
+                    if (modalPilihanTabungan) {
+                        modalPilihanTabungan.classList.remove("hidden");
                     } else {
-                        tampilAlert("Membuka Modal Tambah Target Tabungan (Form Pen)...");
+                        // Fallback aman jika elemen modal belum ter-render di HTML
+                        tampilAlert("Struktur modal pilihan transaksi tabungan tidak ditemukan.", "error");
                     }
                     break;
                     
@@ -3919,6 +4234,455 @@
 
             htmlKoleksi += `</div>`;
             container.innerHTML = htmlKoleksi;
+        };
+
+
+
+        window.renderKontenTabTabungan = async function() {
+            const containerRiwayat = document.getElementById('container-riwayat-mutasi-tabungan');
+            
+            // 1. Dapatkan Periode Aktif dari Dashboard Utama
+            // Skenario fallback jika state global Anda berbentuk string atau Date, disesuaikan ke format "juli_2026"
+            let bulanTahunFormat = "juli_2026"; 
+            let periodeTeksTampilan = "Juli 2026";
+
+            if (window.dompetQState && window.dompetQState.periodeAktif) {
+                // Contoh jika berbentuk objek Date:
+                const tglAktif = new Date(window.dompetQState.periodeAktif);
+                const namaBulanEng = tglAktif.toLocaleString('en-US', { month: 'long' }).toLowerCase(); // "july" -> disesuaikan jika db pakai indo "juli"
+                const namaBulanIndo = tglAktif.toLocaleString('id-ID', { month: 'long' }).toLowerCase(); // "juli"
+                const tahun = tglAktif.getFullYear();
+                
+                // Sesuaikan dengan penamaan dokumen di Firestore Anda (contoh: "juli_2026")
+                bulanTahunFormat = `${namaBulanIndo}_${tahun}`;
+                periodeTeksTampilan = tglAktif.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+            }
+
+            // Target Target default (bisa disesuaikan atau diambil dari dokumen profil/settings nantinya)
+            const targetUtama = 5000000;
+            const targetDarurat = 2000000;
+
+            // Inisialisasi awal nilai penampung
+            let saldoUtama = 0;
+            let saldoDarurat = 0;
+            let gabunganTransaksiMutasi = [];
+
+            try {
+                // 2. Ambil data dokumen Tabungan Utama & Darurat secara paralel dari Firestore
+                // Asumsi db adalah instance Firestore yang sudah di-init di app Anda
+                const docRefUtama = doc(db, "rekap_financal", `mutasi_tabungan1_${bulanTahunFormat}`);
+                const docRefDarurat = doc(db, "rekap_financal", `mutasi_tabungan2_${bulanTahunFormat}`);
+
+                const [snapUtama, snapDarurat] = await Promise.all([
+                    getDoc(docRefUtama),
+                    getDoc(docRefDarurat)
+                ]);
+
+                // Proses Data Tabungan Utama
+                if (snapUtama.exists()) {
+                    const dataU = snapUtama.data();
+                    saldoUtama = parseInt(dataU.totalBersihNetto || 0, 10);
+                    
+                    // Masukkan ke array riwayat jika ada transaksi valid
+                    gabunganTransaksiMutasi.push({
+                        id: snapUtama.id,
+                        ...dataU
+                    });
+                }
+
+                // Proses Data Tabungan Darurat
+                if (snapDarurat.exists()) {
+                    const dataD = snapDarurat.data();
+                    saldoDarurat = parseInt(dataD.totalBersihNetto || 0, 10);
+                    
+                    // Masukkan ke array riwayat jika ada transaksi valid
+                    gabunganTransaksiMutasi.push({
+                        id: snapDarurat.id,
+                        ...dataD
+                    });
+                }
+
+            } catch (error) {
+                console.error("Gagal mengambil data tabungan dari Firestore: ", error);
+            }
+
+            // 3. Hitung Presentase Kemajuan Target
+            // Menggunakan Math.abs jika saldo negatif, namun idealnya saldo tabungan bernilai positif
+            const persenUtama = targetUtama > 0 ? Math.min(Math.round((Math.max(0, saldoUtama) / targetUtama) * 100), 100) : 0;
+            const persenDarurat = targetDarurat > 0 ? Math.min(Math.round((Math.max(0, saldoDarurat) / targetDarurat) * 100), 100) : 0;
+
+            // Render Nilai ke Panel Atas Kartu
+            if(document.getElementById('tabungan-utama-saldo')) document.getElementById('tabungan-utama-saldo').innerText = `Rp ${saldoUtama.toLocaleString('id-ID')}`;
+            if(document.getElementById('tabungan-utama-target')) document.getElementById('tabungan-utama-target').innerText = `Target: Rp ${targetUtama.toLocaleString('id-ID')}`;
+            if(document.getElementById('tabungan-utama-persen')) document.getElementById('tabungan-utama-persen').innerText = `${persenUtama}%`;
+            if(document.getElementById('tabungan-utama-bar')) document.getElementById('tabungan-utama-bar').style.width = `${persenUtama}%`;
+
+            if(document.getElementById('tabungan-darurat-saldo')) document.getElementById('tabungan-darurat-saldo').innerText = `Rp ${saldoDarurat.toLocaleString('id-ID')}`;
+            if(document.getElementById('tabungan-darurat-target')) document.getElementById('tabungan-darurat-target').innerText = `Target: Rp ${targetDarurat.toLocaleString('id-ID')}`;
+            if(document.getElementById('tabungan-darurat-persen')) document.getElementById('tabungan-darurat-persen').innerText = `${persenDarurat}%`;
+            if(document.getElementById('tabungan-darurat-bar')) document.getElementById('tabungan-darurat-bar').style.width = `${persenDarurat}%`;
+
+
+            // 4. LOGIKA RENDERING LIST RIWAYAT DIKELOMPOKKAN PER TANGGAL
+            if (!containerRiwayat) return;
+
+            if (gabunganTransaksiMutasi.length === 0) {
+                containerRiwayat.innerHTML = `
+                    <div class="text-center py-6 text-gray-400">
+                        <p class="text-[10px] font-bold">Belum ada riwayat mutasi pada periode ${periodeTeksTampilan}</p>
+                    </div>`;
+                return;
+            }
+
+            // Mengubah format Firebase Timestamp ke JavaScript Date dan Mengurutkannya
+            const dapatkanWaktuMilidetik = (waktu) => {
+                if (!waktu) return 0;
+                if (typeof waktu.toDate === 'function') return waktu.toDate().getTime();
+                if (waktu.seconds) return waktu.seconds * 1000;
+                return new Date(waktu).getTime();
+            };
+
+            gabunganTransaksiMutasi.sort((a, b) => dapatkanWaktuMilidetik(b.waktuTransaksi) - dapatkanWaktuMilidetik(a.waktuTransaksi));
+
+            // Pengelompokan Berdasarkan Tanggal Teks ("2 Jul 2026")
+            const kelompokTanggal = {};
+            gabunganTransaksiMutasi.forEach(item => {
+                if (!item.waktuTransaksi) return;
+                const dObj = item.waktuTransaksi.seconds ? new Date(item.waktuTransaksi.seconds * 1000) : new Date(item.waktuTransaksi);
+                const tglStr = dObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                
+                if (!kelompokTanggal[tglStr]) {
+                    kelompokTanggal[tglStr] = [];
+                }
+                kelompokTanggal[tglStr].push(item);
+            });
+
+            // Render HTML Kelompok per Tanggal
+            let htmlHasil = "";
+            for (const tanggal in kelompokTanggal) {
+                htmlHasil += `
+                    <div class="space-y-1.5 animate__animated animate__fadeIn">
+                        <p class="text-[10px] font-black text-gray-400 px-1">${tanggal}</p>
+                        <div class="divide-y divide-gray-50 rounded-xl border border-gray-100 bg-white overflow-hidden shadow-xs">
+                `;
+
+                kelompokTanggal[tanggal].forEach(item => {
+                    const nominalMasuk = parseInt(item.pendapatan || 0, 10);
+                    const nominalKeluar = parseInt(item.potongan || 0, 10);
+                    const keterangan = item.keterangan || "Transaksi Tabungan";
+                    const kategori = item.kategori || "mutasi";
+                    
+                    let ikonHtml = "";
+                    let textNominal = "";
+                    let kelasWarna = "";
+
+                    // Menentukan tipe mutasi berdasarkan nilai pendapatan / potongan yang tertulis
+                    if (nominalMasuk > 0) {
+                        ikonHtml = `<div class="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-[10px]"><i class="fas fa-arrow-down"></i></div>`;
+                        textNominal = `+Rp ${nominalMasuk.toLocaleString('id-ID')}`;
+                        kelasWarna = "text-emerald-600 font-bold";
+                    } else {
+                        ikonHtml = `<div class="w-7 h-7 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center text-[10px]"><i class="fas fa-arrow-up"></i></div>`;
+                        textNominal = `-Rp ${nominalKeluar.toLocaleString('id-ID')}`;
+                        kelasWarna = "text-purple-600 font-semibold";
+                    }
+
+                    htmlHasil += `
+                        <div class="p-2.5 flex items-center justify-between gap-2 hover:bg-gray-50 transition">
+                            <div class="flex items-center space-x-2.5 min-w-0">
+                                ${ikonHtml}
+                                <div class="truncate">
+                                    <p class="text-xs font-bold text-gray-800 uppercase tracking-wide truncate">${keterangan}</p>
+                                    <p class="text-[9px] text-gray-400 font-medium capitalize">${kategori.replace('_', ' ')}</p>
+                                </div>
+                            </div>
+                            <div class="text-right flex-shrink-0">
+                                <p class="text-xs ${kelasWarna}">${textNominal}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                htmlHasil += `
+                        </div>
+                    </div>
+                `;
+            }
+
+            containerRiwayat.innerHTML = htmlHasil;
+        };
+
+        window.aksiBukaFormTabungan = function(jenis) {
+            // Sembunyikan modal pilihan transaksinya terlebih dahulu
+            document.getElementById('modal-pilihan-tabungan').classList.add('hidden');
+            
+            if (jenis === 'mutasi_masuk') {
+                if (typeof window.openModalMutasiTabungan === 'function') {
+                    window.openModalMutasiTabungan();
+                } else {
+                    tampilAlert("Membuka Form Input Mutasi Masuk / Top Up Tabungan...");
+                }
+            } else if (jenis === 'transaksi_keluar') {
+                if (typeof window.openModalKeluarTabungan === 'function') {
+                    window.openModalKeluarTabungan();
+                } else {
+                    tampilAlert("Membuka Form Input Pengeluaran Tabungan...");
+                }
+            } else if (jenis === 'atur_target') {
+                // ✨ AKSI BARU: Membuka modal pengaturan target nominal tabungan
+                if (typeof window.openModalPengaturanTargetTabungan === 'function') {
+                    window.openModalPengaturanTargetTabungan();
+                } else {
+                    tamatAturTargetFallback();
+                }
+            }
+        };
+
+        // Skenario pembukaan form target sederhana jika belum ada modal bawaan khusus
+        function tamatAturTargetFallback() {
+            // Anda bisa memicu pemicu bawaan "openTambahTabunganModal" lama Anda di sini 
+            if (typeof window.openTambahTabunganModal === 'function') {
+                window.openTambahTabunganModal();
+            } else {
+                tampilAlert("Membuka Form Konfigurasi Target Utama & Darurat...");
+            }
+        }
+
+        window.aksiBukaFormTabungan = function(jenis) {
+            // Tutup dulu modal pilihan utama agar tidak menumpuk
+            document.getElementById('modal-pilihan-tabungan').classList.add('hidden');
+            
+            // Buka modal spesifik sesuai pilihan transaksi
+            if (jenis === 'mutasi_masuk') {
+                document.getElementById('modal-form-mutasi-tabungan').classList.remove('hidden');
+            } else if (jenis === 'transaksi_keluar') {
+                document.getElementById('modal-form-tarik-tabungan').classList.remove('hidden');
+            } else if (jenis === 'atur_target') {
+                document.getElementById('modal-form-target-tabungan').classList.remove('hidden');
+                
+                // Opsional: Isi otomatis input target dengan nilai yang sudah ada saat ini jika fungsi tersedia
+                if (typeof dataTargetUtama !== 'undefined') {
+                    document.getElementById('target-nominal-utama').value = dataTargetUtama;
+                    document.getElementById('target-nominal-darurat').value = dataTargetDarurat;
+                }
+            }
+        };
+
+        // Fungsi untuk mengatur tanggal default ke hari ini (Gunakan ini saat memicu buka modal mutasi)
+        window.inisialisasiTanggalMutasi = function() {
+            const inputTanggal = document.getElementById('mutasi-tanggal');
+            if (inputTanggal) {
+                const hariIni = new Date();
+                const zonaWaktuLokal = new Date(hariIni.getTime() - (hariIni.getTimezoneOffset() * 60000));
+                inputTanggal.value = zonaWaktuLokal.toISOString().split('T')[0];
+            }
+        };
+
+        // Panggil fungsi inisialisasi agar tanggal langsung terisi hari ini saat script dimuat
+        window.inisialisasiTanggalMutasi();
+
+        // Fungsi Eksekusi Alur Mutasi Berdasarkan Pilihan Asal & Tujuan
+        window.eksekusiSimpanMutasi = function(event) {
+            event.preventDefault();
+
+            const tanggal = document.getElementById('mutasi-tanggal').value;
+            const asal = document.getElementById('mutasi-asal').value;
+            const tujuan = document.getElementById('mutasi-tujuan').value;
+            const keterangan = document.getElementById('mutasi-ket-tabungan').value;
+            
+            // Ambil angka asli dari input display (hilangkan karakter non-angka/titik separator)
+            const rawNominal = document.getElementById('mutasi-nominal-display').value.replace(/[^0-9]/g, "");
+            const nominal = parseInt(rawNominal, 10) || 0;
+
+            // Proteksi 1: Pastikan nominal lebih dari 0
+            if (nominal <= 0) {
+                alert("Masukkan nominal mutasi yang valid!");
+                return;
+            }
+
+            // Proteksi 2: Mencegah mutasi ke tempat yang sama
+            if (asal === tujuan) {
+                alert("Asal mutasi dan Tujuan mutasi tidak boleh sama!");
+                return;
+            }
+
+            // --- ALUR PROSES MUTASI SALDO ---
+            // Logika Validasi Saldo Asal Kecukupan Dana:
+            let saldoCukup = true;
+            if (asal === 'dompet' && typeof saldoDompet !== 'undefined' && saldoDompet < nominal) saldoCukup = false;
+            if (asal === 'utama' && typeof saldoUtama !== 'undefined' && saldoUtama < nominal) saldoCukup = false;
+            if (asal === 'darurat' && typeof saldoDarurat !== 'undefined' && saldoDarurat < nominal) saldoCukup = false;
+
+            if (!saldoCukup) {
+                alert("Maaf, saldo sumber tidak mencukupi untuk melakukan mutasi ini!");
+                return;
+            }
+
+            // Proses Pemindahan Nilai Variabel Saldo
+            if (asal === 'dompet') saldoDompet -= nominal;
+            if (asal === 'utama') saldoUtama -= nominal;
+            if (asal === 'darurat') saldoDarurat -= nominal;
+
+            if (tujuan === 'dompet') saldoDompet += nominal;
+            if (tujuan === 'utama') saldoUtama += nominal;
+            if (tujuan === 'darurat') saldoDarurat += nominal;
+
+            // --- SELESAI PROSES ---
+            alert(`Mutasi Berhasil!\nDana sebesar Rp ${nominal.toLocaleString("id-ID")} dipindahkan.`);
+
+            // Refresh visual view/dashboard aplikasi Anda
+            if (typeof renderDashboard === 'function') renderDashboard();
+            if (typeof simpanDataKeStorage === 'function') simpanDataKeStorage(); // jika menggunakan localStorage
+
+            // Reset Form dan Tutup Modal
+            document.getElementById('form-mutasi-tabungan').reset();
+            window.inisialisasiTanggalMutasi(); // Reset kembali tanggal ke hari ini
+            document.getElementById('modal-form-mutasi-tabungan').classList.add('hidden');
+        };
+
+        // Fungsi mengatur tanggal default penarikan ke hari ini
+        window.inisialisasiTanggalTarik = function() {
+            const inputTanggal = document.getElementById('tarik-tanggal');
+            if (inputTanggal) {
+                const hariIni = new Date();
+                const zonaWaktuLokal = new Date(hariIni.getTime() - (hariIni.getTimezoneOffset() * 60000));
+                inputTanggal.value = zonaWaktuLokal.toISOString().split('T')[0];
+            }
+        };
+
+        // Panggil fungsi inisialisasi agar tanggal langsung terisi hari ini saat script dimuat
+        window.inisialisasiTanggalTarik();
+
+        // Fungsi Eksekusi Penarikan Saldo Tabungan
+        window.eksekusiTarikSaldo = function(event) {
+            event.preventDefault();
+
+            const tanggal = document.getElementById('tarik-tanggal').value;
+            const sumber = document.getElementById('tarik-sumber-tabungan').value;
+            const keterangan = document.getElementById('tarik-ket-tabungan').value;
+            
+            // Konversi string format ribuan ke angka murni
+            const rawNominal = document.getElementById('tarik-nominal-display').value.replace(/[^0-9]/g, "");
+            const nominal = parseInt(rawNominal, 10) || 0;
+
+            // Proteksi 1: Validasi nominal angka valid
+            if (nominal <= 0) {
+                alert("Masukkan nominal penarikan yang valid!");
+                return;
+            }
+
+            // Proteksi 2: Cek ketersediaan saldo dari pos tabungan yang dipilih
+            let saldoCukup = true;
+            if (sumber === 'utama' && typeof saldoUtama !== 'undefined' && saldoUtama < nominal) saldoCukup = false;
+            if (sumber === 'darurat' && typeof saldoDarurat !== 'undefined' && saldoDarurat < nominal) saldoCukup = false;
+
+            if (!saldoCukup) {
+                alert(`Maaf, saldo Tabungan ${sumber === 'utama' ? 'Utama' : 'Darurat'} tidak mencukupi untuk penarikan ini!`);
+                return;
+            }
+
+            // Alur Potong Saldo Tabungan
+            if (sumber === 'utama') {
+                saldoUtama -= nominal;
+            } else if (sumber === 'darurat') {
+                saldoDarurat -= nominal;
+            }
+
+            // Alur Catat Transaksi ke Riwayat Tabungan (Sesuaikan nama array riwayat Anda jika berbeda, misal: listRiwayatTabungan)
+            if (typeof riwayatTabungan !== 'undefined' && Array.isArray(riwayatTabungan)) {
+                riwayatTabungan.push({
+                    id: Date.now(),
+                    tanggal: tanggal,
+                    tipe: 'keluar', // Menandakan pengeluaran/penarikan dana
+                    kategori: `Tarik Tabungan (${sumber === 'utama' ? 'Utama' : 'Darurat'})`,
+                    keterangan: keterangan,
+                    nominal: nominal
+                });
+            }
+
+            // --- SELESAI PROSES ---
+            alert(`Penarikan Berhasil!\nSaldo Tabungan ${sumber === 'utama' ? 'Utama' : 'Darurat'} terpotong sebesar Rp ${nominal.toLocaleString("id-ID")}.`);
+
+            // Refresh visual view/dashboard dan local storage jika fungsi tersebut tersedia
+            if (typeof renderDashboard === 'function') renderDashboard();
+            if (typeof simpanDataKeStorage === 'function') simpanDataKeStorage();
+
+            // Reset Form dan Sembunyikan Modal
+            document.getElementById('form-tarik-tabungan').reset();
+            window.inisialisasiTanggalTarik(); // Set ulang tanggal ke hari ini setelah di-reset
+            document.getElementById('modal-form-tarik-tabungan').classList.add('hidden');
+        };
+
+        // Variabel penampung nilai target global (Pastikan ini dideklarasikan di bagian atas script Anda)
+        window.targetUtama = window.targetUtama || 0;
+        window.targetDarurat = window.targetDarurat || 0;
+
+        // Fungsi mengatur tanggal default pembaruan target ke hari ini
+        window.inisialisasiTanggalTarget = function() {
+            const inputTanggal = document.getElementById('target-tanggal');
+            if (inputTanggal) {
+                const hariIni = new Date();
+                const zonaWaktuLokal = new Date(hariIni.getTime() - (hariIni.getTimezoneOffset() * 60000));
+                inputTanggal.value = zonaWaktuLokal.toISOString().split('T')[0];
+            }
+        };
+
+        // Jalankan otomatis saat awal agar elemen tanggal langsung terisi
+        window.inisialisasiTanggalTarget();
+
+        // Fungsi Eksekusi Simpan dan Kalkulasi Sinkronisasi Progress Bar
+        window.eksekusiSimpanTarget = function(event) {
+            event.preventDefault();
+
+            const tanggal = document.getElementById('target-tanggal').value;
+
+            // Bersihkan titik separator dari input text display untuk diubah ke angka murni
+            const rawUtama = document.getElementById('target-nominal-utama-display').value.replace(/[^0-9]/g, "");
+            const rawDarurat = document.getElementById('target-nominal-darurat-display').value.replace(/[^0-9]/g, "");
+
+            const nominalUtama = parseInt(rawUtama, 10) || 0;
+            const nominalDarurat = parseInt(rawDarurat, 10) || 0;
+
+            // Proteksi: Validasi input target tidak boleh bernilai negatif atau nol
+            if (nominalUtama <= 0 || nominalDarurat <= 0) {
+                alert("Masukkan nominal target yang valid (lebih dari 0)!");
+                return;
+            }
+
+            // Masukkan ke variabel global aplikasi
+            window.targetUtama = nominalUtama;
+            window.targetDarurat = nominalDarurat;
+
+            // --- LOGIKA UTAMA SINKRONISASI PROGRESS BAR & TEKS PANEL ---
+            // Pastikan variabel saldoUtama dan saldoDarurat di bawah ini sesuai dengan variabel aplikasi Anda
+            const nominalSaldoUtama = typeof saldoUtama !== 'undefined' ? saldoUtama : 0;
+            const nominalSaldoDarurat = typeof saldoDarurat !== 'undefined' ? saldoDarurat : 0;
+
+            // Hitung persentase batas maksimal 100% agar progress bar tidak meluap ke luar batas panel
+            const persenUtama = window.targetUtama > 0 ? Math.min(Math.round((nominalSaldoUtama / window.targetUtama) * 100), 100) : 0;
+            const persenDarurat = window.targetDarurat > 0 ? Math.min(Math.round((nominalSaldoDarurat / window.targetDarurat) * 100), 100) : 0;
+
+            // Masukkan fungsi pembaruan teks / UI visual render Anda ke dom HTML di sini.
+            // Contoh implementasi templat jika Anda menggunakan pembaruan DOM langsung:
+            /*
+            const txtTargetUtama = document.getElementById('txt-target-utama'); // elemen label "Target: Rp 0" Anda
+            if(txtTargetUtama) txtTargetUtama.innerText = `Target: Rp ${window.targetUtama.toLocaleString('id-ID')}`;
+            
+            const barUtama = document.getElementById('bar-progress-utama'); // elemen progress bar Tailwind Anda
+            if(barUtama) barUtama.style.width = `${persenUtama}%`;
+            */
+
+            // --- SELESAI PROSES ---
+            alert(`Target Berhasil Diperbarui!\nTarget Utama: Rp ${window.targetUtama.toLocaleString("id-ID")}\nTarget Darurat: Rp ${window.targetDarurat.toLocaleString("id-ID")}`);
+
+            // Panggil fungsi render utama dashboard Anda agar visual grafik & teks langsung berubah seketika
+            if (typeof renderDashboard === 'function') renderDashboard();
+            if (typeof simpanDataKeStorage === 'function') simpanDataKeStorage(); // Menyimpan konfigurasi limit baru ke localStorage
+
+            // Reset Form dan Tutup Modal
+            document.getElementById('form-target-tabungan').reset();
+            window.inisialisasiTanggalTarget(); // Amankan kembali nilai default tanggal
+            document.getElementById('modal-form-target-tabungan').classList.add('hidden');
         };
     </script>
 </body>
