@@ -1746,6 +1746,9 @@
                         console.log("📥 Memicu penarikan data Firestore single-stream...");
                         await muatRekapFinansialDashboard(user.uid);
                     }
+                    if (typeof window.muatDataKendaraanDariFirestore === 'function') {
+                        await window.muatDataKendaraanDariFirestore();
+                    }
                 } else {
                     if (window.sedangProsesRedirect) {
                         console.log("Kredensial sedang dijemput redirect, menunda pemanggilan fungsi kunci...");
@@ -2714,16 +2717,23 @@
 
         // Function 1: Menampilkan / Menyembunyikan Panel Servis sesuai pilihan Kategori
         window.toggleFormOtomotifServis = function() {
-        const kat = document.getElementById('out-kategori').value;
-        const panelServis = document.getElementById('panel-khusus-servis');
+            const kat = document.getElementById('out-kategori')?.value;
+            const panelServis = document.getElementById('panel-khusus-servis');
+            
+            const elKeteranganInput = document.getElementById('out-keterangan');
+            const containerKeterangan = elKeteranganInput ? elKeteranganInput.closest('div') : null;
 
-        if (kat === 'transportasi') {
-            panelServis.classList.remove('hidden');
-            window.updateDropdownKendaraanOptions();
-            window.updateKmAwalDariPilihanKendaraan();
-        } else {
-            panelServis.classList.add('hidden');
-        }
+            if (kat === 'transportasi') {
+                if (panelServis) panelServis.classList.remove('hidden');
+                if (containerKeterangan) containerKeterangan.classList.add('hidden');
+                
+                // Panggil perbarui dropdown
+                window.updateDropdownKendaraanOptions();
+                window.updateKmAwalDariPilihanKendaraan();
+            } else {
+                if (panelServis) panelServis.classList.add('hidden');
+                if (containerKeterangan) containerKeterangan.classList.remove('hidden');
+            }
         };
 
         // Function 2: Update Label Dropdown Kendaraan dari State Nama + Plat Nomor
@@ -2731,10 +2741,14 @@
             const select = document.getElementById('out-servis-kendaraan');
             if (!select || !window.dataKendaraan) return;
 
+            const k1 = window.dataKendaraan[1];
+            const k2 = window.dataKendaraan[2];
+            const k3 = window.dataKendaraan[3];
+
             select.innerHTML = `
-                <option value="1">${window.dataKendaraan[1]?.nama || 'Kendaraan 1'} (${window.dataKendaraan[1]?.plat || ''})</option>
-                <option value="2">${window.dataKendaraan[2]?.nama || 'Kendaraan 2'} (${window.dataKendaraan[2]?.plat || ''})</option>
-                <option value="3">${window.dataKendaraan[3]?.nama || 'Kendaraan 3'} (${window.dataKendaraan[3]?.plat || ''})</option>
+                <option value="1">${k1?.nama || 'Kendaraan 1'} ${k1?.plat ? '(' + k1.plat + ')' : ''}</option>
+                <option value="2">${k2?.nama || 'Kendaraan 2'} ${k2?.plat ? '(' + k2.plat + ')' : ''}</option>
+                <option value="3">${k3?.nama || 'Kendaraan 3'} ${k3?.plat ? '(' + k3.plat + ')' : ''}</option>
             `;
         };
 
@@ -2770,31 +2784,19 @@
         if (disp) disp.innerText = `${trip.toLocaleString('id-ID')} KM`;
         };
 
-        // Toggle Tampilan Panel Otomotif
-        window.toggleFormOtomotifServis = function() {
-            const kat = document.getElementById('out-kategori')?.value;
-            const panelServis = document.getElementById('panel-khusus-servis');
-            
-            // Ambil elemen wrapper / container input keterangan (sesuaikan ID jika ada)
-            const elKeteranganInput = document.getElementById('out-keterangan');
-            const containerKeterangan = elKeteranganInput ? elKeteranganInput.closest('div') : null;
+        // 4. FUNGSI UPDATE TAMPILAN HEADER PANEL SERVIS
+        window.perbaruiTampilanIdentitasKendaraanUI = function() {
+            if (!window.dataKendaraan) return;
 
-            if (kat === 'transportasi') {
-                if (panelServis) panelServis.classList.remove('hidden');
-                
-                // Sembunyikan field keterangan manual agar modal lebih pendek di HP
-                if (containerKeterangan) containerKeterangan.classList.add('hidden');
-                
-                window.updateDropdownKendaraanOptions();
-                window.updateKmAwalDariPilihanKendaraan();
-            } else {
-                if (panelServis) panelServis.classList.add('hidden');
-                
-                // Tampilkan kembali field keterangan untuk kategori selain transportasi
-                if (containerKeterangan) containerKeterangan.classList.remove('hidden');
+            for (let i = 1; i <= 3; i++) {
+                const kData = window.dataKendaraan[i];
+                const elJudul = document.getElementById(`servis-v${i}-nama-plat`);
+                if (elJudul && kData) {
+                    elJudul.innerText = `${kData.nama} - ${kData.plat}`;
+                }
             }
         };
-
+        
         // --- KONTROL ROUTING UNTUK MODAL MUTASI ---
         window.pilihTransaksiMutasi = function() {
             window.tutupPilihanTransaksi();
@@ -5595,19 +5597,19 @@
                     const data = await res.json();
                     const fields = data.fields || {};
 
-                    // Map field Firestore ke State Lokal Global
+                    // Map field Firestore ke State Lokal
                     window.dataKendaraan = {
                         1: { 
                             nama: fields.v1_nama?.stringValue || "Kendaraan 1", 
-                            plat: fields.v1_plat?.stringValue || "G 1081 AZ" 
+                            plat: fields.v1_plat?.stringValue || "" 
                         },
                         2: { 
                             nama: fields.v2_nama?.stringValue || "Kendaraan 2", 
-                            plat: fields.v2_plat?.stringValue || "H 4663 AEW" 
+                            plat: fields.v2_plat?.stringValue || "" 
                         },
                         3: { 
                             nama: fields.v3_nama?.stringValue || "Kendaraan 3", 
-                            plat: fields.v3_plat?.stringValue || "H 3129 HW" 
+                            plat: fields.v3_plat?.stringValue || "" 
                         }
                     };
                 }
@@ -5615,16 +5617,17 @@
                 console.error("Gagal memuat identitas kendaraan dari Firestore:", err);
             }
 
-            // Default fallback jika data di Firestore belum ada
+            // Jika Firestore kosong / gagal, gunakan fallback
             if (!window.dataKendaraan) {
                 window.dataKendaraan = {
-                    1: { nama: "Kendaraan 1", plat: "G 1081 AZ" },
-                    2: { nama: "Kendaraan 2", plat: "H 4663 AEW" },
-                    3: { nama: "Kendaraan 3", plat: "H 3129 HW" }
+                    1: { nama: "Kendaraan 1", plat: "" },
+                    2: { nama: "Kendaraan 2", plat: "" },
+                    3: { nama: "Kendaraan 3", plat: "" }
                 };
             }
 
-            // Perbarui seluruh elemen UI yang terikat dengan data kendaraan
+            // SEGERA PERBARUI DROPDOWN DAN HEADER SERVIS SETELAH DATA DARI CLOUD DAPAT
+            window.updateDropdownKendaraanOptions();
             window.perbaruiTampilanIdentitasKendaraanUI();
         };
 
@@ -5634,9 +5637,11 @@
         window.perbaruiTampilanIdentitasKendaraanUI = function() {
             if (!window.dataKendaraan) return;
 
-            // A. Update Teks Header 3 Panel Kendaraan di Tab Servis
+            // A. Update Teks Judul Card Tab Servis (Mencakup id servis-v1-nama-plat dan label-k1)
             for (let i = 1; i <= 3; i++) {
                 const kData = window.dataKendaraan[i];
+                
+                // Cek beberapa kemungkinan ID elemen header di HTML
                 const elJudul = document.getElementById(`servis-v${i}-nama-plat`);
                 const elNama = document.getElementById(`label-k${i}-nama`);
                 const elPlat = document.getElementById(`label-k${i}-plat`);
@@ -5646,8 +5651,23 @@
                 if (elPlat && kData) elPlat.innerText = kData.plat;
             }
 
-            // B. Update Dropdown Options di Modal Pengeluaran (Bensin & Servis)
+            // B. Update Dropdown Options
             window.updateDropdownKendaraanOptions();
+        };
+
+        window.updateDropdownKendaraanOptions = function() {
+            const select = document.getElementById('out-servis-kendaraan');
+            if (!select || !window.dataKendaraan) return;
+
+            const k1 = window.dataKendaraan[1];
+            const k2 = window.dataKendaraan[2];
+            const k3 = window.dataKendaraan[3];
+
+            select.innerHTML = `
+                <option value="1">${k1.nama} (${k1.plat})</option>
+                <option value="2">${k2.nama} (${k2.plat})</option>
+                <option value="3">${k3.nama} (${k3.plat})</option>
+            `;
         };
 
         // =========================================================
