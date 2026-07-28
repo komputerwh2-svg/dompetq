@@ -2458,35 +2458,51 @@
         window.tutupModalPengeluaran = function() {
             const modal = document.getElementById('modal-pengeluaran-baru');
             if (modal) {
+                // ─── FIX UTAMA: Cukup gunakan class hidden, HAPUS inline style display agar tidak 'ngunci' ───
                 modal.classList.add('hidden');
-                modal.style.display = 'none';
+                modal.style.display = ''; // Menghapus inline style display: none
                 
-                // ─── RESET ELEMEN INPUT FORM ───
+                // ─── RESET ELEMEN INPUT FORM UTAMA ───
                 if (document.getElementById('out-kategori')) document.getElementById('out-kategori').value = "belanja";
                 if (document.getElementById('out-keterangan')) document.getElementById('out-keterangan').value = "";
                 if (document.getElementById('out-nominal')) document.getElementById('out-nominal').value = "";
                 
+                // Kembalikan tampilan kontainer Keterangan ke kondisi muncul (visible)
+                const elKeteranganInput = document.getElementById('out-keterangan');
+                if (elKeteranganInput) {
+                    const containerKeterangan = elKeteranganInput.closest('div');
+                    if (containerKeterangan) containerKeterangan.classList.remove('hidden');
+                }
+
                 // ─── RESET PANEL KHUSUS SERVIS & KENDARAAN ───
                 const panelServis = document.getElementById('panel-khusus-servis');
                 if (panelServis) panelServis.classList.add('hidden');
 
+                // Reset Form Servis
                 if (document.getElementById('out-servis-kendaraan')) document.getElementById('out-servis-kendaraan').value = "1";
                 if (document.getElementById('out-servis-km-awal')) document.getElementById('out-servis-km-awal').value = "";
                 if (document.getElementById('out-servis-km-akhir')) document.getElementById('out-servis-km-akhir').value = "";
                 if (document.getElementById('out-servis-trip-display')) document.getElementById('out-servis-trip-display').innerText = "0 KM";
 
+                // Reset Form Bensin (Tambahan agar lengkap)
+                if (document.getElementById('out-bensin-harga')) document.getElementById('out-bensin-harga').value = "";
+                if (document.getElementById('out-bensin-liter')) document.getElementById('out-bensin-liter').value = "";
+                if (document.getElementById('out-bensin-km-sebelumnya')) document.getElementById('out-bensin-km-sebelumnya').value = "";
+                if (document.getElementById('out-bensin-km-baru')) document.getElementById('out-bensin-km-baru').value = "";
+                if (document.getElementById('out-bensin-trip-display')) document.getElementById('out-bensin-trip-display').innerText = "0 KM";
+
+                // Reset Radio Button ke 'bensin'
+                const radioBensin = document.querySelector('input[name="sub_kategori_kendaraan"][value="bensin"]');
+                if (radioBensin) radioBensin.checked = true;
+
                 // ─── UTAMA: Kembalikan fungsi tombol simpan ke mode awal (Tambah Baru) ───
-                const btnSimpan = modal.querySelector('button[onclick*="prosesUpdateTransaksiUmum"]') || modal.querySelector('button[onclick*="simpanPengeluaranManual"]');
+                const btnSimpan = modal.querySelector('button[onclick*="prosesUpdateTransaksiUmum"]') || 
+                                modal.querySelector('button[onclick*="simpanPengeluaranManual"]') ||
+                                document.getElementById('btn-simpan-pengeluaran');
+                                
                 if (btnSimpan) {
                     btnSimpan.innerHTML = `<i class="fas fa-save"></i> Simpan Pengeluaran`;
                     btnSimpan.setAttribute('onclick', 'window.simpanPengeluaranManual()');
-                }
-
-                const elKeteranganInput = document.getElementById('out-keterangan');
-                if (elKeteranganInput) {
-                    const containerKeterangan = elKeteranganInput.closest('div');
-                    if (containerKeterangan) containerKeterangan.classList.remove('hidden');
-                    elKeteranganInput.value = "";
                 }
             }
             
