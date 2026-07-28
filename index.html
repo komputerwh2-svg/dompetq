@@ -3807,7 +3807,8 @@
                             const pendapatan = parseInt(fields.pendapatan?.integerValue || fields.pendapatan?.stringValue || 0);
                             const potongan = parseInt(fields.potongan?.integerValue || fields.potongan?.stringValue || 0);
                             const netto = parseInt(fields.totalBersihNetto?.integerValue || fields.totalBersihNetto?.stringValue || 0);
-                            const kategoriRaw = fields.kategori?.stringValue || "umum";
+                            
+                            const kategoriRaw = (fields.kategori?.stringValue || "umum").toLowerCase();
                             const subKategori = (fields.subKategori?.stringValue || fields.sub_kategori?.stringValue || "").toLowerCase();
                             const kategori = kategoriRaw.toUpperCase();
                             const keterangan = fields.keterangan?.stringValue || "Transaksi Tanpa Memo";
@@ -3827,8 +3828,8 @@
                             }
 
                             // 🚀 REVISI LOGIKA KALKULASI PINTAR (ANTI DOUBLE-CUT)
-                            const isSlipDokumen = ["gaji", "thr", "ksp"].includes(kategoriRaw.toLowerCase());
-                            const isMutasi = kategoriRaw.toLowerCase().startsWith("mutasi_");
+                            const isSlipDokumen = ["gaji", "thr", "ksp"].includes(kategoriRaw);
+                            const isMutasi = kategoriRaw.startsWith("mutasi_");
 
                             if (isSlipDokumen) {
                                 totalPemasukan += netto > 0 ? netto : (pendapatan - potongan);
@@ -3846,11 +3847,11 @@
                                 let warnaNominal = "text-emerald-600 font-black text-xs"; 
                                 let teksNominal = "";
                                 let jenisTransaksi = ""; 
-                                let badgeSubDetail = ""; // Untuk keterangan khusus Bensin / Servis
+                                let badgeSubDetail = ""; 
 
-                                // Deteksi Jenis & Sub-Kategori Kendaraan
-                                const isBensin = subKategori.includes("bensin") || subKategori.includes("bbm") || kategoriRaw.toLowerCase().includes("bensin");
-                                const isServis = subKategori.includes("servis") || kategoriRaw.toLowerCase().includes("servis");
+                                // 🔍 DETEKSI PRESISI UNTUK KATEGORI TRANSPORTASI / BENSIN / SERVIS
+                                const isBensin = subKategori.includes("bensin") || subKategori.includes("bbm") || kategoriRaw.includes("bensin") || (kategoriRaw === "transportasi" && subKategori !== "servis");
+                                const isServis = subKategori.includes("servis") || kategoriRaw.includes("servis");
 
                                 if (isSlipDokumen) {
                                     iconClass = "fas fa-arrow-up";
@@ -3859,7 +3860,15 @@
                                     teksNominal = `+Rp ${nominalTampil.toLocaleString('id-ID')}`;
                                     jenisTransaksi = "slip";
                                 } else if (potongan > 0) {
-                                    if (isBensin) {
+                                    if (isServis) {
+                                        iconClass = "fas fa-tools";
+                                        iconBg = "bg-amber-50 text-amber-600";
+                                        warnaNominal = "text-amber-700 font-black text-xs";
+                                        jenisTransaksi = "servis";
+
+                                        let infoTrip = tripKM ? `Trip: ${tripKM} KM` : (kmOdometer ? `KM: ${kmOdometer}` : "Servis");
+                                        badgeSubDetail = `<span class="inline-block mt-0.5 text-[9px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded">${infoTrip}</span>`;
+                                    } else if (isBensin) {
                                         iconClass = "fas fa-gas-pump";
                                         iconBg = "bg-blue-50 text-blue-600";
                                         warnaNominal = "text-blue-700 font-black text-xs";
@@ -3868,14 +3877,6 @@
                                         let infoBBM = jenisBBM ? `${jenisBBM}` : "BBM";
                                         let infoLiter = jumlahLiter ? ` • ${jumlahLiter}L` : "";
                                         badgeSubDetail = `<span class="inline-block mt-0.5 text-[9px] font-bold bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded">${infoBBM}${infoLiter}</span>`;
-                                    } else if (isServis) {
-                                        iconClass = "fas fa-tools";
-                                        iconBg = "bg-amber-50 text-amber-600";
-                                        warnaNominal = "text-amber-700 font-black text-xs";
-                                        jenisTransaksi = "servis";
-
-                                        let infoTrip = tripKM ? `Trip: ${tripKM} KM` : (kmOdometer ? `KM: ${kmOdometer}` : "Servis");
-                                        badgeSubDetail = `<span class="inline-block mt-0.5 text-[9px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded">${infoTrip}</span>`;
                                     } else if (isMutasi) {
                                         iconClass = "fas fa-exchange-alt";
                                         iconBg = "bg-purple-50 text-purple-600";
@@ -3893,7 +3894,7 @@
                                     jenisTransaksi = "pemasukan_manual";
                                 }
 
-                                // Mengambil ID dokumen Firestore secara aman untuk parameter aksi
+                                // Mengambil ID dokumen Firestore
                                 const namaPath = doc.name || "";
                                 const idDokumen = namaPath.split('/').pop() || "";
 
@@ -3907,7 +3908,7 @@
                                     tanggalSebelumnya = tanggalTampil; 
                                 }
 
-                                // ─── 2. BARIS DETAIL TRANSAKSI, NOMINAL DI BAWAH, AKSI DI KANAN ───
+                                // ─── 2. BARIS DETAIL TRANSAKSI ───
                                 htmlRiwayatSuntik += `
                                     <div class="flex items-center justify-between py-3 hover:bg-gray-50/50 px-2 -mx-2 rounded-xl transition gap-3 border-b border-gray-100/50 last:border-0">
                                         <div class="flex items-center space-x-3 min-w-0 flex-1">
