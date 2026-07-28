@@ -865,7 +865,6 @@
                         <span style="font-size: 20px;">⛽</span>
                         <h3 style="margin: 0; font-size: 16px; color: #1e293b; font-weight: 700;">Pengaturan Harga BBM</h3>
                     </div>
-                    <button onclick="window.tutupModalPengaturanBBM()" style="border: none; background: transparent; font-size: 20px; cursor: pointer; color: #94a3b8;">&times;</button>
                 </div>
 
                 <!-- Input Harga Pertalite -->
@@ -965,9 +964,9 @@
 
         <!-- MODAL CATAT PENGELUARAN BARU -->
         <div id="modal-pengeluaran-baru" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end justify-center sm:items-center hidden p-0 sm:p-4 overflow-y-auto">
-            <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 flex flex-col max-h-[92vh] sm:max-h-[85vh] my-auto">
+            <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 flex flex-col max-h-[90vh] sm:max-h-[85vh] my-auto">
                 
-                <!-- Header Modal -->
+                <!-- Header Modal (Sticky Top) -->
                 <div class="bg-gradient-to-r from-red-700 to-red-800 px-4 py-3.5 sm:px-5 flex justify-between items-center text-white shrink-0">
                     <div>
                         <h3 class="font-bold text-sm sm:text-base tracking-wide">Catat Pengeluaran Baru</h3>
@@ -978,7 +977,7 @@
                     </button>
                 </div>
 
-                <!-- Body Form -->
+                <!-- Body Form (Area Scrollable) -->
                 <div class="p-4 sm:p-5 bg-slate-50 space-y-4 overflow-y-auto flex-1 text-xs">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div class="space-y-1.5">
@@ -987,7 +986,7 @@
                                 <option value="belanja">Belanja Bulanan</option>
                                 <option value="tagihan">Tagihan & Pulsa</option>
                                 <option value="konsumsi">Makanan & Minuman</option>
-                                <option value="transportasi">Bensin & Kendaraan</option>
+                                <option value="transportasi">Kendaraan</option>
                                 <option value="hiburan">Hiburan & Rekreasi</option>
                                 <option value="lainnya">Kebutuhan Lainnya</option>
                             </select>
@@ -1044,15 +1043,15 @@
                                 </div>
                             </div>
 
-                            <!-- 2. HARGA / LITER & JUMLAH LITER TERKONVERSI -->
+                            <!-- 2. NOMINAL BAYAR MANUAL & JUMLAH LITER TERKONVERSI -->
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
-                                    <label class="block text-[10px] font-bold text-blue-900 mb-1">Harga / Liter (Rp):</label>
-                                    <input type="text" id="out-bensin-harga" readonly class="w-full px-2.5 py-1.5 bg-gray-100 border border-blue-300 rounded-lg text-xs font-bold text-gray-700 outline-none cursor-not-allowed" value="10.000">
+                                    <label class="block text-[10px] font-bold text-blue-900 mb-1">Nominal Bayar (Rp):</label>
+                                    <input type="text" id="out-bensin-bayar" placeholder="0" oninput="if(window.formatRupiahBensin) window.formatRupiahBensin(this); if(window.kalkulasiLiterBensin) window.kalkulasiLiterBensin();" class="w-full px-2.5 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
                                 <div>
-                                    <label class="block text-[10px] font-bold text-blue-900 mb-1">Jumlah Liter (Oto):</label>
-                                    <input type="text" id="out-bensin-liter" readonly class="w-full px-2.5 py-1.5 bg-blue-50 border border-blue-300 rounded-lg text-xs font-black text-blue-700 outline-none" placeholder="0.00 Liter">
+                                    <label class="block text-[10px] font-bold text-blue-900 mb-1">Harga / Liter (Oto):</label>
+                                    <input type="text" id="out-bensin-liter-info" readonly class="w-full px-2.5 py-1.5 bg-blue-100/70 border border-blue-300 rounded-lg text-xs font-black text-blue-800 outline-none cursor-not-allowed" value="10.000 / 0.00 Liter">
                                 </div>
                             </div>
 
@@ -1060,13 +1059,13 @@
                             <div>
                                 <label class="block text-[10px] font-bold text-blue-900 mb-1">Pilih Cepat Nominal Beli:</label>
                                 <div class="grid grid-cols-3 gap-2">
-                                    <button type="button" onclick="window.pilihNominalCepatBensin(20000)" class="py-1.5 border border-blue-400 bg-white text-blue-700 font-bold rounded-lg text-xs hover:bg-blue-50 transition-all shadow-sm">
+                                    <button type="button" onclick="window.pilihNominalCepatBensin(20000)" class="py-1.5 border border-blue-400 bg-white text-blue-700 font-bold rounded-lg text-xs hover:bg-blue-50 transition-all shadow-xs">
                                         20.000
                                     </button>
-                                    <button type="button" onclick="window.pilihNominalCepatBensin(50000)" class="py-1.5 border border-blue-400 bg-white text-blue-700 font-bold rounded-lg text-xs hover:bg-blue-50 transition-all shadow-sm">
+                                    <button type="button" onclick="window.pilihNominalCepatBensin(50000)" class="py-1.5 border border-blue-400 bg-white text-blue-700 font-bold rounded-lg text-xs hover:bg-blue-50 transition-all shadow-xs">
                                         50.000
                                     </button>
-                                    <button type="button" onclick="window.pilihNominalCepatBensin(100000)" class="py-1.5 border border-blue-400 bg-white text-blue-700 font-bold rounded-lg text-xs hover:bg-blue-50 transition-all shadow-sm">
+                                    <button type="button" onclick="window.pilihNominalCepatBensin(100000)" class="py-1.5 border border-blue-400 bg-white text-blue-700 font-bold rounded-lg text-xs hover:bg-blue-50 transition-all shadow-xs">
                                         100.000
                                     </button>
                                 </div>
@@ -1118,7 +1117,7 @@
                         <input type="text" id="out-keterangan" placeholder="Contoh: Bayar Wi-Fi, Beli beras, Servis Motor" class="w-full px-3 py-2.5 sm:py-2 bg-white border border-gray-300 rounded-xl font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-red-500 shadow-sm text-xs">
                     </div>
 
-                    <!-- Nominal Pengeluaran -->
+                    <!-- Nominal Pengeluaran Utama -->
                     <div class="space-y-1.5">
                         <label class="block text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider text-red-600">Nominal Pengeluaran:</label>
                         <div class="relative flex items-center">
@@ -1128,7 +1127,7 @@
                     </div>
                 </div>
 
-                <!-- Footer Modal -->
+                <!-- Footer Modal (Sticky Bottom / Selalu Terlihat) -->
                 <div class="bg-gray-100 px-4 py-3 sm:px-5 flex justify-between items-center border-t border-gray-200 shrink-0 pb-5 sm:pb-3">
                     <button onclick="window.tutupModalPengeluaran()" class="px-4 py-2 sm:py-1.5 bg-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-400 transition shadow-sm text-xs">
                         Batal
@@ -2631,20 +2630,19 @@
         // State BBM Global
         window.jenisBBMAktif = "Pertalite";
 
-        // 1. Fungsi Switch Jenis BBM (Pertalite / Pertamax)
+        // Format Ribuan untuk Input Bayar Manual
+        window.formatRupiahBensin = function(input) {
+            let value = input.value.replace(/\D/g, '');
+            input.value = value ? parseInt(value, 10).toLocaleString('id-ID') : '';
+        };
+
+        // 1. Pilih Jenis BBM (Pertalite / Pertamax)
         window.pilihJenisBBMForm = function(jenis) {
             window.jenisBBMAktif = jenis;
 
             const btnPertalite = document.getElementById('btn-bbm-pertalite');
             const btnPertamax = document.getElementById('btn-bbm-pertamax');
-            const inputHarga = document.getElementById('out-bensin-harga');
 
-            // Ambil rate harga dari localStorage atau config global
-            const hargaPertalite = parseInt(localStorage.getItem('dompetq_harga_pertalite') || "10000", 10);
-            const hargaPertamax = parseInt(localStorage.getItem('dompetq_harga_pertamax') || "12950", 10);
-            const hargaAktif = (jenis === 'Pertalite') ? hargaPertalite : hargaPertamax;
-
-            // Toggle Style Tombol
             if (jenis === 'Pertalite') {
                 if (btnPertalite) btnPertalite.className = "py-1.5 px-3 border-2 border-green-500 bg-green-50 text-green-700 font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 transition-all";
                 if (btnPertamax) btnPertamax.className = "py-1.5 px-3 border border-gray-300 bg-white text-gray-600 font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 transition-all";
@@ -2653,37 +2651,47 @@
                 if (btnPertalite) btnPertalite.className = "py-1.5 px-3 border border-gray-300 bg-white text-gray-600 font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 transition-all";
             }
 
-            if (inputHarga) {
-                inputHarga.value = hargaAktif.toLocaleString('id-ID');
-            }
-
-            // Hitung ulang liter berdasarkan nominal bayar saat ini
             window.kalkulasiLiterBensin();
         };
 
-        // 2. Fungsi List Cepat Nominal (20.000 / 50.000 / 100.000)
+        // 2. Klik Nominal Cepat -> Mengisi Field Bayar Manual & Main Nominal
         window.pilihNominalCepatBensin = function(nominal) {
-            const elNominalUtama = document.getElementById('out-nominal') || document.getElementById('nominal-pengeluaran');
-            if (elNominalUtama) {
-                elNominalUtama.value = nominal.toLocaleString('id-ID');
-            }
+            const elBayar = document.getElementById('out-bensin-bayar');
+            const elMainNominal = document.getElementById('out-nominal');
+
+            if (elBayar) elBayar.value = nominal.toLocaleString('id-ID');
+            if (elMainNominal) elMainNominal.value = nominal.toLocaleString('id-ID');
+
             window.kalkulasiLiterBensin();
         };
 
-        // 3. Kalkulasi Otomatis Jumlah Liter
+        // 3. Kalkulasi Gabungan: "10.000 / 2.00 Liter" & Sinkronkan Nominal Utama
         window.kalkulasiLiterBensin = function() {
-            const elNominalUtama = document.getElementById('out-nominal') || document.getElementById('nominal-pengeluaran');
-            const elHarga = document.getElementById('out-bensin-harga');
-            const elLiter = document.getElementById('out-bensin-liter');
+            const elBayar = document.getElementById('out-bensin-bayar');
+            const elInfoLiter = document.getElementById('out-bensin-liter-info');
+            const elMainNominal = document.getElementById('out-nominal');
 
-            const nominalBayar = parseInt((elNominalUtama?.value || "0").replace(/\D/g, ''), 10) || 0;
-            const hargaPerLiter = parseInt((elHarga?.value || "0").replace(/\D/g, ''), 10) || 10000;
+            // Ambil harga BBM aktif dari Master / LocalStorage
+            const hargaPertalite = parseInt(localStorage.getItem('dompetq_harga_pertalite') || "10000", 10);
+            const hargaPertamax = parseInt(localStorage.getItem('dompetq_harga_pertamax') || "12950", 10);
+            const hargaAktif = (window.jenisBBMAktif === 'Pertalite') ? hargaPertalite : hargaPertamax;
 
-            if (nominalBayar > 0 && hargaPerLiter > 0) {
-                const totalLiter = (nominalBayar / hargaPerLiter).toFixed(2);
-                if (elLiter) elLiter.value = `${totalLiter} Liter`;
+            const nominalBayar = parseInt((elBayar?.value || "0").replace(/\D/g, ''), 10) || 0;
+
+            // Otomatis samakan Nominal Pengeluaran Utama dengan Nominal Bayar Bensin
+            if (elMainNominal && elBayar) {
+                elMainNominal.value = elBayar.value;
+            }
+
+            if (nominalBayar > 0 && hargaAktif > 0) {
+                const totalLiter = (nominalBayar / hargaAktif).toFixed(2);
+                if (elInfoLiter) {
+                    elInfoLiter.value = `${hargaAktif.toLocaleString('id-ID')} / ${totalLiter} Liter`;
+                }
             } else {
-                if (elLiter) elLiter.value = "0.00 Liter";
+                if (elInfoLiter) {
+                    elInfoLiter.value = `${hargaAktif.toLocaleString('id-ID')} / 0.00 Liter`;
+                }
             }
         };
 
