@@ -2724,10 +2724,17 @@
                     await window.muatRekapFinansialDashboard();
                 }
 
-                // Jika user sedang di Tab Servis, panggil reload data servis
+                // Jika user sedang di Tab Servis, panggil reload data servis dengan nilai STRING MURNI
                 if (kategori === "transportasi" && typeof window.prosesDataServisDariTransportasi === 'function') {
+                    const subMode = document.querySelector('input[name="sub_kategori_kendaraan"]:checked')?.value || "bensin";
+                    const idKendaraan = document.getElementById('out-servis-kendaraan')?.value || "1";
+                    
                     window.prosesDataServisDariTransportasi({
-                        ...payloadFields,
+                        kategori: kategori,
+                        keterangan: keterangan, // Ini sudah String murni hasil auto-generate
+                        subModeKendaraan: subMode,
+                        idKendaraan: idKendaraan,
+                        potongan: nominal,
                         waktuTransaksi: new Date().toISOString()
                     });
                 }
@@ -5536,73 +5543,138 @@
 
         // --- FUNGSI PROSES & RENDER TAB SERVIS DARI DOKUMEN OUT_TRANSPORTASI ---
         window.prosesDataServisDariTransportasi = function(dataTransportasi) {
-        /*
-            dataTransportasi adalah object dokumen 'out_transportasi_[bulan]_[tahun]' 
-            dari koleksi 'rekap_finansial'
-        */
-        
-        if (!dataTransportasi) {
-            window.renderTabServis([]);
-            return;
-        }
-
-        // Cek apakah di dalam dokumen out_transportasi terdapat list rincian/array item servis,
-        // atau merupakan single transaksi
-        let listServis = [];
-
-        // Jika Anda menyimpan array/list item di dalam dokumen out_transportasi
-        if (Array.isArray(dataTransportasi.listServis)) {
-            listServis = dataTransportasi.listServis;
-        } 
-        // Jika transaksi berbentuk tunggal
-        else {
-            const ket = dataTransportasi.keterangan || dataTransportasi.fields?.keterangan?.stringValue || "";
-            const potongan = parseInt(dataTransportasi.potongan || dataTransportasi.fields?.potongan?.integerValue || 0, 10);
-            const tgl = dataTransportasi.waktuTransaksi 
-                        ? new Date(dataTransportasi.waktuTransaksi.timestampValue || dataTransportasi.waktuTransaksi).toISOString().split('T')[0]
-                        : (dataTransportasi.tanggal || "-");
-
-            // Hanya ambil jika keterangannya mengandung kata 'servis' / 'service'
-            if (ket.toLowerCase().includes("servis") || ket.toLowerCase().includes("service")) {
-            // Deteksi kendaraan berdasarkan nama kendaraan di keterangan (misal: "Servis Vario")
-            let detectedId = "1"; // Default ke Kendaraan 1
-            if (ket.toLowerCase().includes("vario") || ket.toLowerCase().includes("v1")) detectedId = "1";
-            else if (ket.toLowerCase().includes("supra") || ket.toLowerCase().includes("v2")) detectedId = "2";
-            else if (ket.toLowerCase().includes("mobil") || ket.toLowerCase().includes("v3")) detectedId = "3";
-
-            listServis.push({
-                idKendaraan: detectedId,
-                tanggal: tgl,
-                potongan: potongan,
-                kmAwal: dataTransportasi.kmAwal || 0,
-                kmAkhir: dataTransportasi.kmAkhir || 0,
-                keterangan: ket
-            });
+            /*
+                dataTransportasi dapat berupa:
+                1. Objek dokumen Firestore REST API: { fields: { ... } }
+                2. Direct Payload JavaScript dari window.simpanPengeluaranManual()
+            */
+            
+            if (!dataTransportasi) {
+                if (typeof window.renderTabServis === 'function') {
+                    window.renderTabServis([]);
+                }
+                return;
             }
-        }
 
-        // Kirim data yang terfilter ke fungsi render UI Tab Servis
-        if (typeof window.renderTabServis === 'function') {
-            window.renderTabServis(listServis);
-        }
+            let listServis = [];
+
+            // Jika input berupa Array (kumpulan transaksi)
+            if (Array.isArray(dataTransportasi)) {
+                dataTransportasi.forEach(item => processSingleItem(item));
+            } 
+            // Jika input berupa Array di dalam properti listServis
+            else if (Array.isArray(dataTransportasi.listServis)) {
+                dataTransportasi.listServis.forEach(item => processSingleItem(item));
+            } 
+            // Jika berupa Objek Transaksi Tunggal
+            else {
+                processSingleItem(dataTransportasi);
+            }
+
+            // Fungsi Pembantu Ekstraksi Data Aman (Defensive Parsing)
+            function processSingleItem(item) {
+                if (!item) return;
+
+                // 1. Ekstrak Keterangan dengan Aman (String Murni vs Firestore Object)
+                let ket = "";
+                if (typeof item.keterangan === 'string') {
+                    ket = item.keterangan;
+                } else if (item.keterangan?.stringValue) {
+                    ket = item.keterangan.stringValue;
+                } else if (item.fields?.keterangan?.stringValue) {
+                    ket = item.fields.keterangan.stringValue;
+                }
+
+                const ketLower = ket.toLowerCase();
+
+                // 2. Ekstrak Sub-Mode Kendaraan (Bensin vs Servis)
+                let subMode = item.subModeKendaraan || item.fields?.subModeKendaraan?.stringValue || "";
+                
+                // Cek apakah transaksi termasuk kategori Servis
+                const isServis = subMode === "servis" || ketLower.includes("servis") || ketLower.includes("service");
+
+                if (isServis) {
+                    // 3. Ekstrak ID Kendaraan Secara Presisi (Daftar ID: 1, 2, atau 3)
+                    let idKendaraan = item.idKendaraan || item.fields?.idKendaraan?.stringValue;
+
+                    // Jika idKendaraan belum tersimpan, lakukan matching cerdas berdasarkan nama/plat di window.dataKendaraan
+                    if (!idKendaraan && window.dataKendaraan) {
+                        idKendaraan = "1"; // Default Fallback
+                        for (let id in window.dataKendaraan) {
+                            const k = window.dataKendaraan[id];
+                            const namaK = (k.nama || "").toLowerCase();
+                            const platK = (k.plat || "").toLowerCase().replace(/\s+/g, '');
+                            const ketClean = ketLower.replace(/\s+/g, '');
+
+                            if ((namaK && ketLower.includes(namaK)) || (platK && ketClean.includes(platK))) {
+                                idKendaraan = id.toString();
+                                break;
+                            }
+                        }
+                    }
+
+                    // 4. Ekstrak Potongan / Nominal
+                    const potongan = parseInt(
+                        item.potongan || 
+                        item.fields?.potongan?.integerValue || 
+                        item.totalBersihNetto || 
+                        item.fields?.totalBersihNetto?.integerValue || 
+                        0, 10
+                    );
+
+                    // 5. Ekstrak Tanggal
+                    let tgl = "-";
+                    const rawWaktu = item.waktuTransaksi || item.fields?.waktuTransaksi?.timestampValue;
+                    if (rawWaktu) {
+                        try {
+                            tgl = new Date(rawWaktu).toISOString().split('T')[0];
+                        } catch (e) {
+                            tgl = item.tanggal || "-";
+                        }
+                    } else if (item.tanggal) {
+                        tgl = item.tanggal;
+                    }
+
+                    // 6. Ekstrak Odometer / KM
+                    const kmAwal = parseInt(item.kmAwal || item.fields?.kmAwal?.integerValue || 0, 10);
+                    const kmAkhir = parseInt(item.kmAkhir || item.fields?.kmAkhir?.integerValue || 0, 10);
+
+                    listServis.push({
+                        idKendaraan: idKendaraan || "1",
+                        tanggal: tgl,
+                        potongan: Math.abs(potongan),
+                        kmAwal: kmAwal,
+                        kmAkhir: kmAkhir,
+                        keterangan: ket
+                    });
+                }
+            }
+
+            // Kirim data yang terfilter ke fungsi render UI Tab Servis
+            if (typeof window.renderTabServis === 'function') {
+                window.renderTabServis(listServis);
+            }
         };
 
-        // CONTOH INTEGRASI SAAT MEMBACA DOKUMEN REST API / FIRESTORE
+        // ─── INTEGRASI DENGAN LOADER FIRESTORE ───
         async function muatDataBulanTerpilih(bulanTahun) {
-        // Contoh: bulanTahun = "juli_2026"
-        // Ambil dokumen out_transportasi_[bulan]_[tahun]
-        
-        const docTransportasi = listDokumenRekap.find(doc => 
-            doc.id === `out_transportasi_${bulanTahun}` || 
-            doc.fields?.kategori?.stringValue === "transportasi"
-        );
+            if (!window.listDokumenRekap || !Array.isArray(window.listDokumenRekap)) {
+                if (typeof window.renderTabServis === 'function') window.renderTabServis([]);
+                return;
+            }
 
-        if (docTransportasi) {
-            // Ekstrak dan kirim ke handler tab servis
-            window.prosesDataServisDariTransportasi(docTransportasi);
-        } else {
-            window.renderTabServis([]);
-        }
+            // Filter dokumen transaksi yang merupakan kategori transportasi
+            const listDokumenTransportasi = window.listDokumenRekap.filter(doc => {
+                const idDoc = doc.id || "";
+                const kat = doc.fields?.kategori?.stringValue || doc.kategori || "";
+                return idDoc.startsWith("out_transportasi_") || kat === "transportasi";
+            });
+
+            if (listDokumenTransportasi.length > 0) {
+                window.prosesDataServisDariTransportasi(listDokumenTransportasi);
+            } else {
+                if (typeof window.renderTabServis === 'function') window.renderTabServis([]);
+            }
         }
 
         // =========================================================
