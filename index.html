@@ -2451,16 +2451,25 @@
 
         window.pilihTransaksiKeluar = function() {
             window.tutupPilihanTransaksi();
-            // Tampilkan modal pengeluaran baru
-            document.getElementById('modal-pengeluaran-baru').classList.remove('hidden');
+            
+            const modal = document.getElementById('modal-pengeluaran-baru');
+            if (modal) {
+                modal.style.display = ''; // Bersihkan inline style display: none jika ada
+                modal.classList.remove('hidden'); // Munculkan modal
+                
+                // Panggil penyesuaian UI & Dropdown Kendaraan
+                if (typeof window.toggleFormOtomotifServis === 'function') {
+                    window.toggleFormOtomotifServis();
+                }
+            }
         };
 
         window.tutupModalPengeluaran = function() {
             const modal = document.getElementById('modal-pengeluaran-baru');
             if (modal) {
-                // ─── FIX UTAMA: Cukup gunakan class hidden, HAPUS inline style display agar tidak 'ngunci' ───
+                // Cukup gunakan class hidden (Jangan pakai modal.style.display = 'none')
                 modal.classList.add('hidden');
-                modal.style.display = ''; // Menghapus inline style display: none
+                modal.style.display = ''; 
                 
                 // ─── RESET ELEMEN INPUT FORM UTAMA ───
                 if (document.getElementById('out-kategori')) document.getElementById('out-kategori').value = "belanja";
@@ -2484,7 +2493,7 @@
                 if (document.getElementById('out-servis-km-akhir')) document.getElementById('out-servis-km-akhir').value = "";
                 if (document.getElementById('out-servis-trip-display')) document.getElementById('out-servis-trip-display').innerText = "0 KM";
 
-                // Reset Form Bensin (Tambahan agar lengkap)
+                // Reset Form Bensin
                 if (document.getElementById('out-bensin-harga')) document.getElementById('out-bensin-harga').value = "";
                 if (document.getElementById('out-bensin-liter')) document.getElementById('out-bensin-liter').value = "";
                 if (document.getElementById('out-bensin-km-sebelumnya')) document.getElementById('out-bensin-km-sebelumnya').value = "";
@@ -2495,7 +2504,7 @@
                 const radioBensin = document.querySelector('input[name="sub_kategori_kendaraan"][value="bensin"]');
                 if (radioBensin) radioBensin.checked = true;
 
-                // ─── UTAMA: Kembalikan fungsi tombol simpan ke mode awal (Tambah Baru) ───
+                // ─── Kembalikan fungsi tombol simpan ke mode awal ───
                 const btnSimpan = modal.querySelector('button[onclick*="prosesUpdateTransaksiUmum"]') || 
                                 modal.querySelector('button[onclick*="simpanPengeluaranManual"]') ||
                                 document.getElementById('btn-simpan-pengeluaran');
