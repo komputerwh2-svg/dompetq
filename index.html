@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.5/dist/tesseract.min.js"></script>
+
     
     <style>
     /* ─── PENGATURAN TAB CONTENT ─── */
@@ -366,11 +367,172 @@
 
             </div>
 
-            <div id="servis" class="tab-content w-full">
-                <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-xs w-full">
-                    <h3 class="text-md font-bold text-gray-900 mb-2">Layanan Tambahan</h3>
-                    <p class="text-sm text-gray-500">Fitur kalkulator finansial, zakat, dan manajemen ekspor data.</p>
+            <!-- TAB SERVIS KENDARAAN -->
+            <div id="servis" class="tab-content w-full hidden pb-24">
+            
+            <!-- GRID 3 PANEL UTAMA KENDARAAN -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            
+            <!-- PANEL KENDARAAN 1 -->
+            <div onclick="bukaModalFormServis(1)" class="bg-white rounded-2xl p-4 shadow-xs border border-gray-200 relative cursor-pointer hover:border-blue-300 transition-all group">
+                <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-3">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <h3 id="servis-v1-nama-plat" class="font-bold text-gray-900 text-sm">Kendaraan 1 - B 1234 XXX</h3>
                 </div>
+                
+                <!-- Tombol Pensil Edit Identitas (Stop propagation agar tidak men-trigger klik kartu) -->
+                <button onclick="event.stopPropagation(); bukaModalEditKendaraan(1)" class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Edit Identitas Kendaraan">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                </button>
+                </div>
+
+                <!-- Tanggal Servis -->
+                <div class="grid grid-cols-2 gap-2 text-xs bg-gray-50 p-2.5 rounded-xl mb-3">
+                <div>
+                    <span class="text-gray-400 block text-[10px]">TGL SERVIS LALU</span>
+                    <span id="servis-v1-tgl-lalu" class="font-medium text-gray-600">-</span>
+                </div>
+                <div>
+                    <span class="text-gray-400 block text-[10px]">SERVIS TERBARU</span>
+                    <span id="servis-v1-tgl-baru" class="font-semibold text-blue-600">-</span>
+                </div>
+                </div>
+
+                <!-- Odometer / KM & Trip -->
+                <div class="grid grid-cols-3 gap-1 text-center bg-blue-50/50 p-2 rounded-xl mb-3 border border-blue-100/50">
+                <div>
+                    <span class="text-gray-400 block text-[9px]">KM AWAL</span>
+                    <span id="servis-v1-km-awal" class="font-bold text-gray-700 text-xs">0</span>
+                </div>
+                <div>
+                    <span class="text-gray-400 block text-[9px]">KM AKHIR</span>
+                    <span id="servis-v1-km-akhir" class="font-bold text-gray-700 text-xs">0</span>
+                </div>
+                <div class="border-l border-blue-200/60 pl-1">
+                    <span class="text-blue-500 block text-[9px] font-bold">TRIP</span>
+                    <span id="servis-v1-trip" class="font-extrabold text-blue-600 text-xs">0 KM</span>
+                </div>
+                </div>
+
+                <!-- Keterangan -->
+                <div>
+                <span class="text-gray-400 block text-[10px] mb-0.5">KETERANGAN / CATATAN</span>
+                <p id="servis-v1-ket" class="text-xs text-gray-600 italic bg-gray-50 p-2 rounded-lg min-h-[38px] line-clamp-2">Belum ada catatan servis.</p>
+                </div>
+            </div>
+
+            <!-- PANEL KENDARAAN 2 -->
+            <div onclick="bukaModalFormServis(2)" class="bg-white rounded-2xl p-4 shadow-xs border border-gray-200 relative cursor-pointer hover:border-emerald-300 transition-all group">
+                <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-3">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 bg-emerald-50 text-emerald-600 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <h3 id="servis-v2-nama-plat" class="font-bold text-gray-900 text-sm">Kendaraan 2 - B 5678 YYY</h3>
+                </div>
+                <button onclick="event.stopPropagation(); bukaModalEditKendaraan(2)" class="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Edit Identitas Kendaraan">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                </button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-xs bg-gray-50 p-2.5 rounded-xl mb-3">
+                <div>
+                    <span class="text-gray-400 block text-[10px]">TGL SERVIS LALU</span>
+                    <span id="servis-v2-tgl-lalu" class="font-medium text-gray-600">-</span>
+                </div>
+                <div>
+                    <span class="text-gray-400 block text-[10px]">SERVIS TERBARU</span>
+                    <span id="servis-v2-tgl-baru" class="font-semibold text-emerald-600">-</span>
+                </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-1 text-center bg-emerald-50/50 p-2 rounded-xl mb-3 border border-emerald-100/50">
+                <div>
+                    <span class="text-gray-400 block text-[9px]">KM AWAL</span>
+                    <span id="servis-v2-km-awal" class="font-bold text-gray-700 text-xs">0</span>
+                </div>
+                <div>
+                    <span class="text-gray-400 block text-[9px]">KM AKHIR</span>
+                    <span id="servis-v2-km-akhir" class="font-bold text-gray-700 text-xs">0</span>
+                </div>
+                <div class="border-l border-emerald-200/60 pl-1">
+                    <span class="text-emerald-500 block text-[9px] font-bold">TRIP</span>
+                    <span id="servis-v2-trip" class="font-extrabold text-emerald-600 text-xs">0 KM</span>
+                </div>
+                </div>
+
+                <div>
+                <span class="text-gray-400 block text-[10px] mb-0.5">KETERANGAN / CATATAN</span>
+                <p id="servis-v2-ket" class="text-xs text-gray-600 italic bg-gray-50 p-2 rounded-lg min-h-[38px] line-clamp-2">Belum ada catatan servis.</p>
+                </div>
+            </div>
+
+            <!-- PANEL KENDARAAN 3 -->
+            <div onclick="bukaModalFormServis(3)" class="bg-white rounded-2xl p-4 shadow-xs border border-gray-200 relative cursor-pointer hover:border-purple-300 transition-all group">
+                <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-3">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 bg-purple-50 text-purple-600 rounded-xl group-hover:bg-purple-600 group-hover:text-white transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <h3 id="servis-v3-nama-plat" class="font-bold text-gray-900 text-sm">Kendaraan 3 - B 9101 ZZZ</h3>
+                </div>
+                <button onclick="event.stopPropagation(); bukaModalEditKendaraan(3)" class="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all" title="Edit Identitas Kendaraan">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                </button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-xs bg-gray-50 p-2.5 rounded-xl mb-3">
+                <div>
+                    <span class="text-gray-400 block text-[10px]">TGL SERVIS LALU</span>
+                    <span id="servis-v3-tgl-lalu" class="font-medium text-gray-600">-</span>
+                </div>
+                <div>
+                    <span class="text-gray-400 block text-[10px]">SERVIS TERBARU</span>
+                    <span id="servis-v3-tgl-baru" class="font-semibold text-purple-600">-</span>
+                </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-1 text-center bg-purple-50/50 p-2 rounded-xl mb-3 border border-purple-100/50">
+                <div>
+                    <span class="text-gray-400 block text-[9px]">KM AWAL</span>
+                    <span id="servis-v3-km-awal" class="font-bold text-gray-700 text-xs">0</span>
+                </div>
+                <div>
+                    <span class="text-gray-400 block text-[9px]">KM AKHIR</span>
+                    <span id="servis-v3-km-akhir" class="font-bold text-gray-700 text-xs">0</span>
+                </div>
+                <div class="border-l border-purple-200/60 pl-1">
+                    <span class="text-purple-500 block text-[9px] font-bold">TRIP</span>
+                    <span id="servis-v3-trip" class="font-extrabold text-purple-600 text-xs">0 KM</span>
+                </div>
+                </div>
+
+                <div>
+                <span class="text-gray-400 block text-[10px] mb-0.5">KETERANGAN / CATATAN</span>
+                <p id="servis-v3-ket" class="text-xs text-gray-600 italic bg-gray-50 p-2 rounded-lg min-h-[38px] line-clamp-2">Belum ada catatan servis.</p>
+                </div>
+            </div>
+
+            </div>
+
+            <!-- RIWAYAT TRANSAKSI SERVIS DI BAWAH PANEL -->
+            <div class="bg-white rounded-2xl p-5 shadow-xs border border-gray-200">
+                <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-gray-900 text-sm">RIWAYAT SERVIS KENDARAAN</h3>
+                <span class="text-xs text-gray-400" id="total-riwayat-servis">0 Transaksi</span>
+                </div>
+
+                <!-- Container Tempat List Riwayat Renditan -->
+                <div id="container-riwayat-servis" class="space-y-3">
+                <div class="text-center py-8 text-gray-400 text-xs">
+                    Belum ada riwayat transaksi servis tercatat.
+                </div>
+                </div>
+            </div>
+
             </div>
 
             <div id="pengaturan" class="tab-content w-full">
@@ -648,6 +810,39 @@
             </div>
         </div>
 
+        <!-- MODAL EDIT IDENTITAS KENDARAAN -->
+        <div id="modal-edit-kendaraan" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+            <div class="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl transition-all">
+                <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
+                <h3 class="font-bold text-gray-800 text-sm flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    Edit Identitas Kendaraan
+                </h3>
+                <button onclick="tutupModalEditKendaraan()" class="text-gray-400 hover:text-gray-600 font-bold">&times;</button>
+                </div>
+
+                <form id="form-edit-identitas-kendaraan" onsubmit="simpanIdentitasKendaraan(event)">
+                <!-- Input Hidden Index Kendaraan (1, 2, atau 3) -->
+                <input type="hidden" id="edit-kendaraan-index" value="1">
+
+                <div class="mb-3">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Kendaraan</label>
+                    <input type="text" id="edit-nama-kendaraan" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Contoh: Motor Utama" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Plat Nomor</label>
+                    <input type="text" id="edit-plat-kendaraan" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none uppercase" placeholder="Contoh: B 1234 XXX" required>
+                </div>
+
+                <div class="flex gap-2">
+                    <button type="button" onclick="tutupModalEditKendaraan()" class="w-1/2 py-2 text-xs font-semibold text-gray-500 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all">Batal</button>
+                    <button type="submit" class="w-1/2 py-2 text-xs font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-md">Simpan</button>
+                </div>
+                </form>
+            </div>
+        </div>
+
         <div id="modal-pengaturan" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden z-50">
             <div class="bg-white p-6 rounded-2xl w-80 shadow-xl">
                 <h3 class="text-lg font-bold text-slate-800 mb-4">Pengaturan Akun</h3>
@@ -712,9 +907,11 @@
             </div>
         </div>
 
+        <!-- MODAL CATAT PENGELUARAN BARU -->
         <div id="modal-pengeluaran-baru" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end justify-center sm:items-center hidden p-0 sm:p-4 overflow-y-auto">
             <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 flex flex-col max-h-[92vh] sm:max-h-[85vh] my-auto">
                 
+                <!-- Header Modal -->
                 <div class="bg-gradient-to-r from-red-700 to-red-800 px-4 py-3.5 sm:px-5 flex justify-between items-center text-white shrink-0">
                     <div>
                         <h3 class="font-bold text-sm sm:text-base tracking-wide">Catat Pengeluaran Baru</h3>
@@ -725,11 +922,12 @@
                     </button>
                 </div>
 
+                <!-- Body Form -->
                 <div class="p-4 sm:p-5 bg-slate-50 space-y-4 overflow-y-auto flex-1 text-xs">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div class="space-y-1.5">
                             <label class="block text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Kategori:</label>
-                            <select id="out-kategori" class="w-full px-3 py-2.5 sm:py-2 bg-white border border-gray-300 rounded-xl font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-red-500 cursor-pointer shadow-sm text-xs">
+                            <select id="out-kategori" onchange="window.toggleFormOtomotifServis()" class="w-full px-3 py-2.5 sm:py-2 bg-white border border-gray-300 rounded-xl font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-red-500 cursor-pointer shadow-sm text-xs">
                                 <option value="belanja">Belanja Bulanan</option>
                                 <option value="tagihan">Tagihan & Pulsa</option>
                                 <option value="konsumsi">Makanan & Minuman</option>
@@ -744,11 +942,92 @@
                         </div>
                     </div>
 
-                    <div class="space-y-1.5">
-                        <label class="block text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Keterangan / Keperluan:</label>
-                        <input type="text" id="out-keterangan" placeholder="Contoh: Bayar Wi-Fi, Beli beras" class="w-full px-3 py-2.5 sm:py-2 bg-white border border-gray-300 rounded-xl font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-red-500 shadow-sm text-xs">
+                    <!-- PANEL KHUSUS BENSIN & SERVIS KENDARAAN -->
+                    <div id="panel-khusus-servis" class="hidden p-3 bg-blue-50/80 rounded-xl border border-blue-200 space-y-3">
+                        
+                        <!-- Radio Button Mode: Bensin vs Servis -->
+                        <div class="flex items-center justify-between border-b border-blue-200 pb-2">
+                            <span class="font-bold text-blue-800 text-[11px] flex items-center gap-1.5">
+                                <i class="fas fa-gas-pump text-blue-600"></i> Mode Kendaraan
+                            </span>
+                            <div class="flex items-center gap-3 bg-white px-2.5 py-1 rounded-lg border border-blue-200">
+                                <label class="inline-flex items-center gap-1 cursor-pointer text-[11px] font-bold text-gray-700">
+                                    <input type="radio" name="sub_kategori_kendaraan" value="bensin" checked onchange="window.switchSubKategoriKendaraan('bensin')" class="text-blue-600 focus:ring-blue-500"> Bensin
+                                </label>
+                                <label class="inline-flex items-center gap-1 cursor-pointer text-[11px] font-bold text-gray-700">
+                                    <input type="radio" name="sub_kategori_kendaraan" value="servis" onchange="window.switchSubKategoriKendaraan('servis')" class="text-blue-600 focus:ring-blue-500"> Servis
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Pilih Kendaraan -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-blue-900 mb-1">Pilih Kendaraan:</label>
+                            <select id="out-servis-kendaraan" onchange="window.updateKmAwalDariPilihanKendaraan()" class="w-full px-3 py-2 bg-white border border-blue-300 rounded-lg text-xs font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="1">Kendaraan 1</option>
+                                <option value="2">Kendaraan 2</option>
+                                <option value="3">Kendaraan 3</option>
+                            </select>
+                        </div>
+
+                        <!-- SUB-FORM 1: BENSIN -->
+                        <div id="sub-form-bensin" class="space-y-2.5">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-blue-900 mb-1">Harga / Liter (Rp):</label>
+                                    <input type="text" id="out-bensin-harga" placeholder="10.000" oninput="window.formatInputRibuan(this); window.hitungNominalBensin();" class="w-full px-2.5 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-blue-900 mb-1">Jumlah Liter:</label>
+                                    <input type="number" step="0.01" id="out-bensin-liter" placeholder="0.00" oninput="window.hitungNominalBensin()" class="w-full px-2.5 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-500 mb-1">KM Terakhir (Isi Lalu):</label>
+                                    <input type="number" id="out-bensin-km-sebelumnya" readonly class="w-full px-2.5 py-1.5 bg-gray-100 border border-gray-300 rounded-lg text-xs font-bold text-gray-500 outline-none cursor-not-allowed" value="0">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-blue-900 mb-1">KM Baru Sekarang:</label>
+                                    <input type="number" id="out-bensin-km-baru" placeholder="0" oninput="window.hitungTripBensin()" class="w-full px-2.5 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center text-[11px] bg-white px-3 py-1.5 rounded-lg border border-blue-200">
+                                <span class="text-blue-700 font-semibold">Estimasi Trip Bensin:</span>
+                                <span id="out-bensin-trip-display" class="font-black text-blue-800">0 KM</span>
+                            </div>
+                        </div>
+
+                        <!-- SUB-FORM 2: SERVIS (ODOMETER) -->
+                        <div id="sub-form-servis" class="hidden space-y-2.5">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-blue-900 mb-1">KM Awal:</label>
+                                    <input type="number" id="out-servis-km-awal" placeholder="0" oninput="window.hitungTripOutServis()" class="w-full px-2.5 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-blue-900 mb-1">KM Akhir:</label>
+                                    <input type="number" id="out-servis-km-akhir" placeholder="0" oninput="window.hitungTripOutServis()" class="w-full px-2.5 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center text-[11px] bg-white px-3 py-1.5 rounded-lg border border-blue-200">
+                                <span class="text-blue-700 font-semibold">Estimasi Trip Servis:</span>
+                                <span id="out-servis-trip-display" class="font-black text-blue-800">0 KM</span>
+                            </div>
+                        </div>
+
                     </div>
 
+                    <!-- Keterangan / Keperluan -->
+                    <div class="space-y-1.5">
+                        <label class="block text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Keterangan / Keperluan:</label>
+                        <input type="text" id="out-keterangan" placeholder="Contoh: Bayar Wi-Fi, Beli beras, Servis Motor" class="w-full px-3 py-2.5 sm:py-2 bg-white border border-gray-300 rounded-xl font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-red-500 shadow-sm text-xs">
+                    </div>
+
+                    <!-- Nominal Pengeluaran -->
                     <div class="space-y-1.5">
                         <label class="block text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider text-red-600">Nominal Pengeluaran:</label>
                         <div class="relative flex items-center">
@@ -758,6 +1037,7 @@
                     </div>
                 </div>
 
+                <!-- Footer Modal -->
                 <div class="bg-gray-100 px-4 py-3 sm:px-5 flex justify-between items-center border-t border-gray-200 shrink-0 pb-5 sm:pb-3">
                     <button onclick="window.tutupModalPengeluaran()" class="px-4 py-2 sm:py-1.5 bg-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-400 transition shadow-sm text-xs">
                         Batal
@@ -1320,6 +1600,7 @@
             window.fbCollection = collection;
             window.fbGetDocs = getDocs;
             
+            
             // 4. ATUR PERSISTENSI SESI KEDALAM LOCAL STORAGE
             setPersistence(authInstance, browserLocalPersistence)
             .then(() => {
@@ -1525,6 +1806,7 @@
                 if (typeof openLoginModal === 'function') {
                     openLoginModal();
                     updateLabelBulanDinamis();
+                    window.muatDataKendaraanDariFirestore();
                 }
 
                 // Sembunyikan form Google, langsung tampilkan panel biometrik cepat
@@ -2177,9 +2459,19 @@
                 modal.style.display = 'none';
                 
                 // ─── RESET ELEMEN INPUT FORM ───
+                if (document.getElementById('out-kategori')) document.getElementById('out-kategori').value = "belanja";
                 if (document.getElementById('out-keterangan')) document.getElementById('out-keterangan').value = "";
                 if (document.getElementById('out-nominal')) document.getElementById('out-nominal').value = "";
                 
+                // ─── RESET PANEL KHUSUS SERVIS & KENDARAAN ───
+                const panelServis = document.getElementById('panel-khusus-servis');
+                if (panelServis) panelServis.classList.add('hidden');
+
+                if (document.getElementById('out-servis-kendaraan')) document.getElementById('out-servis-kendaraan').value = "1";
+                if (document.getElementById('out-servis-km-awal')) document.getElementById('out-servis-km-awal').value = "";
+                if (document.getElementById('out-servis-km-akhir')) document.getElementById('out-servis-km-akhir').value = "";
+                if (document.getElementById('out-servis-trip-display')) document.getElementById('out-servis-trip-display').innerText = "0 KM";
+
                 // ─── UTAMA: Kembalikan fungsi tombol simpan ke mode awal (Tambah Baru) ───
                 const btnSimpan = modal.querySelector('button[onclick*="prosesUpdateTransaksiUmum"]') || modal.querySelector('button[onclick*="simpanPengeluaranManual"]');
                 if (btnSimpan) {
@@ -2193,22 +2485,89 @@
             window.jenisTransaksiSedangDiedit = null;
         };
 
+        // 1. Switch Tampilan Mode Bensin vs Servis via Radio Button
+        window.switchSubKategoriKendaraan = function(mode) {
+            const subBensin = document.getElementById('sub-form-bensin');
+            const subServis = document.getElementById('sub-form-servis');
+
+            if (mode === 'bensin') {
+                if (subBensin) subBensin.classList.remove('hidden');
+                if (subServis) subServis.classList.add('hidden');
+                window.updateKmAwalDariPilihanKendaraan();
+            } else {
+                if (subBensin) subBensin.classList.add('hidden');
+                if (subServis) subServis.classList.remove('hidden');
+                window.updateKmAwalDariPilihanKendaraan();
+            }
+        };
+
+        // 2. Hitung Otomatis Nominal Pengeluaran Bensin (Harga/Liter x Jumlah Liter)
+        window.hitungNominalBensin = function() {
+            const hargaLiter = window.ambilAngkaMurni('out-bensin-harga');
+            const totalLiter = parseFloat(document.getElementById('out-bensin-liter')?.value) || 0;
+            
+            if (hargaLiter > 0 && totalLiter > 0) {
+                const totalNominal = Math.round(hargaLiter * totalLiter);
+                const inputNominal = document.getElementById('out-nominal');
+                if (inputNominal) {
+                    inputNominal.value = totalNominal.toLocaleString('id-ID');
+                }
+            }
+        };
+
+        // 3. Hitung Trip Bensin (KM Baru - KM Sebelum)
+        window.hitungTripBensin = function() {
+            const kmSebaiknya = parseInt(document.getElementById('out-bensin-km-sebelumnya')?.value, 10) || 0;
+            const kmBaru = parseInt(document.getElementById('out-bensin-km-baru')?.value, 10) || 0;
+            const trip = Math.max(0, kmBaru - kmSebaiknya);
+
+            const disp = document.getElementById('out-bensin-trip-display');
+            if (disp) disp.innerText = `${trip.toLocaleString('id-ID')} KM`;
+        };
+
+        // 4. Update KM Terakhir saat ganti Pilihan Kendaraan
+        const fnUpdateKmOrig = window.updateKmAwalDariPilihanKendaraan;
+        window.updateKmAwalDariPilihanKendaraan = function() {
+            const idK = document.getElementById('out-servis-kendaraan')?.value || "1";
+            const elKmAkhir = document.getElementById(`servis-v${idK}-km-akhir`);
+            
+            let kmAkhirLalu = 0;
+            if (elKmAkhir) {
+                kmAkhirLalu = parseInt(elKmAkhir.innerText.replace(/[^0-9]/g, ""), 10) || 0;
+            }
+
+            // Set ke KM Sebelumnya Bensin
+            const inputBensinKm = document.getElementById('out-bensin-km-sebelumnya');
+            if (inputBensinKm) inputBensinKm.value = kmAkhirLalu;
+
+            // Set ke KM Awal Servis
+            const inputServisKm = document.getElementById('out-servis-km-awal');
+            if (inputServisKm) inputServisKm.value = kmAkhirLalu > 0 ? kmAkhirLalu : "";
+
+            window.hitungTripBensin();
+            window.hitungTripOutServis();
+        };
+
 
         window.simpanPengeluaranManual = async function() {
             const kategori = document.getElementById('out-kategori').value;
             const keterangan = document.getElementById('out-keterangan').value.trim();
             
-            // ─── PERUBAHAN DISINI: Menggunakan fungsi penapis angka murni dari string teks bertitik ───
+            // Menggunakan penapis angka murni
             const nominal = window.ambilAngkaMurni('out-nominal');
             const inputPeriode = document.getElementById('out-periode').value;
 
             if (nominal <= 0 || !keterangan) {
-                tampilAlert("Gagal menyimpan! Harap isi keterangan dan nominal pengeluaran dengan benar.", "warning");
+                if (typeof tampilAlert === 'function') {
+                    tampilAlert("Gagal menyimpan! Harap isi keterangan dan nominal pengeluaran dengan benar.", "warning");
+                }
                 return;
             }
 
             if (!window.auth || !window.auth.currentUser) {
-                tampilAlert("Sesi login kedaluwarsa. Silakan login ulang dengan Google.", "error");
+                if (typeof tampilAlert === 'function') {
+                    tampilAlert("Sesi login kedaluwarsa. Silakan login ulang dengan Google.", "error");
+                }
                 return;
             }
 
@@ -2235,7 +2594,9 @@
             }
 
             try {
-                tampilAlert("Mengamankan jalur data Firebase...", "info");
+                if (typeof tampilAlert === 'function') {
+                    tampilAlert("Mengamankan jalur data Firebase...", "info");
+                }
                 const userToken = await userAktif.getIdToken(true);
 
                 // Kunci ID Unik Pengeluaran di Firestore: out_kategori_bulan_tahun
@@ -2244,20 +2605,49 @@
 
                 const endpointFirestore = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/rekap_finansial/${keyTransaksi}`;
 
-                const payloadFirestore = {
-                    fields: {
-                        kategori: { stringValue: kategori },
-                        keterangan: { stringValue: keterangan },
-                        periode: { stringValue: periodeTeks },
-                        pendapatan: { integerValue: "0" }, 
-                        potongan: { integerValue: nominal.toString() }, // Terkirim angka bersih string ("100000")
-                        totalBersihNetto: { integerValue: `-${nominal}` }, // Terkirim angka bersih negatif ("-100000")
-                        referenceKeyImage: { stringValue: "MANUAL_INPUT" },
-                        waktuTransaksi: { timestampValue: new Date().toISOString() },
-                        namaUser: { stringValue: namaUserSistem }
-                    }
+                // ─── 1. STRUKTUR PAYLOAD BASE ───
+                const payloadFields = {
+                    kategori: { stringValue: kategori },
+                    keterangan: { stringValue: keterangan },
+                    periode: { stringValue: periodeTeks },
+                    pendapatan: { integerValue: "0" }, 
+                    potongan: { integerValue: nominal.toString() }, 
+                    totalBersihNetto: { integerValue: `-${nominal}` }, 
+                    referenceKeyImage: { stringValue: "MANUAL_INPUT" },
+                    waktuTransaksi: { timestampValue: new Date().toISOString() },
+                    namaUser: { stringValue: namaUserSistem }
                 };
 
+                // ─── 2. TAMBAHAN FIELD JIKA KATEGORI TRANSPORTASI / SERVIS ───
+                if (kategori === "transportasi") {
+                    const subMode = document.querySelector('input[name="sub_kategori_kendaraan"]:checked')?.value || "bensin";
+                    const idKendaraan = document.getElementById('out-servis-kendaraan')?.value || "1";
+
+                    payloadFields.subModeKendaraan = { stringValue: subMode };
+                    payloadFields.idKendaraan = { stringValue: idKendaraan };
+
+                    if (subMode === "bensin") {
+                        const hargaLiter = window.ambilAngkaMurni('out-bensin-harga');
+                        const jumlahLiter = parseFloat(document.getElementById('out-bensin-liter')?.value) || 0;
+                        const kmBaru = parseInt(document.getElementById('out-bensin-km-baru')?.value, 10) || 0;
+                        const kmSblm = parseInt(document.getElementById('out-bensin-km-sebelumnya')?.value, 10) || 0;
+
+                        payloadFields.hargaPerLiter = { integerValue: hargaLiter.toString() };
+                        payloadFields.jumlahLiter = { doubleValue: jumlahLiter };
+                        payloadFields.kmAwal = { integerValue: kmSblm.toString() };
+                        payloadFields.kmAkhir = { integerValue: kmBaru.toString() };
+                    } else {
+                        const kmAwal = parseInt(document.getElementById('out-servis-km-awal')?.value, 10) || 0;
+                        const kmAkhir = parseInt(document.getElementById('out-servis-km-akhir')?.value, 10) || 0;
+
+                        payloadFields.kmAwal = { integerValue: kmAwal.toString() };
+                        payloadFields.kmAkhir = { integerValue: kmAkhir.toString() };
+                    }
+                }
+
+                const payloadFirestore = { fields: payloadFields };
+
+                // ─── 3. KIRIM KE FIRESTORE VIA REST API (PATCH) ───
                 const responFirestore = await fetch(endpointFirestore, {
                     method: 'PATCH',
                     headers: {
@@ -2272,20 +2662,86 @@
                     throw new Error(`Gagal Menyimpan ke Firestore: ${errTxt}`);
                 }
 
-                tampilAlert(`Sukses! Pengeluaran untuk ${keterangan} berhasil dicatat.`, "success");
+                if (typeof tampilAlert === 'function') {
+                    tampilAlert(`Sukses! Pengeluaran untuk ${keterangan} berhasil dicatat.`, "success");
+                }
+
                 window.tutupModalPengeluaran();
 
-                // Memicu sinkronisasi penghitungan ulang angka dashboard agar pengeluaran langsung memotong saldo
+                // ─── 4. Memicu Sinkronisasi Dashboard & Tab Servis ───
                 if (typeof window.inisialisasiAplikasi === 'function') {
                     await window.inisialisasiAplikasi();
                 } else if (typeof window.muatRekapFinansialDashboard === 'function') {
                     await window.muatRekapFinansialDashboard();
                 }
 
+                // Jika user sedang di Tab Servis, panggil reload data servis
+                if (kategori === "transportasi" && typeof window.prosesDataServisDariTransportasi === 'function') {
+                    window.prosesDataServisDariTransportasi({
+                        ...payloadFields,
+                        waktuTransaksi: new Date().toISOString()
+                    });
+                }
+
             } catch (error) {
                 console.error("Error Simpan Pengeluaran:", error);
-                tampilAlert(`Gagal Sinkronisasi: ${error.message}`, "error");
+                if (typeof tampilAlert === 'function') {
+                    tampilAlert(`Gagal Sinkronisasi: ${error.message}`, "error");
+                }
             }
+        };
+
+        // Function 1: Menampilkan / Menyembunyikan Panel Servis sesuai pilihan Kategori
+        window.toggleFormOtomotifServis = function() {
+        const kat = document.getElementById('out-kategori').value;
+        const panelServis = document.getElementById('panel-khusus-servis');
+
+        if (kat === 'transportasi') {
+            panelServis.classList.remove('hidden');
+            window.updateDropdownKendaraanOptions();
+            window.updateKmAwalDariPilihanKendaraan();
+        } else {
+            panelServis.classList.add('hidden');
+        }
+        };
+
+        // Function 2: Update Label Dropdown Kendaraan dari State Nama + Plat Nomor
+        window.updateDropdownKendaraanOptions = function() {
+        const select = document.getElementById('out-servis-kendaraan');
+        if (!select || !window.dataKendaraan) return;
+
+        select.innerHTML = `
+            <option value="1">${window.dataKendaraan[1]?.nama || 'Kendaraan 1'} (${window.dataKendaraan[1]?.plat || ''})</option>
+            <option value="2">${window.dataKendaraan[2]?.nama || 'Kendaraan 2'} (${window.dataKendaraan[2]?.plat || ''})</option>
+            <option value="3">${window.dataKendaraan[3]?.nama || 'Kendaraan 3'} (${window.dataKendaraan[3]?.plat || ''})</option>
+        `;
+        };
+
+        // Function 3: Set KM Awal Otomatis dari KM Akhir Terakhir Kendaraan Terpilih
+        window.updateKmAwalDariPilihanKendaraan = function() {
+        const idK = document.getElementById('out-servis-kendaraan').value;
+        const elKmAkhir = document.getElementById(`servis-v${idK}-km-akhir`);
+        
+        let kmAkhirLalu = 0;
+        if (elKmAkhir) {
+            kmAkhirLalu = parseInt(elKmAkhir.innerText.replace(/[^0-9]/g, ""), 10) || 0;
+        }
+
+        const inputKmAwal = document.getElementById('out-servis-km-awal');
+        if (inputKmAwal) {
+            inputKmAwal.value = kmAkhirLalu > 0 ? kmAkhirLalu : "";
+        }
+        window.hitungTripOutServis();
+        };
+
+        // Function 4: Hitung Trip Otomatis di Modal Pengeluaran
+        window.hitungTripOutServis = function() {
+        const kmAwal = parseInt(document.getElementById('out-servis-km-awal').value, 10) || 0;
+        const kmAkhir = parseInt(document.getElementById('out-servis-km-akhir').value, 10) || 0;
+        const trip = Math.max(0, kmAkhir - kmAwal);
+
+        const disp = document.getElementById('out-servis-trip-display');
+        if (disp) disp.innerText = `${trip.toLocaleString('id-ID')} KM`;
         };
 
         // --- KONTROL ROUTING UNTUK MODAL MUTASI ---
@@ -4998,6 +5454,250 @@
                 if (typeof tampilAlert === 'function') tampilAlert(`Gagal Simpan Target: ${error.message}`, "error");
                 else alert("Terjadi kesalahan jaringan, gagal menyimpan target baru ke cloud.");
             }
+        };
+
+        // --- FUNGSI PROSES & RENDER TAB SERVIS DARI DOKUMEN OUT_TRANSPORTASI ---
+        window.prosesDataServisDariTransportasi = function(dataTransportasi) {
+        /*
+            dataTransportasi adalah object dokumen 'out_transportasi_[bulan]_[tahun]' 
+            dari koleksi 'rekap_finansial'
+        */
+        
+        if (!dataTransportasi) {
+            window.renderTabServis([]);
+            return;
+        }
+
+        // Cek apakah di dalam dokumen out_transportasi terdapat list rincian/array item servis,
+        // atau merupakan single transaksi
+        let listServis = [];
+
+        // Jika Anda menyimpan array/list item di dalam dokumen out_transportasi
+        if (Array.isArray(dataTransportasi.listServis)) {
+            listServis = dataTransportasi.listServis;
+        } 
+        // Jika transaksi berbentuk tunggal
+        else {
+            const ket = dataTransportasi.keterangan || dataTransportasi.fields?.keterangan?.stringValue || "";
+            const potongan = parseInt(dataTransportasi.potongan || dataTransportasi.fields?.potongan?.integerValue || 0, 10);
+            const tgl = dataTransportasi.waktuTransaksi 
+                        ? new Date(dataTransportasi.waktuTransaksi.timestampValue || dataTransportasi.waktuTransaksi).toISOString().split('T')[0]
+                        : (dataTransportasi.tanggal || "-");
+
+            // Hanya ambil jika keterangannya mengandung kata 'servis' / 'service'
+            if (ket.toLowerCase().includes("servis") || ket.toLowerCase().includes("service")) {
+            // Deteksi kendaraan berdasarkan nama kendaraan di keterangan (misal: "Servis Vario")
+            let detectedId = "1"; // Default ke Kendaraan 1
+            if (ket.toLowerCase().includes("vario") || ket.toLowerCase().includes("v1")) detectedId = "1";
+            else if (ket.toLowerCase().includes("supra") || ket.toLowerCase().includes("v2")) detectedId = "2";
+            else if (ket.toLowerCase().includes("mobil") || ket.toLowerCase().includes("v3")) detectedId = "3";
+
+            listServis.push({
+                idKendaraan: detectedId,
+                tanggal: tgl,
+                potongan: potongan,
+                kmAwal: dataTransportasi.kmAwal || 0,
+                kmAkhir: dataTransportasi.kmAkhir || 0,
+                keterangan: ket
+            });
+            }
+        }
+
+        // Kirim data yang terfilter ke fungsi render UI Tab Servis
+        if (typeof window.renderTabServis === 'function') {
+            window.renderTabServis(listServis);
+        }
+        };
+
+        // CONTOH INTEGRASI SAAT MEMBACA DOKUMEN REST API / FIRESTORE
+        async function muatDataBulanTerpilih(bulanTahun) {
+        // Contoh: bulanTahun = "juli_2026"
+        // Ambil dokumen out_transportasi_[bulan]_[tahun]
+        
+        const docTransportasi = listDokumenRekap.find(doc => 
+            doc.id === `out_transportasi_${bulanTahun}` || 
+            doc.fields?.kategori?.stringValue === "transportasi"
+        );
+
+        if (docTransportasi) {
+            // Ekstrak dan kirim ke handler tab servis
+            window.prosesDataServisDariTransportasi(docTransportasi);
+        } else {
+            window.renderTabServis([]);
+        }
+        }
+
+        // =========================================================
+        // 1. FETCH & SINKRONISASI DATA KENDARAAN DARI FIRESTORE
+        // =========================================================
+        window.muatDataKendaraanDariFirestore = async function() {
+        const projectId = window.firebaseConfig?.projectId || "dompetq-app";
+        const endpoint = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/pengaturan_aplikasi/data_kendaraan`;
+
+        try {
+            const userToken = window.auth?.currentUser ? await window.auth.currentUser.getIdToken() : null;
+            const headers = userToken ? { 'Authorization': `Bearer ${userToken}` } : {};
+
+            const res = await fetch(endpoint, { method: 'GET', headers });
+            
+            if (res.ok) {
+            const data = await res.json();
+            const fields = data.fields || {};
+
+            // Map field Firestore ke State Lokal
+            window.dataKendaraan = {
+                1: { 
+                nama: fields.v1_nama?.stringValue || "Kendaraan 1", 
+                plat: fields.v1_plat?.stringValue || "B 1234 XXX" 
+                },
+                2: { 
+                nama: fields.v2_nama?.stringValue || "Kendaraan 2", 
+                plat: fields.v2_plat?.stringValue || "B 5678 YYY" 
+                },
+                3: { 
+                nama: fields.v3_nama?.stringValue || "Kendaraan 3", 
+                plat: fields.v3_plat?.stringValue || "B 9101 ZZZ" 
+                }
+            };
+            } else {
+            console.log("Dokumen data_kendaraan belum ada, menggunakan default.");
+            }
+        } catch (err) {
+            console.error("Gagal memuat identitas kendaraan dari Firestore:", err);
+        }
+
+        // Update Tampilan Header 3 Panel Kendaraan di UI
+        for (let i = 1; i <= 3; i++) {
+            const kData = window.dataKendaraan[i];
+            const elJudul = document.getElementById(`servis-v${i}-nama-plat`);
+            if (elJudul && kData) {
+            elJudul.innerText = `${kData.nama} - ${kData.plat}`;
+            }
+        }
+        };
+
+        // =========================================================
+        // 2. SIMPAN IDENTITAS KENDARAAN KE FIRESTORE (REST API)
+        // =========================================================
+        window.simpanIdentitasKendaraan = async function(event) {
+        event.preventDefault();
+
+        const index = document.getElementById('edit-kendaraan-index').value;
+        const namaInput = document.getElementById('edit-nama-kendaraan').value.trim();
+        const platInput = document.getElementById('edit-plat-kendaraan').value.trim().toUpperCase();
+
+        if (!namaInput || !platInput) return;
+
+        // 1. Perbarui State Lokal
+        window.dataKendaraan[index] = { nama: namaInput, plat: platInput };
+
+        // Update UI Langsung
+        const elJudul = document.getElementById(`servis-v${index}-nama-plat`);
+        if (elJudul) elJudul.innerText = `${namaInput} - ${platInput}`;
+
+        tutupModalEditKendaraan();
+
+        // 2. Persiapkan Payload Firestore REST API
+        const projectId = window.firebaseConfig?.projectId || "dompetq-app";
+        const endpoint = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/pengaturan_aplikasi/data_kendaraan`;
+
+        let namaUserSistem = "iwashia";
+        if (window.auth?.currentUser?.email) {
+            namaUserSistem = window.auth.currentUser.email.split('@')[0];
+        }
+
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        const payload = {
+            fields: {
+            v1_nama: { stringValue: window.dataKendaraan[1].nama },
+            v1_plat: { stringValue: window.dataKendaraan[1].plat },
+            v2_nama: { stringValue: window.dataKendaraan[2].nama },
+            v2_plat: { stringValue: window.dataKendaraan[2].plat },
+            v3_nama: { stringValue: window.dataKendaraan[3].nama },
+            v3_plat: { stringValue: window.dataKendaraan[3].plat },
+            namaUser: { stringValue: namaUserSistem },
+            terakhirDiperbarui: { stringValue: todayStr },
+            waktuServer: { timestampValue: new Date().toISOString() }
+            }
+        };
+
+        try {
+            const userToken = window.auth?.currentUser ? await window.auth.currentUser.getIdToken(true) : "";
+            const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${userToken}`
+            };
+
+            const response = await fetch(endpoint, {
+            method: 'PATCH', // Menggunakan PATCH untuk auto-create jika dokumen belum ada
+            headers: headers,
+            body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+            throw new Error(`HTTP Error: ${response.status}`);
+            }
+
+            if (typeof tampilAlert === 'function') {
+            tampilAlert("Identitas kendaraan berhasil disimpan ke Cloud!", "success");
+            }
+
+            // Refresh render list riwayat jika ada
+            if (window.lastDataServis) {
+            window.renderTabServis(window.lastDataServis);
+            }
+
+        } catch (error) {
+            console.error("Gagal menyimpan identitas kendaraan ke Firestore:", error);
+            if (typeof tampilAlert === 'function') {
+            tampilAlert("Gagal menyimpan ke Cloud. Periksa koneksi internet.", "error");
+            }
+        }
+        };
+
+        // =========================================================
+        // LOGIKA MODAL EDIT IDENTITAS KENDARAAN (NAMA & PLAT)
+        // =========================================================
+
+        // State lokal default jika belum terisi
+        if (!window.dataKendaraan) {
+        window.dataKendaraan = {
+            1: { nama: "Kendaraan 1", plat: "B 1234 XXX" },
+            2: { nama: "Kendaraan 2", plat: "B 5678 YYY" },
+            3: { nama: "Kendaraan 3", plat: "B 9101 ZZZ" }
+        };
+        }
+
+        // 1. Fungsi Buka Modal Edit Identitas
+        window.bukaModalEditKendaraan = function(index) {
+        // Simpan index kendaraan yang sedang diedit ke input hidden
+        const elIndex = document.getElementById('edit-kendaraan-index');
+        if (elIndex) elIndex.value = index;
+
+        // Ambil data kendaraan dari state lokal
+        const currentData = window.dataKendaraan[index] || { nama: "", plat: "" };
+
+        // Isikan data ke form input di dalam modal
+        const elNama = document.getElementById('edit-nama-kendaraan');
+        const elPlat = document.getElementById('edit-plat-kendaraan');
+        
+        if (elNama) elNama.value = currentData.nama;
+        if (elPlat) elPlat.value = currentData.plat;
+
+        // Tampilkan Modal
+        const modal = document.getElementById('modal-edit-kendaraan');
+        if (modal) {
+            modal.classList.remove('hidden');
+        } else {
+            console.error("Elemen #modal-edit-kendaraan tidak ditemukan di HTML!");
+        }
+        };
+
+        // 2. Fungsi Tutup Modal Edit Identitas
+        window.tutupModalEditKendaraan = function() {
+        const modal = document.getElementById('modal-edit-kendaraan');
+        if (modal) modal.classList.add('hidden');
         };
     </script>
 </body>
