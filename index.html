@@ -537,21 +537,25 @@
 
             <div id="pengaturan" class="tab-content w-full">
                 <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-xs divide-y divide-gray-100 text-sm font-semibold text-gray-700 w-full">
-                    <div class="py-4 flex justify-between items-center cursor-pointer hover:text-blue-600">
+                    
+                    <!-- Menu Keamanan & PIN -->
+                    <div class="py-4 flex justify-between items-center cursor-pointer hover:text-blue-600 transition-colors">
                         <span><i class="fas fa-shield-alt mr-2.5 text-gray-400"></i>Keamanan & PIN Sekuritas</span>
                         <i class="fas fa-chevron-right text-xs text-gray-300"></i>
                     </div>
-                    <!-- Item Menu Harga BBM di Tab Setelan -->
-                    <div onclick="window.bukaModalPengaturanBBM()" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <span style="font-size: 18px;">⛽</span>
-                            <span style="font-size: 14px; font-weight: 600; color: #334155;">Harga BBM</span>
-                        </div>
-                        <span style="color: #94a3b8; font-size: 16px;">&rsaquo;</span>
+
+                    <!-- Menu Harga BBM (Diselaraskan menggunakan Tailwind) -->
+                    <div onclick="window.bukaModalPengaturanBBM()" class="py-4 flex justify-between items-center cursor-pointer hover:text-blue-600 transition-colors">
+                        <span><i class="fas fa-gas-pump mr-2.5 text-gray-400"></i>Harga BBM</span>
+                        <i class="fas fa-chevron-right text-xs text-gray-300"></i>
                     </div>
-                    <div class="py-4 flex justify-between items-center cursor-pointer text-rose-600 font-bold">
-                        <span><i onclick="tutupLoginModal()" class="fas fa-sign-out-alt mr-2.5"></i>Keluar</span>
+
+                    <!-- Menu Keluar -->
+                    <div onclick="tutupLoginModal()" class="py-4 flex justify-between items-center cursor-pointer text-rose-600 font-bold hover:text-rose-700 transition-colors">
+                        <span><i class="fas fa-sign-out-alt mr-2.5"></i>Keluar</span>
+                        <i class="fas fa-chevron-right text-xs text-rose-300"></i>
                     </div>
+
                 </div>
             </div>
 
@@ -856,7 +860,7 @@
             <div style="background: #fff; border-radius: 16px; width: 90%; max-width: 380px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: fadeIn 0.2s ease-in-out;">
                 
                 <!-- Header Modal -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+                <div style="display: flex; justify-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span style="font-size: 20px;">⛽</span>
                         <h3 style="margin: 0; font-size: 16px; color: #1e293b; font-weight: 700;">Pengaturan Harga BBM</h3>
@@ -864,24 +868,23 @@
                     <button onclick="window.tutupModalPengaturanBBM()" style="border: none; background: transparent; font-size: 20px; cursor: pointer; color: #94a3b8;">&times;</button>
                 </div>
 
-                <!-- Tombol Cepat Jenis BBM (Pertalite / Pertamax) -->
-                <label style="font-size: 12px; font-weight: 700; color: #64748b; display: block; margin-bottom: 8px;">PILIH PRESET / JENIS BBM:</label>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
-                    <button type="button" onclick="window.pilihPresetBBM('Pertalite', 10000)" style="padding: 10px; border: 1.5px solid #22c55e; background: #f0fdf4; color: #15803d; font-weight: 700; border-radius: 8px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                        🟢 Pertalite
-                    </button>
-                    <button type="button" onclick="window.pilihPresetBBM('Pertamax', 12950)" style="padding: 10px; border: 1.5px solid #2563eb; background: #eff6ff; color: #1d4ed8; font-weight: 700; border-radius: 8px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                        🔵 Pertamax
-                    </button>
-                </div>
-
-                <!-- Input Harga Per Liter -->
+                <!-- Input Harga Pertalite -->
                 <div style="margin-bottom: 12px;">
-                    <label style="font-size: 12px; font-weight: 700; color: #64748b; display: block; margin-bottom: 6px;">Harga per Liter (Rp):</label>
-                    <input type="text" id="cfg-harga-bbm" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; font-weight: 700; color: #0f172a; box-sizing: border-box;" placeholder="10.000" onkeyup="window.formatRupiahInput ? window.formatRupiahInput(this) : null">
+                    <label style="font-size: 12px; font-weight: 700; color: #15803d; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
+                        🟢 Harga Pertalite / Liter (Rp):
+                    </label>
+                    <input type="text" id="cfg-harga-pertalite" style="width: 100%; padding: 10px 12px; border: 1.5px solid #bbf7d0; background: #f0fdf4; border-radius: 8px; font-size: 14px; font-weight: 700; color: #14532d; box-sizing: border-box;" placeholder="10.000" onkeyup="if(window.formatRupiahInput) window.formatRupiahInput(this)">
                 </div>
 
-                <!-- Teks Keterangan Last Update (Per tanggal simpan) -->
+                <!-- Input Harga Pertamax -->
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 12px; font-weight: 700; color: #1d4ed8; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
+                        🔵 Harga Pertamax / Liter (Rp):
+                    </label>
+                    <input type="text" id="cfg-harga-pertamax" style="width: 100%; padding: 10px 12px; border: 1.5px solid #bfdbfe; background: #eff6ff; border-radius: 8px; font-size: 14px; font-weight: 700; color: #1e40af; box-sizing: border-box;" placeholder="12.950" onkeyup="if(window.formatRupiahInput) window.formatRupiahInput(this)">
+                </div>
+
+                <!-- Teks Keterangan Last Update -->
                 <div style="margin-bottom: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 11px; color: #64748b; display: flex; align-items: center; justify-content: space-between;">
                     <span>Terakhir diperbarui:</span>
                     <strong id="label-last-update-bbm" style="color: #334155;">-</strong>
@@ -6005,25 +6008,30 @@
         if (modal) modal.classList.add('hidden');
         };
 
-        // State Global Harga BBM
+        // State Global Master Harga BBM
         window.configBBM = {
-            hargaPerLiter: parseInt(localStorage.getItem('dompetq_harga_bbm') || "10000", 10),
-            jenisBBM: localStorage.getItem('dompetq_jenis_bbm') || "Pertalite",
+            hargaPertalite: parseInt(localStorage.getItem('dompetq_harga_pertalite') || "10000", 10),
+            hargaPertamax: parseInt(localStorage.getItem('dompetq_harga_pertamax') || "12950", 10),
             lastUpdate: localStorage.getItem('dompetq_update_bbm') || "-"
         };
 
-        // ─── 1. LOAD DATA HARGA BBM DARI FIRESTORE / LOCALSTORAGE ───
+        // Auto load saat aplikasi terbuka
+        document.addEventListener("DOMContentLoaded", function() {
+            window.muatPengaturanBBM();
+        });
+
+        // ─── 1. LOAD DATA DARI LOCALSTORAGE / FIRESTORE ───
         window.muatPengaturanBBM = async function() {
-            // 1. Cek LocalStorage
-            const localHarga = localStorage.getItem('dompetq_harga_bbm');
-            const localJenis = localStorage.getItem('dompetq_jenis_bbm');
+            // 1. Ambil dari LocalStorage terlebih dahulu
+            const localPertalite = localStorage.getItem('dompetq_harga_pertalite');
+            const localPertamax = localStorage.getItem('dompetq_harga_pertamax');
             const localUpdate = localStorage.getItem('dompetq_update_bbm');
 
-            if (localHarga) window.configBBM.hargaPerLiter = parseInt(localHarga, 10);
-            if (localJenis) window.configBBM.jenisBBM = localJenis;
+            if (localPertalite) window.configBBM.hargaPertalite = parseInt(localPertalite, 10);
+            if (localPertamax) window.configBBM.hargaPertamax = parseInt(localPertamax, 10);
             if (localUpdate) window.configBBM.lastUpdate = localUpdate;
 
-            // 2. Fetch dari Firestore jika user online
+            // 2. Sync dari Cloud Firestore
             if (window.auth?.currentUser) {
                 try {
                     const userToken = await window.auth.currentUser.getIdToken();
@@ -6038,13 +6046,13 @@
                         const data = await res.json();
                         const fields = data.fields || {};
                         
-                        if (fields.hargaPerLiter?.integerValue) {
-                            window.configBBM.hargaPerLiter = parseInt(fields.hargaPerLiter.integerValue, 10);
-                            localStorage.setItem('dompetq_harga_bbm', window.configBBM.hargaPerLiter.toString());
+                        if (fields.hargaPertalite?.integerValue) {
+                            window.configBBM.hargaPertalite = parseInt(fields.hargaPertalite.integerValue, 10);
+                            localStorage.setItem('dompetq_harga_pertalite', window.configBBM.hargaPertalite.toString());
                         }
-                        if (fields.jenisBBM?.stringValue) {
-                            window.configBBM.jenisBBM = fields.jenisBBM.stringValue;
-                            localStorage.setItem('dompetq_jenis_bbm', window.configBBM.jenisBBM);
+                        if (fields.hargaPertamax?.integerValue) {
+                            window.configBBM.hargaPertamax = parseInt(fields.hargaPertamax.integerValue, 10);
+                            localStorage.setItem('dompetq_harga_pertamax', window.configBBM.hargaPertamax.toString());
                         }
                         if (fields.lastUpdate?.stringValue) {
                             window.configBBM.lastUpdate = fields.lastUpdate.stringValue;
@@ -6052,37 +6060,27 @@
                         }
                     }
                 } catch (e) {
-                    console.warn("Gagal sync Firestore BBM:", e);
+                    console.warn("Gagal fetch BBM dari Firestore:", e);
                 }
             }
 
-            window.updateDisplayHargaBBMForm();
-        };
-
-        // Sync nilai ke input di Form Pengeluaran Bensin
-        window.updateDisplayHargaBBMForm = function() {
-            const elHargaForm = document.getElementById('out-bensin-harga');
-            if (elHargaForm) {
-                elHargaForm.value = window.configBBM.hargaPerLiter.toLocaleString('id-ID');
-            }
-            if (typeof window.kalkulasiLiterBensinOtomatis === 'function') {
-                window.kalkulasiLiterBensinOtomatis();
+            // Refresh tampilan form pengeluaran jika sedang terbuka
+            if (typeof window.pilihJenisBBMForm === 'function') {
+                window.pilihJenisBBMForm(window.jenisBBMAktif || 'Pertalite');
             }
         };
 
-        // ─── 2. BUKA & TUTUP MODAL ───
+        // ─── 2. BUKA & TUTUP MODAL SETELAN BBM ───
         window.bukaModalPengaturanBBM = function() {
-            const elModal = document.getElementById('modal-pengaturan-bbm');
-            const elInput = document.getElementById('cfg-harga-bbm');
+            const elPertalite = document.getElementById('cfg-harga-pertalite');
+            const elPertamax = document.getElementById('cfg-harga-pertamax');
             const elLabelUpdate = document.getElementById('label-last-update-bbm');
 
-            if (elInput) {
-                elInput.value = window.configBBM.hargaPerLiter.toLocaleString('id-ID');
-            }
-            if (elLabelUpdate) {
-                elLabelUpdate.textContent = window.configBBM.lastUpdate || "Belum ada catatan";
-            }
+            if (elPertalite) elPertalite.value = window.configBBM.hargaPertalite.toLocaleString('id-ID');
+            if (elPertamax) elPertamax.value = window.configBBM.hargaPertamax.toLocaleString('id-ID');
+            if (elLabelUpdate) elLabelUpdate.textContent = window.configBBM.lastUpdate || "Belum ada catatan";
 
+            const elModal = document.getElementById('modal-pengaturan-bbm');
             if (elModal) elModal.style.display = "flex";
         };
 
@@ -6091,41 +6089,35 @@
             if (elModal) elModal.style.display = "none";
         };
 
-        // ─── 3. PRESET BUTTON PERTALITE & PERTAMAX ───
-        window.pilihPresetBBM = function(jenis, harga) {
-            const elInput = document.getElementById('cfg-harga-bbm');
-            if (elInput) {
-                elInput.value = harga.toLocaleString('id-ID');
-            }
-            window.configBBM.jenisBBMTemp = jenis;
-        };
-
-        // ─── 4. SIMPAN DATA PENGATURAN BBM ───
+        // ─── 3. SIMPAN KEDUA HARGA BBM KEDALAM FIRESTORE ───
         window.simpanPengaturanBBM = async function() {
-            const valHarga = window.ambilAngkaMurni 
-                ? window.ambilAngkaMurni('cfg-harga-bbm') 
-                : parseInt((document.getElementById('cfg-harga-bbm')?.value || "0").replace(/\D/g, ''), 10);
+            const valPertalite = parseInt((document.getElementById('cfg-harga-pertalite')?.value || "0").replace(/\D/g, ''), 10);
+            const valPertamax = parseInt((document.getElementById('cfg-harga-pertamax')?.value || "0").replace(/\D/g, ''), 10);
 
-            if (valHarga <= 0) {
-                if (typeof tampilAlert === 'function') tampilAlert("Masukkan harga BBM per liter yang valid!", "warning");
+            if (valPertalite <= 0 || valPertamax <= 0) {
+                if (typeof tampilAlert === 'function') {
+                    tampilAlert("Masukkan nominal harga Pertalite dan Pertamax yang valid!", "warning");
+                } else {
+                    alert("Masukkan nominal harga Pertalite dan Pertamax yang valid!");
+                }
                 return;
             }
 
-            // Format Tanggal Update: "28 Juli 2026, 13:25 WIB"
+            // Format Tanggal Update
             const skrg = new Date();
             const namaBulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
             const tglTeks = `${skrg.getDate()} ${namaBulanIndo[skrg.getMonth()]} ${skrg.getFullYear()}, ${String(skrg.getHours()).padStart(2, '0')}:${String(skrg.getMinutes()).padStart(2, '0')} WIB`;
 
-            window.configBBM.hargaPerLiter = valHarga;
-            window.configBBM.jenisBBM = window.configBBM.jenisBBMTemp || window.configBBM.jenisBBM || "Custom";
+            window.configBBM.hargaPertalite = valPertalite;
+            window.configBBM.hargaPertamax = valPertamax;
             window.configBBM.lastUpdate = tglTeks;
 
             // Simpan LocalStorage
-            localStorage.setItem('dompetq_harga_bbm', valHarga.toString());
-            localStorage.setItem('dompetq_jenis_bbm', window.configBBM.jenisBBM);
+            localStorage.setItem('dompetq_harga_pertalite', valPertalite.toString());
+            localStorage.setItem('dompetq_harga_pertamax', valPertamax.toString());
             localStorage.setItem('dompetq_update_bbm', tglTeks);
 
-            // Simpan / Patch ke Firestore
+            // Patch Dokumen Firestore dengan 2 Field
             if (window.auth?.currentUser) {
                 try {
                     if (typeof tampilAlert === 'function') tampilAlert("Menyimpan ke cloud...", "info");
@@ -6136,8 +6128,8 @@
 
                     const payload = {
                         fields: {
-                            hargaPerLiter: { integerValue: valHarga.toString() },
-                            jenisBBM: { stringValue: window.configBBM.jenisBBM },
+                            hargaPertalite: { integerValue: valPertalite.toString() },
+                            hargaPertamax: { integerValue: valPertamax.toString() },
                             lastUpdate: { stringValue: tglTeks },
                             updatedAt: { timestampValue: skrg.toISOString() }
                         }
@@ -6156,10 +6148,14 @@
                 }
             }
 
-            window.updateDisplayHargaBBMForm();
+            // Update form pengeluaran & tutup modal
+            if (typeof window.pilihJenisBBMForm === 'function') {
+                window.pilihJenisBBMForm(window.jenisBBMAktif || 'Pertalite');
+            }
             window.tutupModalPengaturanBBM();
+
             if (typeof tampilAlert === 'function') {
-                tampilAlert(`Harga BBM (${window.configBBM.jenisBBM}) berhasil diperbarui ke Rp ${valHarga.toLocaleString('id-ID')}!`, "success");
+                tampilAlert("Harga BBM Pertalite & Pertamax berhasil diperbarui!", "success");
             }
         };
     </script>
