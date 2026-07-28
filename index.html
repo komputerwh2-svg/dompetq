@@ -541,6 +541,14 @@
                         <span><i class="fas fa-shield-alt mr-2.5 text-gray-400"></i>Keamanan & PIN Sekuritas</span>
                         <i class="fas fa-chevron-right text-xs text-gray-300"></i>
                     </div>
+                    <!-- Item Menu Harga BBM di Tab Setelan -->
+                    <div onclick="window.bukaModalPengaturanBBM()" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 18px;">⛽</span>
+                            <span style="font-size: 14px; font-weight: 600; color: #334155;">Harga BBM</span>
+                        </div>
+                        <span style="color: #94a3b8; font-size: 16px;">&rsaquo;</span>
+                    </div>
                     <div class="py-4 flex justify-between items-center cursor-pointer text-rose-600 font-bold">
                         <span><i onclick="tutupLoginModal()" class="fas fa-sign-out-alt mr-2.5"></i>Keluar</span>
                     </div>
@@ -843,6 +851,51 @@
             </div>
         </div>
 
+        <!-- ─── MODAL PENGATURAN HARGA BBM ─── -->
+        <div id="modal-pengaturan-bbm" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+            <div style="background: #fff; border-radius: 16px; width: 90%; max-width: 380px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: fadeIn 0.2s ease-in-out;">
+                
+                <!-- Header Modal -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 20px;">⛽</span>
+                        <h3 style="margin: 0; font-size: 16px; color: #1e293b; font-weight: 700;">Pengaturan Harga BBM</h3>
+                    </div>
+                    <button onclick="window.tutupModalPengaturanBBM()" style="border: none; background: transparent; font-size: 20px; cursor: pointer; color: #94a3b8;">&times;</button>
+                </div>
+
+                <!-- Tombol Cepat Jenis BBM (Pertalite / Pertamax) -->
+                <label style="font-size: 12px; font-weight: 700; color: #64748b; display: block; margin-bottom: 8px;">PILIH PRESET / JENIS BBM:</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+                    <button type="button" onclick="window.pilihPresetBBM('Pertalite', 10000)" style="padding: 10px; border: 1.5px solid #22c55e; background: #f0fdf4; color: #15803d; font-weight: 700; border-radius: 8px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        🟢 Pertalite
+                    </button>
+                    <button type="button" onclick="window.pilihPresetBBM('Pertamax', 12950)" style="padding: 10px; border: 1.5px solid #2563eb; background: #eff6ff; color: #1d4ed8; font-weight: 700; border-radius: 8px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        🔵 Pertamax
+                    </button>
+                </div>
+
+                <!-- Input Harga Per Liter -->
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 12px; font-weight: 700; color: #64748b; display: block; margin-bottom: 6px;">Harga per Liter (Rp):</label>
+                    <input type="text" id="cfg-harga-bbm" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; font-weight: 700; color: #0f172a; box-sizing: border-box;" placeholder="10.000" onkeyup="window.formatRupiahInput ? window.formatRupiahInput(this) : null">
+                </div>
+
+                <!-- Teks Keterangan Last Update (Per tanggal simpan) -->
+                <div style="margin-bottom: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 11px; color: #64748b; display: flex; align-items: center; justify-content: space-between;">
+                    <span>Terakhir diperbarui:</span>
+                    <strong id="label-last-update-bbm" style="color: #334155;">-</strong>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" onclick="window.tutupModalPengaturanBBM()" style="flex: 1; padding: 11px; border: 1px solid #cbd5e1; background: #fff; color: #475569; border-radius: 8px; font-weight: 600; cursor: pointer;">Batal</button>
+                    <button type="button" onclick="window.simpanPengaturanBBM()" style="flex: 1; padding: 11px; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 4px rgba(37,99,235,0.2);">Simpan Harga</button>
+                </div>
+
+            </div>
+        </div>
+
         <div id="modal-pengaturan" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden z-50">
             <div class="bg-white p-6 rounded-2xl w-80 shadow-xl">
                 <h3 class="text-lg font-bold text-slate-800 mb-4">Pengaturan Akun</h3>
@@ -972,17 +1025,51 @@
 
                         <!-- SUB-FORM 1: BENSIN -->
                         <div id="sub-form-bensin" class="space-y-2.5">
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-blue-900 mb-1">Harga / Liter (Rp):</label>
-                                    <input type="text" id="out-bensin-harga" placeholder="10.000" oninput="window.formatInputRibuan(this); window.hitungNominalBensin();" class="w-full px-2.5 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-blue-900 mb-1">Jumlah Liter:</label>
-                                    <input type="number" step="0.01" id="out-bensin-liter" placeholder="0.00" oninput="window.hitungNominalBensin()" class="w-full px-2.5 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+                            
+                            <!-- 1. PILIHAN TIPE BBM -->
+                            <div>
+                                <label class="block text-[10px] font-bold text-blue-900 mb-1">Pilih Jenis BBM:</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button type="button" id="btn-bbm-pertalite" onclick="window.pilihJenisBBMForm('Pertalite')" 
+                                        class="py-1.5 px-3 border-2 border-green-500 bg-green-50 text-green-700 font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 transition-all">
+                                        🟢 Pertalite
+                                    </button>
+                                    <button type="button" id="btn-bbm-pertamax" onclick="window.pilihJenisBBMForm('Pertamax')" 
+                                        class="py-1.5 px-3 border border-gray-300 bg-white text-gray-600 font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 transition-all">
+                                        🔵 Pertamax
+                                    </button>
                                 </div>
                             </div>
 
+                            <!-- 2. HARGA / LITER & JUMLAH LITER TERKONVERSI -->
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-blue-900 mb-1">Harga / Liter (Rp):</label>
+                                    <input type="text" id="out-bensin-harga" readonly class="w-full px-2.5 py-1.5 bg-gray-100 border border-blue-300 rounded-lg text-xs font-bold text-gray-700 outline-none cursor-not-allowed" value="10.000">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-blue-900 mb-1">Jumlah Liter (Oto):</label>
+                                    <input type="text" id="out-bensin-liter" readonly class="w-full px-2.5 py-1.5 bg-blue-50 border border-blue-300 rounded-lg text-xs font-black text-blue-700 outline-none" placeholder="0.00 Liter">
+                                </div>
+                            </div>
+
+                            <!-- 3. LIST CEPAT NOMINAL BELI BENSIN -->
+                            <div>
+                                <label class="block text-[10px] font-bold text-blue-900 mb-1">Pilih Cepat Nominal Beli:</label>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button type="button" onclick="window.pilihNominalCepatBensin(20000)" class="py-1.5 border border-blue-400 bg-white text-blue-700 font-bold rounded-lg text-xs hover:bg-blue-50 transition-all shadow-sm">
+                                        20.000
+                                    </button>
+                                    <button type="button" onclick="window.pilihNominalCepatBensin(50000)" class="py-1.5 border border-blue-400 bg-white text-blue-700 font-bold rounded-lg text-xs hover:bg-blue-50 transition-all shadow-sm">
+                                        50.000
+                                    </button>
+                                    <button type="button" onclick="window.pilihNominalCepatBensin(100000)" class="py-1.5 border border-blue-400 bg-white text-blue-700 font-bold rounded-lg text-xs hover:bg-blue-50 transition-all shadow-sm">
+                                        100.000
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 4. KM ODOMETER -->
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <label class="block text-[10px] font-bold text-gray-500 mb-1">KM Terakhir (Isi Lalu):</label>
@@ -994,6 +1081,7 @@
                                 </div>
                             </div>
 
+                            <!-- ESTIMASI TRIP DISPLAY -->
                             <div class="flex justify-between items-center text-[11px] bg-white px-3 py-1.5 rounded-lg border border-blue-200">
                                 <span class="text-blue-700 font-semibold">Estimasi Trip Bensin:</span>
                                 <span id="out-bensin-trip-display" class="font-black text-blue-800">0 KM</span>
@@ -1810,6 +1898,7 @@
                     openLoginModal();
                     updateLabelBulanDinamis();
                     window.muatDataKendaraanDariFirestore();
+                    window.muatPengaturanBBM();
                 }
 
                 // Sembunyikan form Google, langsung tampilkan panel biometrik cepat
@@ -2536,28 +2625,85 @@
             }
         };
 
-        // 2. Hitung Otomatis Nominal Pengeluaran Bensin (Harga/Liter x Jumlah Liter)
-        window.hitungNominalBensin = function() {
-            const hargaLiter = window.ambilAngkaMurni('out-bensin-harga');
-            const totalLiter = parseFloat(document.getElementById('out-bensin-liter')?.value) || 0;
-            
-            if (hargaLiter > 0 && totalLiter > 0) {
-                const totalNominal = Math.round(hargaLiter * totalLiter);
-                const inputNominal = document.getElementById('out-nominal');
-                if (inputNominal) {
-                    inputNominal.value = totalNominal.toLocaleString('id-ID');
-                }
+        // State BBM Global
+        window.jenisBBMAktif = "Pertalite";
+
+        // 1. Fungsi Switch Jenis BBM (Pertalite / Pertamax)
+        window.pilihJenisBBMForm = function(jenis) {
+            window.jenisBBMAktif = jenis;
+
+            const btnPertalite = document.getElementById('btn-bbm-pertalite');
+            const btnPertamax = document.getElementById('btn-bbm-pertamax');
+            const inputHarga = document.getElementById('out-bensin-harga');
+
+            // Ambil rate harga dari localStorage atau config global
+            const hargaPertalite = parseInt(localStorage.getItem('dompetq_harga_pertalite') || "10000", 10);
+            const hargaPertamax = parseInt(localStorage.getItem('dompetq_harga_pertamax') || "12950", 10);
+            const hargaAktif = (jenis === 'Pertalite') ? hargaPertalite : hargaPertamax;
+
+            // Toggle Style Tombol
+            if (jenis === 'Pertalite') {
+                if (btnPertalite) btnPertalite.className = "py-1.5 px-3 border-2 border-green-500 bg-green-50 text-green-700 font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 transition-all";
+                if (btnPertamax) btnPertamax.className = "py-1.5 px-3 border border-gray-300 bg-white text-gray-600 font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 transition-all";
+            } else {
+                if (btnPertamax) btnPertamax.className = "py-1.5 px-3 border-2 border-blue-600 bg-blue-50 text-blue-700 font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 transition-all";
+                if (btnPertalite) btnPertalite.className = "py-1.5 px-3 border border-gray-300 bg-white text-gray-600 font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 transition-all";
+            }
+
+            if (inputHarga) {
+                inputHarga.value = hargaAktif.toLocaleString('id-ID');
+            }
+
+            // Hitung ulang liter berdasarkan nominal bayar saat ini
+            window.kalkulasiLiterBensin();
+        };
+
+        // 2. Fungsi List Cepat Nominal (20.000 / 50.000 / 100.000)
+        window.pilihNominalCepatBensin = function(nominal) {
+            const elNominalUtama = document.getElementById('out-nominal') || document.getElementById('nominal-pengeluaran');
+            if (elNominalUtama) {
+                elNominalUtama.value = nominal.toLocaleString('id-ID');
+            }
+            window.kalkulasiLiterBensin();
+        };
+
+        // 3. Kalkulasi Otomatis Jumlah Liter
+        window.kalkulasiLiterBensin = function() {
+            const elNominalUtama = document.getElementById('out-nominal') || document.getElementById('nominal-pengeluaran');
+            const elHarga = document.getElementById('out-bensin-harga');
+            const elLiter = document.getElementById('out-bensin-liter');
+
+            const nominalBayar = parseInt((elNominalUtama?.value || "0").replace(/\D/g, ''), 10) || 0;
+            const hargaPerLiter = parseInt((elHarga?.value || "0").replace(/\D/g, ''), 10) || 10000;
+
+            if (nominalBayar > 0 && hargaPerLiter > 0) {
+                const totalLiter = (nominalBayar / hargaPerLiter).toFixed(2);
+                if (elLiter) elLiter.value = `${totalLiter} Liter`;
+            } else {
+                if (elLiter) elLiter.value = "0.00 Liter";
             }
         };
 
-        // 3. Hitung Trip Bensin (KM Baru - KM Sebelum)
-        window.hitungTripBensin = function() {
-            const kmSebaiknya = parseInt(document.getElementById('out-bensin-km-sebelumnya')?.value, 10) || 0;
-            const kmBaru = parseInt(document.getElementById('out-bensin-km-baru')?.value, 10) || 0;
-            const trip = Math.max(0, kmBaru - kmSebaiknya);
+        // Listen input manual pada nominal pengeluaran utama
+        document.addEventListener("DOMContentLoaded", function() {
+            const elNominalUtama = document.getElementById('out-nominal') || document.getElementById('nominal-pengeluaran');
+            if (elNominalUtama) {
+                elNominalUtama.addEventListener('input', function() {
+                    window.kalkulasiLiterBensin();
+                });
+            }
+        });
 
-            const disp = document.getElementById('out-bensin-trip-display');
-            if (disp) disp.innerText = `${trip.toLocaleString('id-ID')} KM`;
+        // 4. Hitung Estimasi Trip Bensin
+        window.hitungTripBensin = function() {
+            const kmSblm = parseFloat(document.getElementById('out-bensin-km-sebelumnya')?.value) || 0;
+            const kmBaru = parseFloat(document.getElementById('out-bensin-km-baru')?.value) || 0;
+            const elDisplay = document.getElementById('out-bensin-trip-display');
+
+            if (elDisplay) {
+                const selisih = kmBaru - kmSblm;
+                elDisplay.textContent = `${selisih > 0 ? selisih.toLocaleString('id-ID') : 0} KM`;
+            }
         };
 
         // 4. Update KM Terakhir saat ganti Pilihan Kendaraan
@@ -2585,21 +2731,27 @@
 
 
         window.simpanPengeluaranManual = async function() {
-            const kategori = document.getElementById('out-kategori').value;
+            const kategori = document.getElementById('out-kategori')?.value || "belanja";
             let keterangan = document.getElementById('out-keterangan')?.value.trim() || "";
             
             // Menggunakan penapis angka murni
-            const nominal = window.ambilAngkaMurni('out-nominal');
+            const nominal = window.ambilAngkaMurni ? window.ambilAngkaMurni('out-nominal') : parseInt(document.getElementById('out-nominal')?.value || 0, 10);
             const inputPeriode = document.getElementById('out-periode')?.value;
 
-            // ─── OTOMATISASI KETERANGAN KHUSUS KATEGORI TRANSPORTASI/KENDARAAN ───
+            let subMode = "bensin";
+            let idKendaraan = "1";
+            let namaKendaraanSingkat = "kendaraan";
+
+            // ─── 1. OTOMATISASI KETERANGAN KHUSUS KATEGORI TRANSPORTASI/KENDARAAN ───
             if (kategori === "transportasi") {
-                const subMode = document.querySelector('input[name="sub_kategori_kendaraan"]:checked')?.value || "bensin";
-                const idKendaraan = document.getElementById('out-servis-kendaraan')?.value || "1";
+                subMode = document.querySelector('input[name="sub_kategori_kendaraan"]:checked')?.value || "bensin";
+                idKendaraan = document.getElementById('out-servis-kendaraan')?.value || "1";
                 
                 // Ambil nama dan plat kendaraan dari state global
                 const dataK = window.dataKendaraan?.[idKendaraan] || { nama: `Kendaraan ${idKendaraan}`, plat: "" };
                 const labelMode = subMode === "bensin" ? "Bensin" : "Servis";
+                
+                namaKendaraanSingkat = dataK.nama || `kendaraan${idKendaraan}`;
                 
                 // Contoh hasil: "Bensin Kijang (G 1081 AZ)" atau "Servis Vario 110 FI (H 4663 AEW)"
                 keterangan = `${labelMode} ${dataK.nama} ${dataK.plat ? '(' + dataK.plat + ')' : ''}`.trim();
@@ -2627,8 +2779,8 @@
             }
 
             // Parsing Periode Kalender
-            let periodeTeks = "Juni 2026";
-            let formatPeriodeClean = "juni_2026";
+            let periodeTeks = "Juli 2026";
+            let formatPeriodeClean = "juli_2026";
             if (inputPeriode) {
                 const [tahun, bulan] = inputPeriode.split('-');
                 const namaBulanIndo = [
@@ -2647,14 +2799,10 @@
                     tampilAlert("Mengamankan jalur data Firebase...", "info");
                 }
                 const userToken = await userAktif.getIdToken(true);
-
-                // Kunci ID Unik Pengeluaran di Firestore: out_kategori_bulan_tahun
-                const keyTransaksi = `out_${kategori}_${formatPeriodeClean}`;
                 const projectId = window.firebaseConfig?.projectId || "dompetq-app";
+                const timestampUnik = Date.now();
 
-                const endpointFirestore = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/rekap_finansial/${keyTransaksi}`;
-
-                // ─── 1. STRUKTUR PAYLOAD BASE ───
+                // ─── 2. STRUKTUR PAYLOAD BASE FIRESTORE ───
                 const payloadFields = {
                     kategori: { stringValue: kategori },
                     keterangan: { stringValue: keterangan },
@@ -2667,16 +2815,16 @@
                     namaUser: { stringValue: namaUserSistem }
                 };
 
-                // ─── 2. TAMBAHAN FIELD JIKA KATEGORI TRANSPORTASI / SERVIS ───
-                if (kategori === "transportasi") {
-                    const subMode = document.querySelector('input[name="sub_kategori_kendaraan"]:checked')?.value || "bensin";
-                    const idKendaraan = document.getElementById('out-servis-kendaraan')?.value || "1";
+                let endpointFirestore = "";
+                let httpMethod = "PATCH"; // Default PATCH untuk single document
 
+                // ─── 3. PENANGANAN KHUSUS TRANSPORTASI (SUB-COLLECTION DENGAN NAMA UNIK) ───
+                if (kategori === "transportasi") {
                     payloadFields.subModeKendaraan = { stringValue: subMode };
                     payloadFields.idKendaraan = { stringValue: idKendaraan };
 
                     if (subMode === "bensin") {
-                        const hargaLiter = window.ambilAngkaMurni('out-bensin-harga');
+                        const hargaLiter = window.ambilAngkaMurni ? window.ambilAngkaMurni('out-bensin-harga') : 0;
                         const jumlahLiter = parseFloat(document.getElementById('out-bensin-liter')?.value) || 0;
                         const kmBaru = parseInt(document.getElementById('out-bensin-km-baru')?.value, 10) || 0;
                         const kmSblm = parseInt(document.getElementById('out-bensin-km-sebelumnya')?.value, 10) || 0;
@@ -2692,13 +2840,55 @@
                         payloadFields.kmAwal = { integerValue: kmAwal.toString() };
                         payloadFields.kmAkhir = { integerValue: kmAkhir.toString() };
                     }
+
+                    // Bersihkan nama kendaraan untuk ID (misal: "Vario 110 FI" -> "vario110fi")
+                    const namaClean = namaKendaraanSingkat.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    // Format ID Unik: namakendaraan_jenistransaksi_timestamp
+                    const subDocId = `${namaClean}_${subMode}_${timestampUnik}`;
+                    payloadFields.idTransaksi = { stringValue: subDocId };
+
+                    const docIndukId = `out_transportasi_${formatPeriodeClean}`;
+
+                    // Simpan ke Sub-Collection 'rincian_transaksi' di dalam dokumen induk out_transportasi_juli_2026
+                    endpointFirestore = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/rekap_finansial/${docIndukId}/rincian_transaksi?documentId=${subDocId}`;
+                    httpMethod = "POST";
+
+                    // Pastikan dokumen induk terbuat/terupdate
+                    try {
+                        const endpointInduk = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/rekap_finansial/${docIndukId}`;
+                        await fetch(endpointInduk, {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${userToken}`
+                            },
+                            body: JSON.stringify({
+                                fields: {
+                                    kategori: { stringValue: "transportasi" },
+                                    periode: { stringValue: periodeTeks },
+                                    updatedAt: { timestampValue: new Date().toISOString() }
+                                }
+                            })
+                        });
+                    } catch (eInduk) {
+                        console.warn("Update dokumen induk transportasi dilewati:", eInduk);
+                    }
+
+                } else {
+                    // Untuk Kategori Pengeluaran Umum Lainnya (Belanja, Konsumsi, dll)
+                    // Gunakan ID unik bertimestamp agar tidak menimpa transaksi sebelumnya
+                    const keyTransaksi = `out_${kategori}_${formatPeriodeClean}_${timestampUnik}`;
+                    payloadFields.idTransaksi = { stringValue: keyTransaksi };
+
+                    endpointFirestore = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/rekap_finansial/${keyTransaksi}`;
+                    httpMethod = "PATCH";
                 }
 
                 const payloadFirestore = { fields: payloadFields };
 
-                // ─── 3. KIRIM KE FIRESTORE VIA REST API (PATCH) ───
+                // ─── 4. KIRIM KE FIRESTORE VIA REST API ───
                 const responFirestore = await fetch(endpointFirestore, {
-                    method: 'PATCH',
+                    method: httpMethod,
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${userToken}`
@@ -2717,21 +2907,18 @@
 
                 window.tutupModalPengeluaran();
 
-                // ─── 4. Memicu Sinkronisasi Dashboard & Tab Servis ───
+                // ─── 5. Memicu Sinkronisasi Dashboard & Tab Servis ───
                 if (typeof window.inisialisasiAplikasi === 'function') {
                     await window.inisialisasiAplikasi();
                 } else if (typeof window.muatRekapFinansialDashboard === 'function') {
                     await window.muatRekapFinansialDashboard();
                 }
 
-                // Jika user sedang di Tab Servis, panggil reload data servis dengan nilai STRING MURNI
+                // Jika user sedang di Tab Servis, panggil reload data servis (kirim Data String Murni)
                 if (kategori === "transportasi" && typeof window.prosesDataServisDariTransportasi === 'function') {
-                    const subMode = document.querySelector('input[name="sub_kategori_kendaraan"]:checked')?.value || "bensin";
-                    const idKendaraan = document.getElementById('out-servis-kendaraan')?.value || "1";
-                    
                     window.prosesDataServisDariTransportasi({
                         kategori: kategori,
-                        keterangan: keterangan, // Ini sudah String murni hasil auto-generate
+                        keterangan: keterangan,
                         subModeKendaraan: subMode,
                         idKendaraan: idKendaraan,
                         potongan: nominal,
@@ -2806,14 +2993,16 @@
             if (typeof window.hitungTripOutServis === 'function') window.hitungTripOutServis();
         };
 
-        // Function 4: Hitung Trip Otomatis di Modal Pengeluaran
+        // 5. Hitung Estimasi Trip Servis
         window.hitungTripOutServis = function() {
-        const kmAwal = parseInt(document.getElementById('out-servis-km-awal').value, 10) || 0;
-        const kmAkhir = parseInt(document.getElementById('out-servis-km-akhir').value, 10) || 0;
-        const trip = Math.max(0, kmAkhir - kmAwal);
+            const kmAwal = parseFloat(document.getElementById('out-servis-km-awal')?.value) || 0;
+            const kmAkhir = parseFloat(document.getElementById('out-servis-km-akhir')?.value) || 0;
+            const elDisplay = document.getElementById('out-servis-trip-display');
 
-        const disp = document.getElementById('out-servis-trip-display');
-        if (disp) disp.innerText = `${trip.toLocaleString('id-ID')} KM`;
+            if (elDisplay) {
+                const selisih = kmAkhir - kmAwal;
+                elDisplay.textContent = `${selisih > 0 ? selisih.toLocaleString('id-ID') : 0} KM`;
+            }
         };
 
         // 4. FUNGSI UPDATE TAMPILAN HEADER PANEL SERVIS
@@ -5543,138 +5732,73 @@
 
         // --- FUNGSI PROSES & RENDER TAB SERVIS DARI DOKUMEN OUT_TRANSPORTASI ---
         window.prosesDataServisDariTransportasi = function(dataTransportasi) {
-            /*
-                dataTransportasi dapat berupa:
-                1. Objek dokumen Firestore REST API: { fields: { ... } }
-                2. Direct Payload JavaScript dari window.simpanPengeluaranManual()
-            */
-            
-            if (!dataTransportasi) {
-                if (typeof window.renderTabServis === 'function') {
-                    window.renderTabServis([]);
-                }
-                return;
+        /*
+            dataTransportasi adalah object dokumen 'out_transportasi_[bulan]_[tahun]' 
+            dari koleksi 'rekap_finansial'
+        */
+        
+        if (!dataTransportasi) {
+            window.renderTabServis([]);
+            return;
+        }
+
+        // Cek apakah di dalam dokumen out_transportasi terdapat list rincian/array item servis,
+        // atau merupakan single transaksi
+        let listServis = [];
+
+        // Jika Anda menyimpan array/list item di dalam dokumen out_transportasi
+        if (Array.isArray(dataTransportasi.listServis)) {
+            listServis = dataTransportasi.listServis;
+        } 
+        // Jika transaksi berbentuk tunggal
+        else {
+            const ket = dataTransportasi.keterangan || dataTransportasi.fields?.keterangan?.stringValue || "";
+            const potongan = parseInt(dataTransportasi.potongan || dataTransportasi.fields?.potongan?.integerValue || 0, 10);
+            const tgl = dataTransportasi.waktuTransaksi 
+                        ? new Date(dataTransportasi.waktuTransaksi.timestampValue || dataTransportasi.waktuTransaksi).toISOString().split('T')[0]
+                        : (dataTransportasi.tanggal || "-");
+
+            // Hanya ambil jika keterangannya mengandung kata 'servis' / 'service'
+            if (ket.toLowerCase().includes("servis") || ket.toLowerCase().includes("service")) {
+            // Deteksi kendaraan berdasarkan nama kendaraan di keterangan (misal: "Servis Vario")
+            let detectedId = "1"; // Default ke Kendaraan 1
+            if (ket.toLowerCase().includes("vario") || ket.toLowerCase().includes("v1")) detectedId = "1";
+            else if (ket.toLowerCase().includes("supra") || ket.toLowerCase().includes("v2")) detectedId = "2";
+            else if (ket.toLowerCase().includes("mobil") || ket.toLowerCase().includes("v3")) detectedId = "3";
+
+            listServis.push({
+                idKendaraan: detectedId,
+                tanggal: tgl,
+                potongan: potongan,
+                kmAwal: dataTransportasi.kmAwal || 0,
+                kmAkhir: dataTransportasi.kmAkhir || 0,
+                keterangan: ket
+            });
             }
+        }
 
-            let listServis = [];
-
-            // Jika input berupa Array (kumpulan transaksi)
-            if (Array.isArray(dataTransportasi)) {
-                dataTransportasi.forEach(item => processSingleItem(item));
-            } 
-            // Jika input berupa Array di dalam properti listServis
-            else if (Array.isArray(dataTransportasi.listServis)) {
-                dataTransportasi.listServis.forEach(item => processSingleItem(item));
-            } 
-            // Jika berupa Objek Transaksi Tunggal
-            else {
-                processSingleItem(dataTransportasi);
-            }
-
-            // Fungsi Pembantu Ekstraksi Data Aman (Defensive Parsing)
-            function processSingleItem(item) {
-                if (!item) return;
-
-                // 1. Ekstrak Keterangan dengan Aman (String Murni vs Firestore Object)
-                let ket = "";
-                if (typeof item.keterangan === 'string') {
-                    ket = item.keterangan;
-                } else if (item.keterangan?.stringValue) {
-                    ket = item.keterangan.stringValue;
-                } else if (item.fields?.keterangan?.stringValue) {
-                    ket = item.fields.keterangan.stringValue;
-                }
-
-                const ketLower = ket.toLowerCase();
-
-                // 2. Ekstrak Sub-Mode Kendaraan (Bensin vs Servis)
-                let subMode = item.subModeKendaraan || item.fields?.subModeKendaraan?.stringValue || "";
-                
-                // Cek apakah transaksi termasuk kategori Servis
-                const isServis = subMode === "servis" || ketLower.includes("servis") || ketLower.includes("service");
-
-                if (isServis) {
-                    // 3. Ekstrak ID Kendaraan Secara Presisi (Daftar ID: 1, 2, atau 3)
-                    let idKendaraan = item.idKendaraan || item.fields?.idKendaraan?.stringValue;
-
-                    // Jika idKendaraan belum tersimpan, lakukan matching cerdas berdasarkan nama/plat di window.dataKendaraan
-                    if (!idKendaraan && window.dataKendaraan) {
-                        idKendaraan = "1"; // Default Fallback
-                        for (let id in window.dataKendaraan) {
-                            const k = window.dataKendaraan[id];
-                            const namaK = (k.nama || "").toLowerCase();
-                            const platK = (k.plat || "").toLowerCase().replace(/\s+/g, '');
-                            const ketClean = ketLower.replace(/\s+/g, '');
-
-                            if ((namaK && ketLower.includes(namaK)) || (platK && ketClean.includes(platK))) {
-                                idKendaraan = id.toString();
-                                break;
-                            }
-                        }
-                    }
-
-                    // 4. Ekstrak Potongan / Nominal
-                    const potongan = parseInt(
-                        item.potongan || 
-                        item.fields?.potongan?.integerValue || 
-                        item.totalBersihNetto || 
-                        item.fields?.totalBersihNetto?.integerValue || 
-                        0, 10
-                    );
-
-                    // 5. Ekstrak Tanggal
-                    let tgl = "-";
-                    const rawWaktu = item.waktuTransaksi || item.fields?.waktuTransaksi?.timestampValue;
-                    if (rawWaktu) {
-                        try {
-                            tgl = new Date(rawWaktu).toISOString().split('T')[0];
-                        } catch (e) {
-                            tgl = item.tanggal || "-";
-                        }
-                    } else if (item.tanggal) {
-                        tgl = item.tanggal;
-                    }
-
-                    // 6. Ekstrak Odometer / KM
-                    const kmAwal = parseInt(item.kmAwal || item.fields?.kmAwal?.integerValue || 0, 10);
-                    const kmAkhir = parseInt(item.kmAkhir || item.fields?.kmAkhir?.integerValue || 0, 10);
-
-                    listServis.push({
-                        idKendaraan: idKendaraan || "1",
-                        tanggal: tgl,
-                        potongan: Math.abs(potongan),
-                        kmAwal: kmAwal,
-                        kmAkhir: kmAkhir,
-                        keterangan: ket
-                    });
-                }
-            }
-
-            // Kirim data yang terfilter ke fungsi render UI Tab Servis
-            if (typeof window.renderTabServis === 'function') {
-                window.renderTabServis(listServis);
-            }
+        // Kirim data yang terfilter ke fungsi render UI Tab Servis
+        if (typeof window.renderTabServis === 'function') {
+            window.renderTabServis(listServis);
+        }
         };
 
-        // ─── INTEGRASI DENGAN LOADER FIRESTORE ───
+        // CONTOH INTEGRASI SAAT MEMBACA DOKUMEN REST API / FIRESTORE
         async function muatDataBulanTerpilih(bulanTahun) {
-            if (!window.listDokumenRekap || !Array.isArray(window.listDokumenRekap)) {
-                if (typeof window.renderTabServis === 'function') window.renderTabServis([]);
-                return;
-            }
+        // Contoh: bulanTahun = "juli_2026"
+        // Ambil dokumen out_transportasi_[bulan]_[tahun]
+        
+        const docTransportasi = listDokumenRekap.find(doc => 
+            doc.id === `out_transportasi_${bulanTahun}` || 
+            doc.fields?.kategori?.stringValue === "transportasi"
+        );
 
-            // Filter dokumen transaksi yang merupakan kategori transportasi
-            const listDokumenTransportasi = window.listDokumenRekap.filter(doc => {
-                const idDoc = doc.id || "";
-                const kat = doc.fields?.kategori?.stringValue || doc.kategori || "";
-                return idDoc.startsWith("out_transportasi_") || kat === "transportasi";
-            });
-
-            if (listDokumenTransportasi.length > 0) {
-                window.prosesDataServisDariTransportasi(listDokumenTransportasi);
-            } else {
-                if (typeof window.renderTabServis === 'function') window.renderTabServis([]);
-            }
+        if (docTransportasi) {
+            // Ekstrak dan kirim ke handler tab servis
+            window.prosesDataServisDariTransportasi(docTransportasi);
+        } else {
+            window.renderTabServis([]);
+        }
         }
 
         // =========================================================
@@ -5879,6 +6003,164 @@
         window.tutupModalEditKendaraan = function() {
         const modal = document.getElementById('modal-edit-kendaraan');
         if (modal) modal.classList.add('hidden');
+        };
+
+        // State Global Harga BBM
+        window.configBBM = {
+            hargaPerLiter: parseInt(localStorage.getItem('dompetq_harga_bbm') || "10000", 10),
+            jenisBBM: localStorage.getItem('dompetq_jenis_bbm') || "Pertalite",
+            lastUpdate: localStorage.getItem('dompetq_update_bbm') || "-"
+        };
+
+        // ─── 1. LOAD DATA HARGA BBM DARI FIRESTORE / LOCALSTORAGE ───
+        window.muatPengaturanBBM = async function() {
+            // 1. Cek LocalStorage
+            const localHarga = localStorage.getItem('dompetq_harga_bbm');
+            const localJenis = localStorage.getItem('dompetq_jenis_bbm');
+            const localUpdate = localStorage.getItem('dompetq_update_bbm');
+
+            if (localHarga) window.configBBM.hargaPerLiter = parseInt(localHarga, 10);
+            if (localJenis) window.configBBM.jenisBBM = localJenis;
+            if (localUpdate) window.configBBM.lastUpdate = localUpdate;
+
+            // 2. Fetch dari Firestore jika user online
+            if (window.auth?.currentUser) {
+                try {
+                    const userToken = await window.auth.currentUser.getIdToken();
+                    const projectId = window.firebaseConfig?.projectId || "dompetq-app";
+                    const endpoint = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/pengaturan_aplikasi/bbm`;
+
+                    const res = await fetch(endpoint, {
+                        headers: { 'Authorization': `Bearer ${userToken}` }
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        const fields = data.fields || {};
+                        
+                        if (fields.hargaPerLiter?.integerValue) {
+                            window.configBBM.hargaPerLiter = parseInt(fields.hargaPerLiter.integerValue, 10);
+                            localStorage.setItem('dompetq_harga_bbm', window.configBBM.hargaPerLiter.toString());
+                        }
+                        if (fields.jenisBBM?.stringValue) {
+                            window.configBBM.jenisBBM = fields.jenisBBM.stringValue;
+                            localStorage.setItem('dompetq_jenis_bbm', window.configBBM.jenisBBM);
+                        }
+                        if (fields.lastUpdate?.stringValue) {
+                            window.configBBM.lastUpdate = fields.lastUpdate.stringValue;
+                            localStorage.setItem('dompetq_update_bbm', window.configBBM.lastUpdate);
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Gagal sync Firestore BBM:", e);
+                }
+            }
+
+            window.updateDisplayHargaBBMForm();
+        };
+
+        // Sync nilai ke input di Form Pengeluaran Bensin
+        window.updateDisplayHargaBBMForm = function() {
+            const elHargaForm = document.getElementById('out-bensin-harga');
+            if (elHargaForm) {
+                elHargaForm.value = window.configBBM.hargaPerLiter.toLocaleString('id-ID');
+            }
+            if (typeof window.kalkulasiLiterBensinOtomatis === 'function') {
+                window.kalkulasiLiterBensinOtomatis();
+            }
+        };
+
+        // ─── 2. BUKA & TUTUP MODAL ───
+        window.bukaModalPengaturanBBM = function() {
+            const elModal = document.getElementById('modal-pengaturan-bbm');
+            const elInput = document.getElementById('cfg-harga-bbm');
+            const elLabelUpdate = document.getElementById('label-last-update-bbm');
+
+            if (elInput) {
+                elInput.value = window.configBBM.hargaPerLiter.toLocaleString('id-ID');
+            }
+            if (elLabelUpdate) {
+                elLabelUpdate.textContent = window.configBBM.lastUpdate || "Belum ada catatan";
+            }
+
+            if (elModal) elModal.style.display = "flex";
+        };
+
+        window.tutupModalPengaturanBBM = function() {
+            const elModal = document.getElementById('modal-pengaturan-bbm');
+            if (elModal) elModal.style.display = "none";
+        };
+
+        // ─── 3. PRESET BUTTON PERTALITE & PERTAMAX ───
+        window.pilihPresetBBM = function(jenis, harga) {
+            const elInput = document.getElementById('cfg-harga-bbm');
+            if (elInput) {
+                elInput.value = harga.toLocaleString('id-ID');
+            }
+            window.configBBM.jenisBBMTemp = jenis;
+        };
+
+        // ─── 4. SIMPAN DATA PENGATURAN BBM ───
+        window.simpanPengaturanBBM = async function() {
+            const valHarga = window.ambilAngkaMurni 
+                ? window.ambilAngkaMurni('cfg-harga-bbm') 
+                : parseInt((document.getElementById('cfg-harga-bbm')?.value || "0").replace(/\D/g, ''), 10);
+
+            if (valHarga <= 0) {
+                if (typeof tampilAlert === 'function') tampilAlert("Masukkan harga BBM per liter yang valid!", "warning");
+                return;
+            }
+
+            // Format Tanggal Update: "28 Juli 2026, 13:25 WIB"
+            const skrg = new Date();
+            const namaBulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            const tglTeks = `${skrg.getDate()} ${namaBulanIndo[skrg.getMonth()]} ${skrg.getFullYear()}, ${String(skrg.getHours()).padStart(2, '0')}:${String(skrg.getMinutes()).padStart(2, '0')} WIB`;
+
+            window.configBBM.hargaPerLiter = valHarga;
+            window.configBBM.jenisBBM = window.configBBM.jenisBBMTemp || window.configBBM.jenisBBM || "Custom";
+            window.configBBM.lastUpdate = tglTeks;
+
+            // Simpan LocalStorage
+            localStorage.setItem('dompetq_harga_bbm', valHarga.toString());
+            localStorage.setItem('dompetq_jenis_bbm', window.configBBM.jenisBBM);
+            localStorage.setItem('dompetq_update_bbm', tglTeks);
+
+            // Simpan / Patch ke Firestore
+            if (window.auth?.currentUser) {
+                try {
+                    if (typeof tampilAlert === 'function') tampilAlert("Menyimpan ke cloud...", "info");
+                    
+                    const userToken = await window.auth.currentUser.getIdToken(true);
+                    const projectId = window.firebaseConfig?.projectId || "dompetq-app";
+                    const endpoint = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/pengaturan_aplikasi/bbm`;
+
+                    const payload = {
+                        fields: {
+                            hargaPerLiter: { integerValue: valHarga.toString() },
+                            jenisBBM: { stringValue: window.configBBM.jenisBBM },
+                            lastUpdate: { stringValue: tglTeks },
+                            updatedAt: { timestampValue: skrg.toISOString() }
+                        }
+                    };
+
+                    await fetch(endpoint, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${userToken}`
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                } catch (e) {
+                    console.error("Gagal simpan harga BBM ke Firestore:", e);
+                }
+            }
+
+            window.updateDisplayHargaBBMForm();
+            window.tutupModalPengaturanBBM();
+            if (typeof tampilAlert === 'function') {
+                tampilAlert(`Harga BBM (${window.configBBM.jenisBBM}) berhasil diperbarui ke Rp ${valHarga.toLocaleString('id-ID')}!`, "success");
+            }
         };
     </script>
 </body>
