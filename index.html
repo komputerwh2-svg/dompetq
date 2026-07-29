@@ -3766,7 +3766,7 @@
                 let totalSaldoBulanLalu = 0;
                 
                 let htmlRiwayatSuntik = "";
-                let tanggalSebelumnya = ""; // ✨ Pelacak tanggal kelompok harian ala GoPay
+                let tanggalSebelumnya = ""; // Pelacak tanggal kelompok harian ala GoPay
 
                 totalSaldoBulanLalu = await window.periksaDanAmankanSaldoBulanLalu(userToken, projectId, formatPeriodeLaluClean);
 
@@ -3825,8 +3825,10 @@
                                                 waktuTransaksi: sf.waktuTransaksi || sf.updatedAt || { timestampValue: new Date().toISOString() },
                                                 jenisBBM: sf.jenisBBM || sf.jenis_bbm || { stringValue: "" },
                                                 jumlahLiter: sf.jumlahLiter || sf.jumlah_liter || { doubleValue: 0 },
-                                                kmOdometer: sf.kmAkhir || sf.kmOdometer || { integerValue: 0 },
-                                                tripKM: sf.tripKM || { integerValue: 0 }
+                                                kmAwal: sf.kmAwal || sf.km_awal || { integerValue: 0 },
+                                                kmOdometer: sf.kmAkhir || sf.kmOdometer || sf.km_odometer || { integerValue: 0 },
+                                                tripKM: sf.tripKM || sf.trip_km || { integerValue: 0 },
+                                                keteranganServis: sf.detailServis || sf.keteranganServis || sf.servisDetail || { stringValue: "" }
                                             }
                                         });
                                     });
@@ -3844,19 +3846,19 @@
                         }
                     }
 
-                    // Urutkan transaksi dari waktu terbaru (descending) agar pengelompokan harian runtut
+                    // Urutkan transaksi dari waktu terbaru (descending)
                     normalizedDocs.sort((a, b) => {
                         const timeA = new Date(a.fields?.waktuTransaksi?.timestampValue || 0);
                         const timeB = new Date(b.fields?.waktuTransaksi?.timestampValue || 0);
                         return timeB - timeA;
                     });
 
-                    let counterItem = 0;
-
+                    // 🎯 RENDER SELURUH TRANSAKSI PADA BULAN AKTIF SEKARANG
                     normalizedDocs.forEach(item => {
                         const fields = item.fields || {};
                         const teksPeriodeDoc = fields.periode?.stringValue || "";
 
+                        // FILTER HANYA BULAN AKTIF (misal: "Juli 2026")
                         if (teksPeriodeDoc.trim().toLowerCase() === periodeBulanSekarang.trim().toLowerCase()) {
                             
                             const pendapatan = parseInt(fields.pendapatan?.integerValue || fields.pendapatan?.stringValue || 0);
@@ -3869,11 +3871,13 @@
                             const keterangan = fields.keterangan?.stringValue || "Transaksi Tanpa Memo";
                             const namaUser = fields.namaUser?.stringValue || "system";
 
-                            // Metadata Tambahan untuk Kendaraan (Bensin & Servis)
+                            // Metadata Tambahan
                             const jenisBBM = fields.jenisBBM?.stringValue || fields.jenis_bbm?.stringValue || "";
                             const jumlahLiter = fields.jumlahLiter?.doubleValue || fields.jumlahLiter?.integerValue || fields.jumlah_liter?.stringValue || 0;
-                            const kmOdometer = fields.kmOdometer?.integerValue || fields.km_odometer?.integerValue || fields.kmOdometer?.stringValue || 0;
+                            const kmAwal = fields.kmAwal?.integerValue || fields.kmAwal?.stringValue || 0;
+                            const kmAkhir = fields.kmOdometer?.integerValue || fields.km_odometer?.integerValue || fields.kmOdometer?.stringValue || 0;
                             const tripKM = fields.tripKM?.integerValue || fields.trip_km?.integerValue || fields.tripKM?.stringValue || 0;
+                            const ketServis = fields.keteranganServis?.stringValue || "";
                             
                             const tanggalRaw = fields.waktuTransaksi?.timestampValue;
                             let tanggalTampil = "Bulan Ini";
@@ -3882,7 +3886,7 @@
                                 tanggalTampil = new Date(tanggalRaw).toLocaleDateString('id-ID', optTgl);
                             }
 
-                            // 🚀 REVISI LOGIKA KALKULASI PINTAR (ANTI DOUBLE-CUT)
+                            // 🚀 REVISI LOGIKA KALKULASI PINTAR
                             const isSlipDokumen = ["gaji", "thr", "ksp"].includes(kategoriRaw);
                             const isMutasi = kategoriRaw.startsWith("mutasi_");
 
@@ -3895,105 +3899,111 @@
                                 totalPengeluaran += potongan;
                             }
 
-                            // ✨ RENDER BARIS RIWAYAT TRANSAKSI (MAKSIMAL 5 ITEM DI DASHBOARD)
-                            if (counterItem < 5) {
-                                let iconClass = "fas fa-arrow-up"; 
-                                let iconBg = "bg-emerald-50 text-emerald-600";
-                                let warnaNominal = "text-emerald-600 font-black text-xs"; 
-                                let teksNominal = "";
-                                let jenisTransaksi = ""; 
-                                let badgeSubDetail = ""; 
+                            // ✨ RENDER BARIS RIWAYAT TRANSAKSI (TANPA BATAS 5 ITEM)
+                            let iconClass = "fas fa-arrow-up"; 
+                            let iconBg = "bg-emerald-50 text-emerald-600";
+                            let warnaNominal = "text-emerald-600 font-black text-xs"; 
+                            let teksNominal = "";
+                            let jenisTransaksi = ""; 
+                            let badgeSubDetail = ""; 
+                            let teksSubKategoriUser = `${kategori} (${namaUser})`; 
 
-                                // 🔍 DETEKSI PRESISI UNTUK KATEGORI TRANSPORTASI / BENSIN / SERVIS
-                                const isBensin = subKategori.includes("bensin") || subKategori.includes("bbm") || kategoriRaw.includes("bensin") || (kategoriRaw === "transportasi" && subKategori !== "servis");
-                                const isServis = subKategori.includes("servis") || kategoriRaw.includes("servis");
+                            const isBensin = subKategori.includes("bensin") || subKategori.includes("bbm") || kategoriRaw.includes("bensin") || (kategoriRaw === "transportasi" && subKategori !== "servis");
+                            const isServis = subKategori.includes("servis") || kategoriRaw.includes("servis");
 
-                                if (isSlipDokumen) {
-                                    iconClass = "fas fa-arrow-up";
-                                    iconBg = "bg-emerald-50 text-emerald-600";
-                                    const nominalTampil = netto > 0 ? netto : (pendapatan - potongan);
-                                    teksNominal = `+Rp ${nominalTampil.toLocaleString('id-ID')}`;
-                                    jenisTransaksi = "slip";
-                                } else if (potongan > 0) {
-                                    if (isServis) {
-                                        iconClass = "fas fa-tools";
-                                        iconBg = "bg-amber-50 text-amber-600";
-                                        warnaNominal = "text-amber-700 font-black text-xs";
-                                        jenisTransaksi = "servis";
+                            if (isSlipDokumen || (pendapatan > 0 && potongan === 0)) {
+                                // 🟢 PEMASUKAN / SLIP GAJI
+                                iconClass = "fas fa-arrow-up";
+                                iconBg = "bg-emerald-50 text-emerald-600";
+                                warnaNominal = "text-emerald-600 font-black text-xs";
+                                
+                                const nominalTampil = isSlipDokumen ? (netto > 0 ? netto : (pendapatan - potongan)) : pendapatan;
+                                teksNominal = `+Rp ${nominalTampil.toLocaleString('id-ID')}`;
+                                jenisTransaksi = isSlipDokumen ? "slip" : "pemasukan_manual";
+                            } else if (potongan > 0) {
+                                // 🔴 PENGELUARAN / MUTASI / BENSIN / SERVIS
+                                if (isServis) {
+                                    iconClass = "fas fa-tools";
+                                    iconBg = "bg-amber-50 text-amber-600";
+                                    warnaNominal = "text-amber-700 font-black text-xs";
+                                    jenisTransaksi = "servis";
 
-                                        let infoTrip = tripKM ? `Trip: ${tripKM} KM` : (kmOdometer ? `KM: ${kmOdometer}` : "Servis");
-                                        badgeSubDetail = `<span class="inline-block mt-0.5 text-[9px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded">${infoTrip}</span>`;
-                                    } else if (isBensin) {
-                                        iconClass = "fas fa-gas-pump";
-                                        iconBg = "bg-blue-50 text-blue-600";
-                                        warnaNominal = "text-blue-700 font-black text-xs";
-                                        jenisTransaksi = "bensin";
-                                        
-                                        let infoBBM = jenisBBM ? `${jenisBBM}` : "BBM";
-                                        let infoLiter = jumlahLiter ? ` • ${jumlahLiter}L` : "";
-                                        badgeSubDetail = `<span class="inline-block mt-0.5 text-[9px] font-bold bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded">${infoBBM}${infoLiter}</span>`;
-                                    } else if (isMutasi) {
-                                        iconClass = "fas fa-exchange-alt";
-                                        iconBg = "bg-purple-50 text-purple-600";
-                                        warnaNominal = "text-purple-600 font-black text-xs";
-                                        jenisTransaksi = "mutasi";
+                                    teksSubKategoriUser = ketServis ? `Servis: ${ketServis}` : `SERVIS KENDARAAN (${namaUser})`;
+                                    let infoTrip = tripKM ? `Trip: ${tripKM} KM` : (kmAkhir ? `KM: ${kmAkhir}` : "Servis");
+                                    badgeSubDetail = `<span class="inline-block mt-0.5 text-[9px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded">${infoTrip}</span>`;
+                                } else if (isBensin) {
+                                    iconClass = "fas fa-gas-pump";
+                                    iconBg = "bg-blue-50 text-blue-600";
+                                    warnaNominal = "text-blue-700 font-black text-xs";
+                                    jenisTransaksi = "bensin";
+                                    
+                                    const calcTrip = tripKM || (kmAkhir > kmAwal && kmAwal > 0 ? kmAkhir - kmAwal : 0);
+                                    if (kmAwal || kmAkhir) {
+                                        teksSubKategoriUser = `KM: ${kmAwal.toLocaleString('id-ID')} - ${kmAkhir.toLocaleString('id-ID')} (${calcTrip.toLocaleString('id-ID')} KM)`;
                                     } else {
-                                        iconClass = "fas fa-arrow-down";
-                                        iconBg = "bg-rose-50 text-rose-600";
-                                        warnaNominal = "text-rose-600 font-black text-xs";
-                                        jenisTransaksi = "pengeluaran";
+                                        teksSubKategoriUser = `BBM (${namaUser})`;
                                     }
-                                    teksNominal = `-Rp ${potongan.toLocaleString('id-ID')}`;
+
+                                    let infoBBM = jenisBBM ? `${jenisBBM}` : "BBM";
+                                    let infoLiter = jumlahLiter ? ` • ${jumlahLiter}L` : "";
+                                    badgeSubDetail = `<span class="inline-block mt-0.5 text-[9px] font-bold bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded">${infoBBM}${infoLiter}</span>`;
+                                } else if (isMutasi) {
+                                    iconClass = "fas fa-exchange-alt";
+                                    iconBg = "bg-purple-50 text-purple-600";
+                                    warnaNominal = "text-purple-600 font-black text-xs";
+                                    jenisTransaksi = "mutasi";
                                 } else {
-                                    teksNominal = `+Rp ${pendapatan.toLocaleString('id-ID')}`;
-                                    jenisTransaksi = "pemasukan_manual";
+                                    iconClass = "fas fa-arrow-down";
+                                    iconBg = "bg-rose-50 text-rose-600";
+                                    warnaNominal = "text-rose-600 font-black text-xs";
+                                    jenisTransaksi = "pengeluaran";
                                 }
+                                teksNominal = `-Rp ${potongan.toLocaleString('id-ID')}`;
+                            }
 
-                                const idDokumen = item.idDokumen;
+                            const idDokumen = item.idDokumen;
 
-                                // ─── 1. KELOMPOK HARIAN (ALA GOPAY) ───
-                                if (tanggalTampil !== tanggalSebelumnya) {
-                                    htmlRiwayatSuntik += `
-                                        <div class="pt-4 pb-1.5 first:pt-1">
-                                            <span class="text-xs font-extrabold text-gray-900 tracking-wide">${tanggalTampil}</span>
-                                        </div>
-                                    `;
-                                    tanggalSebelumnya = tanggalTampil; 
-                                }
-
-                                // ─── 2. BARIS DETAIL TRANSAKSI ───
+                            // ─── 1. KELOMPOK HARIAN ───
+                            if (tanggalTampil !== tanggalSebelumnya) {
                                 htmlRiwayatSuntik += `
-                                    <div class="flex items-center justify-between py-3 hover:bg-gray-50/50 px-2 -mx-2 rounded-xl transition gap-3 border-b border-gray-100/50 last:border-0">
-                                        <div class="flex items-center space-x-3 min-w-0 flex-1">
-                                            <div class="w-9 h-9 flex-shrink-0 rounded-full ${iconBg} flex items-center justify-center text-xs shadow-xs">
-                                                <i class="${iconClass}"></i>
-                                            </div>
-                                            <div class="min-w-0 space-y-0.5">
-                                                <p class="font-bold text-xs text-gray-800 uppercase truncate">${keterangan}</p>
-                                                <p class="text-[10px] text-gray-400 truncate">${kategori} (${namaUser})</p>
-                                                ${badgeSubDetail}
-                                                <div class="pt-0.5">
-                                                    <span class="${warnaNominal}">${teksNominal}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="flex items-center space-x-1 flex-shrink-0">
-                                            <button onclick="window.bukaModalEdit('${idDokumen}', '${jenisTransaksi}')" 
-                                                    title="Ubah Data"
-                                                    class="w-7 h-7 flex items-center justify-center text-orange-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all focus:outline-none">
-                                                <i class="fas fa-edit text-[12px]"></i>
-                                            </button>
-                                            <button onclick="window.konfirmasiHapusTransaksi('${idDokumen}', '${jenisTransaksi}')" 
-                                                    title="Hapus Data"
-                                                    class="w-7 h-7 flex items-center justify-center text-rose-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all focus:outline-none">
-                                                <i class="fas fa-trash-alt text-[12px]"></i>
-                                            </button>
-                                        </div>
+                                    <div class="pt-4 pb-1.5 first:pt-1">
+                                        <span class="text-xs font-extrabold text-gray-900 tracking-wide">${tanggalTampil}</span>
                                     </div>
                                 `;
-                                counterItem++;
+                                tanggalSebelumnya = tanggalTampil; 
                             }
+
+                            // ─── 2. BARIS DETAIL TRANSAKSI ───
+                            htmlRiwayatSuntik += `
+                                <div class="flex items-center justify-between py-3 hover:bg-gray-50/50 px-2 -mx-2 rounded-xl transition gap-3 border-b border-gray-100/50 last:border-0">
+                                    <div class="flex items-center space-x-3 min-w-0 flex-1">
+                                        <div class="w-9 h-9 flex-shrink-0 rounded-full ${iconBg} flex items-center justify-center text-xs shadow-xs">
+                                            <i class="${iconClass}"></i>
+                                        </div>
+                                        <div class="min-w-0 space-y-0.5">
+                                            <p class="font-bold text-xs text-gray-800 uppercase truncate">${keterangan}</p>
+                                            <p class="text-[10px] text-gray-400 truncate">${teksSubKategoriUser}</p>
+                                            ${badgeSubDetail}
+                                            <div class="pt-0.5">
+                                                <span class="${warnaNominal}">${teksNominal}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center space-x-1 flex-shrink-0">
+                                        <button onclick="window.bukaModalEdit('${idDokumen}', '${jenisTransaksi}')" 
+                                                title="Ubah Data"
+                                                class="w-7 h-7 flex items-center justify-center text-orange-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all focus:outline-none">
+                                            <i class="fas fa-edit text-[12px]"></i>
+                                        </button>
+                                        <button onclick="window.konfirmasiHapusTransaksi('${idDokumen}', '${jenisTransaksi}')" 
+                                                title="Hapus Data"
+                                                class="w-7 h-7 flex items-center justify-center text-rose-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all focus:outline-none">
+                                            <i class="fas fa-trash-alt text-[12px]"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
                         }
                     });
 
@@ -4001,7 +4011,7 @@
                         htmlRiwayatSuntik = `
                             <div class="text-center py-8 text-gray-400">
                                 <i class="fas fa-receipt text-lg block mb-1 text-gray-300"></i>
-                                <p class="text-[11px] font-bold">Belum Ada Transaksi</p>
+                                <p class="text-[11px] font-bold">Belum Ada Transaksi Bulan Ini</p>
                                 <p class="text-[9px] text-gray-400">Silakan tambahkan pemasukan atau pengeluaran baru.</p>
                             </div>
                         `;
