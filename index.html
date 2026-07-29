@@ -1058,32 +1058,38 @@
                         </div>
 
                         <!-- SUB-FORM 2: SERVIS (ODOMETER) -->
-                        <div id="sub-form-servis" class="hidden space-y-2.5">
-                            
-                            <!-- Keterangan / Detail Servis Khusus -->
-                            <div>
-                                <label class="block text-[10px] font-bold text-blue-900 mb-1">Detail / Jenis Servis:</label>
-                                <input type="text" id="out-servis-keterangan" placeholder="Contoh: Ganti Oli Engine, Kampas Rem, Servis Berkala" class="w-full px-2.5 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 shadow-xs">
-                            </div>
-
-                            <!-- KM Odometer -->
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-blue-900 mb-1">KM Awal:</label>
-                                    <input type="number" id="out-servis-km-awal" placeholder="0" oninput="window.hitungTripOutServis()" class="w-full px-2.5 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+                            <div id="sub-form-servis" class="hidden space-y-2.5">
+                                
+                                <!-- Detail Servis & Nominal Bayar (Sejajar 2 Kolom) -->
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-blue-900 mb-1">Detail / Jenis Servis:</label>
+                                        <input type="text" id="out-servis-keterangan" placeholder="Contoh: Ganti Oli, Kampas Rem" class="w-full px-2.5 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 shadow-xs">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-blue-900 mb-1">Nominal Servis (Rp):</label>
+                                        <input type="text" id="out-servis-nominal" placeholder="0" oninput="window.syncNominalServisToUtama(this)" class="w-full px-2.5 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 shadow-xs">
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-blue-900 mb-1">KM Akhir:</label>
-                                    <input type="number" id="out-servis-km-akhir" placeholder="0" oninput="window.hitungTripOutServis()" class="w-full px-2.5 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+
+                                <!-- KM Odometer -->
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-blue-900 mb-1">KM Awal:</label>
+                                        <input type="number" id="out-servis-km-awal" placeholder="0" oninput="window.hitungTripOutServis()" class="w-full px-2.5 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-blue-900 mb-1">KM Akhir:</label>
+                                        <input type="number" id="out-servis-km-akhir" placeholder="0" oninput="window.hitungTripOutServis()" class="w-full px-2.5 py-1.5 bg-white border border-blue-300 rounded-lg text-xs font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+
+                                <!-- Display Estimasi Trip -->
+                                <div class="flex justify-between items-center text-[11px] bg-white px-3 py-1.5 rounded-lg border border-blue-200">
+                                    <span class="text-blue-700 font-semibold">Estimasi Trip Servis:</span>
+                                    <span id="out-servis-trip-display" class="font-black text-blue-800">0 KM</span>
                                 </div>
                             </div>
-
-                            <!-- Display Estimasi Trip -->
-                            <div class="flex justify-between items-center text-[11px] bg-white px-3 py-1.5 rounded-lg border border-blue-200">
-                                <span class="text-blue-700 font-semibold">Estimasi Trip Servis:</span>
-                                <span id="out-servis-trip-display" class="font-black text-blue-800">0 KM</span>
-                            </div>
-                        </div>
 
                     </div>
 
@@ -2869,6 +2875,29 @@
             if (typeof window.hitungTripOutServis === 'function') window.hitungTripOutServis();
         };
 
+        // Function untuk Auto Sync Nominal Servis ke Nominal Utama Pengeluaran
+        window.syncNominalServisToUtama = function(inputEl) {
+            // 1. Ambil & bersihkan angka
+            let rawValue = inputEl.value.replace(/\D/g, "");
+            
+            if (rawValue) {
+                let valInt = parseInt(rawValue, 10);
+                
+                // Format tampilan di input servis (e.g. 150.000)
+                inputEl.value = valInt.toLocaleString('id-ID');
+                
+                // 2. Set otomatis ke Input Nominal Utama
+                const elNominalUtama = document.getElementById('out-nominal');
+                if (elNominalUtama) {
+                    elNominalUtama.value = valInt.toLocaleString('id-ID');
+                }
+            } else {
+                inputEl.value = "";
+                const elNominalUtama = document.getElementById('out-nominal');
+                if (elNominalUtama) elNominalUtama.value = "";
+            }
+        };
+
 
         window.simpanPengeluaranManual = async function() {
             const kategori = document.getElementById('out-kategori')?.value || "belanja";
@@ -4372,9 +4401,9 @@
             const userAktif = window.currentUser || (window.auth ? window.auth.currentUser : null);
             if (!userAktif) {
                 if (typeof tampilAlert === 'function') {
-                    tampilAlert("❌ Sesi aktif habis. Silakan login kembali.");
+                    tampilAlert("❌ Sesi aktif habis. Silakan login kembali.", "error");
                 } else {
-                    tampilAlert("❌ Sesi aktif habis. Silakan login kembali.");
+                    alert("❌ Sesi aktif habis. Silakan login kembali.");
                 }
                 return;
             }
@@ -4426,38 +4455,85 @@
                             modalOcr.classList.remove('hidden');
                             if (modalOcr.style.display) modalOcr.style.display = 'flex';
                             if (typeof tampilAlert === 'function') {
-                                tampilAlert("Data lama berhasil dihapus. Silakan lakukan upload ulang pada modal OCR yang telah terbuka.");
+                                tampilAlert("Data lama berhasil dihapus. Silakan lakukan upload ulang pada modal OCR yang telah terbuka.", "success");
                             }
                         } else {
                             if (typeof tampilAlert === 'function') {
-                                tampilAlert("Data lama terhapus, namun modal OCR tidak ditemukan. Silakan buka Akses Cepat -> Upload Slip.");
+                                tampilAlert("Data lama terhapus, namun modal OCR tidak ditemukan. Silakan buka Akses Cepat -> Upload Slip.", "warning");
                             }
                         }
                     } else {
                         if (typeof tampilAlert === 'function') {
-                            tampilAlert("❌ Gagal menghapus data slip lama.");
+                            tampilAlert("❌ Gagal menghapus data slip lama.", "error");
                         }
                     }
 
                 } else if (jenisTransaksi === 'pengeluaran') {
-                    // ─── ALUR PENGELUARAN ───
-                    const kategoriRaw = fields.kategori?.stringValue || "lainnya";
+                    // ─── ALUR PENGELUARAN (UMUM, BENSIN, SERVIS) ───
+                    const kategoriRaw = (fields.kategori?.stringValue || "lainnya").toLowerCase();
                     const periodeRaw = fields.periode?.stringValue || ""; 
                     const keterangan = fields.keterangan?.stringValue || "";
                     const nominal = parseInt(fields.potongan?.integerValue || fields.potongan?.stringValue || 0, 10);
 
-                    if (document.getElementById('out-kategori')) document.getElementById('out-kategori').value = kategoriRaw.toLowerCase();
+                    // Set Kategori & Keterangan
+                    const elKategori = document.getElementById('out-kategori');
+                    if (elKategori) {
+                        elKategori.value = kategoriRaw;
+                        // Switch tampilan sub-form (BBM, Servis, atau Default)
+                        if (typeof window.gantiSubFormPengeluaran === 'function') {
+                            window.gantiSubFormPengeluaran();
+                        } else if (typeof window.pilihKategoriPengeluaran === 'function') {
+                            window.pilihKategoriPengeluaran(kategoriRaw);
+                        }
+                    }
+
                     if (document.getElementById('out-keterangan')) document.getElementById('out-keterangan').value = keterangan;
                     
-                    // Tampilkan nominal dengan format ribuan (.toLocaleString)
+                    // Set Nominal Utama
                     if (document.getElementById('out-nominal')) {
                         document.getElementById('out-nominal').value = nominal === 0 ? "" : nominal.toLocaleString('id-ID');
                     }
                     
+                    // Set Periode
                     if (document.getElementById('out-periode') && periodeRaw) {
-                        document.getElementById('out-periode').value = window.konversiTeksKeMonthInput(periodeRaw);
+                        document.getElementById('out-periode').value = window.konversiTeksKeMonthInput ? window.konversiTeksKeMonthInput(periodeRaw) : periodeRaw;
                     }
 
+                    // ─── ISOLASI POPULASI SUB-FORM SPESIFIK ───
+                    if (kategoriRaw === 'bensin' || kategoriRaw === 'bbm') {
+                        const jenisBBM = fields.jenisBBM?.stringValue || fields.jenis_bbm?.stringValue || 'Pertalite';
+                        const literBBM = fields.literBBM?.doubleValue || fields.literBBM?.integerValue || fields.liter_bbm?.stringValue || 0;
+                        const odoBBM = fields.odometer?.integerValue || fields.odometer?.stringValue || 0;
+
+                        // Set pilihan tombol / select jenis BBM
+                        if (typeof window.pilihJenisBBMForm === 'function') {
+                            window.pilihJenisBBMForm(jenisBBM);
+                        } else {
+                            const elJenisBBM = document.getElementById('out-bbm-jenis');
+                            if (elJenisBBM) elJenisBBM.value = jenisBBM;
+                        }
+
+                        if (document.getElementById('out-bbm-nominal')) document.getElementById('out-bbm-nominal').value = nominal === 0 ? "" : nominal.toLocaleString('id-ID');
+                        if (document.getElementById('out-bbm-liter')) document.getElementById('out-bbm-liter').value = literBBM || "";
+                        if (document.getElementById('out-bbm-odometer')) document.getElementById('out-bbm-odometer').value = odoBBM || "";
+
+                    } else if (kategoriRaw === 'servis') {
+                        const kmAwal = fields.kmAwal?.integerValue || fields.km_awal?.stringValue || 0;
+                        const kmAkhir = fields.kmAkhir?.integerValue || fields.km_akhir?.stringValue || 0;
+                        const detailServis = fields.detailServis?.stringValue || keterangan;
+
+                        if (document.getElementById('out-servis-keterangan')) document.getElementById('out-servis-keterangan').value = detailServis;
+                        if (document.getElementById('out-servis-nominal')) document.getElementById('out-servis-nominal').value = nominal === 0 ? "" : nominal.toLocaleString('id-ID');
+                        if (document.getElementById('out-servis-km-awal')) document.getElementById('out-servis-km-awal').value = kmAwal || "";
+                        if (document.getElementById('out-servis-km-akhir')) document.getElementById('out-servis-km-akhir').value = kmAkhir || "";
+
+                        // Hitung ulang estimasi trip jika fungsi tersedia
+                        if (typeof window.hitungTripOutServis === 'function') {
+                            window.hitungTripOutServis();
+                        }
+                    }
+
+                    // Tampilkan Modal
                     const modalPengeluaran = document.getElementById('modal-pengeluaran-baru');
                     if (modalPengeluaran) {
                         modalPengeluaran.classList.remove('hidden');
@@ -4481,13 +4557,12 @@
                     if (document.getElementById('mutasi-tujuan')) document.getElementById('mutasi-tujuan').value = targetPos;
                     if (document.getElementById('mutasi-keterangan')) document.getElementById('mutasi-keterangan').value = keterangan;
                     
-                    // Tampilkan nominal dengan format ribuan (.toLocaleString)
                     if (document.getElementById('mutasi-nominal')) {
                         document.getElementById('mutasi-nominal').value = nominal === 0 ? "" : nominal.toLocaleString('id-ID');
                     }
                     
                     if (document.getElementById('mutasi-periode') && periodeRaw) {
-                        document.getElementById('mutasi-periode').value = window.konversiTeksKeMonthInput(periodeRaw);
+                        document.getElementById('mutasi-periode').value = window.konversiTeksKeMonthInput ? window.konversiTeksKeMonthInput(periodeRaw) : periodeRaw;
                     }
 
                     const modalMutasi = document.getElementById('modal-mutasi-saldo');
@@ -4506,9 +4581,9 @@
             } catch (error) {
                 console.error("❌ Gagal memuat detail edit data:", error);
                 if (typeof tampilAlert === 'function') {
-                    tampilAlert("Gagal mengambil rincian data transaksi.");
+                    tampilAlert("Gagal mengambil rincian data transaksi.", "error");
                 } else {
-                    tampilAlert("Gagal mengambil rincian data transaksi.");
+                    alert("Gagal mengambil rincian data transaksi.");
                 }
             }
         };
