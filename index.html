@@ -183,8 +183,8 @@
 
             <div id="rekap" class="tab-content active-content space-y-6 w-full">
     
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
-                    
+                <div class="grid grid-cols-1 gap-6 w-full max-w-xl">
+                    <!-- Card Rekap Utama -->
                     <div class="bg-white border border-gray-200/80 rounded-2xl p-5 shadow-xs relative overflow-hidden flex flex-col justify-between h-full min-h-[210px]">
                         <div class="absolute top-0 left-0 right-0 h-1.5 bg-blue-600"></div>
                         
@@ -223,6 +223,7 @@
                             </div>
                         </div>
 
+                        <!-- Overlay Lock Auth -->
                         <div id="auth-lock-overlay" class="absolute inset-0 bg-white/95 backdrop-blur-xs flex flex-col items-center justify-center text-center p-4 transition-all duration-300">
                             <div class="w-10 h-10 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center border border-gray-200 shadow-xs mb-2">
                                 <i class="fas fa-lock text-sm"></i>
@@ -2712,21 +2713,40 @@
             window.jenisTransaksiSedangDiedit = null;
         };
 
-        // 1. Switch Tampilan Mode Bensin vs Servis via Radio Button
+        // 1. Switch Tampilan Mode Bensin vs Servis via Radio Button (Sudah Diperbaiki)
         window.switchSubKategoriKendaraan = function(mode) {
             const subBensin = document.getElementById('sub-form-bensin');
             const subServis = document.getElementById('sub-form-servis');
+            const inputNominal = document.getElementById('out-nominal');
 
             if (mode === 'bensin') {
                 if (subBensin) subBensin.classList.remove('hidden');
                 if (subServis) subServis.classList.add('hidden');
-                window.updateKmAwalDariPilihanKendaraan();
+                
+                if (inputNominal) {
+                    inputNominal.disabled = false;
+                    inputNominal.readOnly = false;
+                }
             } else {
                 if (subBensin) subBensin.classList.add('hidden');
                 if (subServis) subServis.classList.remove('hidden');
+
+                // Memastikan nominal bisa diketik manual di mode servis
+                if (inputNominal) {
+                    inputNominal.disabled = false;
+                    inputNominal.readOnly = false;
+                    inputNominal.value = "";
+                    inputNominal.focus();
+                }
+            }
+
+            if (typeof window.updateKmAwalDariPilihanKendaraan === 'function') {
                 window.updateKmAwalDariPilihanKendaraan();
             }
         };
+
+        // Alias pendukung jika ada tombol/script lain yang memanggil gantiSubModeKendaraan
+        window.gantiSubModeKendaraan = window.switchSubKategoriKendaraan;
 
         // State BBM Global
         window.jenisBBMAktif = "Pertalite";
@@ -2820,25 +2840,33 @@
 
         // 4. Update KM Terakhir saat ganti Pilihan Kendaraan
         const fnUpdateKmOrig = window.updateKmAwalDariPilihanKendaraan;
-        window.updateKmAwalDariPilihanKendaraan = function() {
+       window.updateKmAwalDariPilihanKendaraan = function() {
             const idK = document.getElementById('out-servis-kendaraan')?.value || "1";
-            const elKmAkhir = document.getElementById(`servis-v${idK}-km-akhir`);
-            
             let kmAkhirLalu = 0;
-            if (elKmAkhir) {
-                kmAkhirLalu = parseInt(elKmAkhir.innerText.replace(/[^0-9]/g, ""), 10) || 0;
+
+            // Prioritas 1: Ambil dari Data Global Kendaraan
+            if (window.dataKendaraan && window.dataKendaraan[idK] && window.dataKendaraan[idK].kmAkhir) {
+                kmAkhirLalu = parseInt(window.dataKendaraan[idK].kmAkhir, 10) || 0;
+            } 
+            // Prioritas 2: Fallback ke Element DOM
+            else {
+                const elKmAkhir = document.getElementById(`servis-v${idK}-km-akhir`);
+                if (elKmAkhir) {
+                    const teksKM = elKmAkhir.innerText || elKmAkhir.textContent || "0";
+                    kmAkhirLalu = parseInt(teksKM.replace(/[^0-9]/g, ""), 10) || 0;
+                }
             }
 
             // Set ke KM Sebelumnya Bensin
             const inputBensinKm = document.getElementById('out-bensin-km-sebelumnya');
-            if (inputBensinKm) inputBensinKm.value = kmAkhirLalu;
+            if (inputBensinKm) inputBensinKm.value = kmAkhirLalu > 0 ? kmAkhirLalu : 0;
 
             // Set ke KM Awal Servis
             const inputServisKm = document.getElementById('out-servis-km-awal');
             if (inputServisKm) inputServisKm.value = kmAkhirLalu > 0 ? kmAkhirLalu : "";
 
-            window.hitungTripBensin();
-            window.hitungTripOutServis();
+            if (typeof window.hitungTripBensin === 'function') window.hitungTripBensin();
+            if (typeof window.hitungTripOutServis === 'function') window.hitungTripOutServis();
         };
 
 
@@ -2846,7 +2874,7 @@
             const kategori = document.getElementById('out-kategori')?.value || "belanja";
             let keterangan = document.getElementById('out-keterangan')?.value.trim() || "";
             
-            // Menggunakan penapis angka murni
+            // Penapis angka murni
             const nominal = window.ambilAngkaMurni ? window.ambilAngkaMurni('out-nominal') : parseInt(document.getElementById('out-nominal')?.value || 0, 10);
             const inputPeriode = document.getElementById('out-periode')?.value;
 
@@ -2855,12 +2883,11 @@
             let namaKendaraanSingkat = "kendaraan";
             let detailServisKhusus = "";
 
-            // ─── 1. OTOMATISASI KETERANGAN KHUSUS KATEGORI TRANSPORTASI/KENDARAAN ───
+            // ─── OTOMATISASI KETERANGAN KHUSUS KATEGORI TRANSPORTASI ───
             if (kategori === "transportasi") {
                 subMode = document.querySelector('input[name="sub_kategori_kendaraan"]:checked')?.value || "bensin";
                 idKendaraan = document.getElementById('out-servis-kendaraan')?.value || "1";
                 
-                // Ambil nama dan plat kendaraan dari state global
                 const dataK = window.dataKendaraan?.[idKendaraan] || { nama: `Kendaraan ${idKendaraan}`, plat: "" };
                 namaKendaraanSingkat = dataK.nama || `kendaraan${idKendaraan}`;
 
@@ -2869,18 +2896,16 @@
                     const platTeks = dataK.plat ? `(${dataK.plat})` : '';
                     
                     if (detailServisKhusus) {
-                        keterangan = `Servis (${detailServisKhusus}) - ${dataK.nama} ${platTeks}`.trim();
+                        keterangan = `Servis - ${dataK.nama} ${platTeks}`.trim();
                     } else {
                         keterangan = `Servis ${dataK.nama} ${platTeks}`.trim();
                     }
                 } else {
-                    // Mode Bensin
                     const labelMode = "Bensin";
                     keterangan = `${labelMode} ${dataK.nama} ${dataK.plat ? '(' + dataK.plat + ')' : ''}`.trim();
                 }
             }
 
-            // Validasi dasar
             if (nominal <= 0 || !keterangan) {
                 if (typeof tampilAlert === 'function') {
                     tampilAlert("Gagal menyimpan! Harap isi nominal pengeluaran dan rincian dengan benar.", "warning");
@@ -2888,7 +2913,6 @@
                 return;
             }
 
-            // Ambil user aktif dari auth atau window.currentUser fallback
             const userAktif = window.currentUser || (window.auth ? window.auth.currentUser : null);
             if (!userAktif || !userAktif.uid) {
                 if (typeof tampilAlert === 'function') {
@@ -2903,7 +2927,6 @@
                 namaUserSistem = userAktif.email.split('@')[0];
             }
 
-            // Parsing Periode Kalender
             let periodeTeks = "Juli 2026";
             let formatPeriodeClean = "juli_2026";
             if (inputPeriode) {
@@ -2928,7 +2951,6 @@
                 const projectId = window.firebaseConfig?.projectId || "dompetq-app";
                 const timestampUnik = Date.now();
 
-                // ─── 2. STRUKTUR PAYLOAD BASE FIRESTORE ───
                 const payloadFields = {
                     kategori: { stringValue: kategori },
                     keterangan: { stringValue: keterangan },
@@ -2939,13 +2961,12 @@
                     referenceKeyImage: { stringValue: "MANUAL_INPUT" },
                     waktuTransaksi: { timestampValue: new Date().toISOString() },
                     namaUser: { stringValue: namaUserSistem },
-                    uid: { stringValue: uid } // Disimpan sebagai identitas pemilik data
+                    uid: { stringValue: uid }
                 };
 
                 let endpointFirestore = "";
                 let httpMethod = "PATCH";
 
-                // ─── 3. PENANGANAN KHUSUS TRANSPORTASI (SUB-COLLECTION PER-USER) ───
                 if (kategori === "transportasi") {
                     payloadFields.subModeKendaraan = { stringValue: subMode };
                     payloadFields.subKategori = { stringValue: subMode };
@@ -2962,7 +2983,6 @@
                         payloadFields.kmAwal = { integerValue: kmSblm.toString() };
                         payloadFields.kmAkhir = { integerValue: kmBaru.toString() };
                     } else {
-                        // Mode Servis
                         const kmAwal = parseInt(document.getElementById('out-servis-km-awal')?.value, 10) || 0;
                         const kmAkhir = parseInt(document.getElementById('out-servis-km-akhir')?.value, 10) || 0;
                         const tripKM = (kmAkhir > kmAwal) ? (kmAkhir - kmAwal) : 0;
@@ -2982,11 +3002,9 @@
 
                     const docIndukId = `out_transportasi_${formatPeriodeClean}`;
 
-                    // Path Firestore per-user: users/{uid}/rekap_finansial/{docIndukId}/rincian_transaksi/{subDocId}
                     endpointFirestore = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/rekap_finansial/${docIndukId}/rincian_transaksi?documentId=${subDocId}`;
                     httpMethod = "POST";
 
-                    // Pastikan dokumen induk terbuat di bawah sub-koleksi pengguna
                     try {
                         const endpointInduk = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/rekap_finansial/${docIndukId}`;
                         await fetch(endpointInduk, {
@@ -3008,18 +3026,15 @@
                     }
 
                 } else {
-                    // Untuk Kategori Pengeluaran Umum Lainnya (Belanja, Konsumsi, dll)
                     const keyTransaksi = `out_${kategori}_${formatPeriodeClean}_${timestampUnik}`;
                     payloadFields.idTransaksi = { stringValue: keyTransaksi };
 
-                    // Path Firestore per-user: users/{uid}/rekap_finansial/{keyTransaksi}
                     endpointFirestore = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/rekap_finansial/${keyTransaksi}`;
                     httpMethod = "PATCH";
                 }
 
                 const payloadFirestore = { fields: payloadFields };
 
-                // ─── 4. KIRIM KE FIRESTORE VIA REST API ───
                 const responFirestore = await fetch(endpointFirestore, {
                     method: httpMethod,
                     headers: {
@@ -3034,6 +3049,24 @@
                     throw new Error(`Gagal Menyimpan ke Firestore: ${errTxt}`);
                 }
 
+                if (kategori === "transportasi") {
+                    const kmInputBaru = (subMode === "bensin") 
+                        ? (parseInt(document.getElementById('out-bensin-km-baru')?.value, 10) || 0)
+                        : (parseInt(document.getElementById('out-servis-km-akhir')?.value, 10) || 0);
+
+                    if (kmInputBaru > 0) {
+                        if (!window.dataKendaraan) window.dataKendaraan = {};
+                        if (!window.dataKendaraan[idKendaraan]) window.dataKendaraan[idKendaraan] = {};
+                        
+                        window.dataKendaraan[idKendaraan].kmAkhir = kmInputBaru;
+
+                        const elKmAkhir = document.getElementById(`servis-v${idKendaraan}-km-akhir`);
+                        if (elKmAkhir) {
+                            elKmAkhir.innerText = `${kmInputBaru.toLocaleString('id-ID')} km`;
+                        }
+                    }
+                }
+
                 if (typeof tampilAlert === 'function') {
                     tampilAlert(`Sukses! Pengeluaran "${keterangan}" berhasil dicatat.`, "success");
                 }
@@ -3042,7 +3075,6 @@
                     window.tutupModalPengeluaran();
                 }
 
-                // ─── 5. MEMICU SINKRONISASI DASHBOARD & TAB SERVIS ───
                 if (typeof window.inisialisasiAplikasi === 'function') {
                     await window.inisialisasiAplikasi();
                 } else if (typeof window.muatRekapFinansialDashboard === 'function') {
@@ -3391,6 +3423,9 @@
             return atob(kunciTersamar); // Mengembalikan API Key asli ke memori saat runtime
         }
 
+        // =================================================================
+        // PROCESS OCR DOCUMENT ENGINE (GEMINI VISION)
+        // =================================================================
         window.prosesOcrDokumen = async function() {
             const fileInput = document.getElementById('input-foto');
             const jenisKategori = document.getElementById('jenis-slip')?.value || "gaji";
@@ -3419,11 +3454,15 @@
                 const compressedBase64 = await window.kompresGambarKeBase64(file, 850);
                 window.globalCompressedImageBase64 = compressedBase64;
                 
-                // Ambil data base64 murni tanpa string header data:image/...;base64,
+                // Ambil data base64 murni tanpa header data:image/...;base64,
                 const base64RawData = compressedBase64.split(',')[1];
 
                 // 2. Ambil Kunci Rahasia Gemini dari fungsi Obfuscator
-                const apiKey = dapatkanKunciRahasia();
+                const apiKey = typeof dapatkanKunciRahasia === 'function' ? dapatkanKunciRahasia() : '';
+
+                if (!apiKey) {
+                    throw new Error("Kunci API Gemini tidak ditemukan atau gagal dimuat.");
+                }
 
                 // 3. Prompt Rekayasa Instruksi OCR
                 const promptInstruksi = `
@@ -3445,8 +3484,8 @@
         4. Ekstrak Nominal Potongan: Ambil nilai angka murni dari "Total Potongan", "PPh 21", atau komponen "PENYESUAIAN" (jika tidak ditemukan potongan/nol, isi 0).
                 `;
 
-                // 4. Request ke Endpoint Gemini 2.5 Flash API dengan Structured JSON Schema
-                const urlEndpoint = `[https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$](https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$){apiKey}`;
+                // 4. Request ke Endpoint Gemini 2.5 Flash API (URL Murni Tanpa Format Markdown)
+                const urlEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
                 const payloadApi = {
                     contents: [{
@@ -3541,33 +3580,30 @@
             }
         };
 
+        // =================================================================
+        // RESET FORM OCR & UI STATE
+        // =================================================================
         window.resetFormOcr = function() {
             console.log("[DompetQ Clean Engine] Mengosongkan form pindaian dan pratinjau OCR...");
             
             // 1. Reset variabel cache gambar global
-            globalCompressedImageBase64 = null;
+            window.globalCompressedImageBase64 = null;
             
-            // 2. Kosongkan input file agar bisa memilih file yang sama lagi jika diinginkan
+            // 2. Kosongkan input file
             const fileInput = document.getElementById('input-foto');
             if (fileInput) fileInput.value = "";
             
             // 3. Kembalikan dropdown pilihan jenis dan input periode ke default awal
             const jenisSlip = document.getElementById('jenis-slip');
-            if (jenisSlip) jenisSlip.value = ""; // Default kembali ke Slip Gaji Bulanan
+            if (jenisSlip) jenisSlip.value = "";
 
             const inputPeriodeUi = document.getElementById('ocr-periode');
-            if (inputPeriodeUi) {
-                // Atur kembali ke bulan berjalan saat ini (Juli 2026) sebagai fallback standar
-                const waktuSekarang = new Date();
-                const tahunTerdeteksi = waktuSekarang.getFullYear(); // 2026
-                const bulanTerdeteksi = String(waktuSekarang.getMonth() + 1).padStart(2, '0');
-                inputPeriodeUi.value = "";
-            }
+            if (inputPeriodeUi) inputPeriodeUi.value = "";
 
             // 4. Kosongkan nilai kalkulator nominal numerik di form konfirmasi
             const ocrPendapatan = document.getElementById('ocr-pendapatan');
             const ocrPotongan = document.getElementById('ocr-potongan');
-            const ocrNetto = document.getElementById('ocr-netto'); // Jika elemen ini ada di UI Anda
+            const ocrNetto = document.getElementById('ocr-netto');
             
             if (ocrPendapatan) ocrPendapatan.value = "";
             if (ocrPotongan) ocrPotongan.value = "";
@@ -3580,17 +3616,22 @@
                 previewImg.classList.add('hidden');
             }
 
-            // 6. Kembalikan struktur langkah langkah UI Modal (Step UI) ke tampilan awal
-            document.getElementById('step-input').classList.remove('hidden');
-            document.getElementById('step-jenis-dokumen').style.opacity = "1";
-            document.getElementById('step-loading').classList.add('hidden');
-            document.getElementById('step-konfirmasi').classList.add('hidden');
+            // 6. Safe Reset UI Step Elements
+            const stepInput = document.getElementById('step-input');
+            const stepJenis = document.getElementById('step-jenis-dokumen');
+            const stepLoading = document.getElementById('step-loading');
+            const stepKonfirmasi = document.getElementById('step-konfirmasi');
+
+            if (stepInput) stepInput.classList.remove('hidden');
+            if (stepJenis) stepJenis.style.opacity = "1";
+            if (stepLoading) stepLoading.classList.add('hidden');
+            if (stepKonfirmasi) stepKonfirmasi.classList.add('hidden');
         };
 
         // =================================================================
         // FUNCTION UTILITY: IMAGE COMPRESSION ENGINE
         // =================================================================
-        function kompresGambarKeBase64(file, maxDimension) {
+        window.kompresGambarKeBase64 = function(file, maxDimension) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
@@ -3612,12 +3653,12 @@
                         canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.70)); // Kualitas 70% (Sangat optimal untuk database teks)
+                        resolve(canvas.toDataURL('image/jpeg', 0.70)); // Kualitas 70%
                     };
                 };
                 reader.onerror = err => reject(err);
             });
-        }
+        };
 
         // =================================================================
         // FUNGSIONALITAS AKHIR: SIMPAN DATA OCR (GESER BULAN BUKU & MULTI-USER)
