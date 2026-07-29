@@ -963,11 +963,13 @@
         </div>
 
         <!-- MODAL CATAT PENGELUARAN BARU -->
-        <div id="modal-pengeluaran-baru" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end justify-center sm:items-center hidden p-0 sm:p-4 overflow-y-auto">
-            <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 flex flex-col max-h-[90vh] sm:max-h-[85vh] my-auto">
+        <div id="modal-pengeluaran-baru" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-start justify-center pt-4 pb-20 sm:items-center sm:p-4 overflow-y-auto hidden">
+            
+            <!-- Box Modal Utama -->
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 flex flex-col max-h-[80vh] sm:max-h-[85vh] my-auto">
                 
                 <!-- Header Modal (Sticky Top) -->
-                <div class="bg-gradient-to-r from-red-700 to-red-800 px-4 py-3.5 sm:px-5 flex justify-between items-center text-white shrink-0">
+                <div class="bg-gradient-to-r from-red-700 to-red-800 px-4 py-3 sm:px-5 flex justify-between items-center text-white shrink-0">
                     <div>
                         <h3 class="font-bold text-sm sm:text-base tracking-wide">Catat Pengeluaran Baru</h3>
                         <p class="text-[10px] text-red-200">Kurangi saldo utama untuk pos keuangan tertentu</p>
@@ -977,7 +979,7 @@
                     </button>
                 </div>
 
-                <!-- Body Form (Area Scrollable) -->
+                <!-- Body Form (Area Scrollable Internal) -->
                 <div class="p-4 sm:p-5 bg-slate-50 space-y-4 overflow-y-auto flex-1 text-xs">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div class="space-y-1.5">
@@ -1137,7 +1139,7 @@
                 </div>
 
                 <!-- Footer Modal (Sticky Bottom / Selalu Terlihat) -->
-                <div class="bg-gray-100 px-4 py-3 sm:px-5 flex justify-between items-center border-t border-gray-200 shrink-0 pb-5 sm:pb-3">
+                <div class="bg-gray-100 px-4 py-3 sm:px-5 flex justify-between items-center border-t border-gray-200 shrink-0">
                     <button onclick="window.tutupModalPengeluaran()" class="px-4 py-2 sm:py-1.5 bg-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-400 transition shadow-sm text-xs">
                         Batal
                     </button>
@@ -2761,6 +2763,7 @@
             let subMode = "bensin";
             let idKendaraan = "1";
             let namaKendaraanSingkat = "kendaraan";
+            let detailServisKhusus = "";
 
             // ─── 1. OTOMATISASI KETERANGAN KHUSUS KATEGORI TRANSPORTASI/KENDARAAN ───
             if (kategori === "transportasi") {
@@ -2769,12 +2772,23 @@
                 
                 // Ambil nama dan plat kendaraan dari state global
                 const dataK = window.dataKendaraan?.[idKendaraan] || { nama: `Kendaraan ${idKendaraan}`, plat: "" };
-                const labelMode = subMode === "bensin" ? "Bensin" : "Servis";
-                
                 namaKendaraanSingkat = dataK.nama || `kendaraan${idKendaraan}`;
-                
-                // Contoh hasil: "Bensin Kijang (G 1081 AZ)" atau "Servis Vario 110 FI (H 4663 AEW)"
-                keterangan = `${labelMode} ${dataK.nama} ${dataK.plat ? '(' + dataK.plat + ')' : ''}`.trim();
+
+                if (subMode === "servis") {
+                    detailServisKhusus = document.getElementById('out-servis-keterangan')?.value.trim() || "";
+                    const platTeks = dataK.plat ? `(${dataK.plat})` : '';
+                    
+                    // Jika ada detail khusus (cth: "Ganti Oli Engine"), formatnya: "Servis (Ganti Oli Engine) - Vario 110 FI (H 4663 AEW)"
+                    if (detailServisKhusus) {
+                        keterangan = `Servis (${detailServisKhusus}) - ${dataK.nama} ${platTeks}`.trim();
+                    } else {
+                        keterangan = `Servis ${dataK.nama} ${platTeks}`.trim();
+                    }
+                } else {
+                    // Mode Bensin
+                    const labelMode = "Bensin";
+                    keterangan = `${labelMode} ${dataK.nama} ${dataK.plat ? '(' + dataK.plat + ')' : ''}`.trim();
+                }
             }
 
             // Validasi dasar
@@ -2841,6 +2855,7 @@
                 // ─── 3. PENANGANAN KHUSUS TRANSPORTASI (SUB-COLLECTION DENGAN NAMA UNIK) ───
                 if (kategori === "transportasi") {
                     payloadFields.subModeKendaraan = { stringValue: subMode };
+                    payloadFields.subKategori = { stringValue: subMode };
                     payloadFields.idKendaraan = { stringValue: idKendaraan };
 
                     if (subMode === "bensin") {
@@ -2854,11 +2869,18 @@
                         payloadFields.kmAwal = { integerValue: kmSblm.toString() };
                         payloadFields.kmAkhir = { integerValue: kmBaru.toString() };
                     } else {
+                        // Mode Servis
                         const kmAwal = parseInt(document.getElementById('out-servis-km-awal')?.value, 10) || 0;
                         const kmAkhir = parseInt(document.getElementById('out-servis-km-akhir')?.value, 10) || 0;
+                        const tripKM = (kmAkhir > kmAwal) ? (kmAkhir - kmAwal) : 0;
 
                         payloadFields.kmAwal = { integerValue: kmAwal.toString() };
                         payloadFields.kmAkhir = { integerValue: kmAkhir.toString() };
+                        payloadFields.tripKM = { integerValue: tripKM.toString() };
+                        
+                        if (detailServisKhusus) {
+                            payloadFields.detailServis = { stringValue: detailServisKhusus };
+                        }
                     }
 
                     // Bersihkan nama kendaraan untuk ID (misal: "Vario 110 FI" -> "vario110fi")
@@ -2896,7 +2918,6 @@
 
                 } else {
                     // Untuk Kategori Pengeluaran Umum Lainnya (Belanja, Konsumsi, dll)
-                    // Gunakan ID unik bertimestamp agar tidak menimpa transaksi sebelumnya
                     const keyTransaksi = `out_${kategori}_${formatPeriodeClean}_${timestampUnik}`;
                     payloadFields.idTransaksi = { stringValue: keyTransaksi };
 
@@ -2941,6 +2962,7 @@
                         keterangan: keterangan,
                         subModeKendaraan: subMode,
                         idKendaraan: idKendaraan,
+                        detailServis: detailServisKhusus,
                         potongan: nominal,
                         waktuTransaksi: new Date().toISOString()
                     });
