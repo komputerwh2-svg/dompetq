@@ -3665,10 +3665,29 @@
         // =================================================================
         window.simpanDataOcr = async function() {
             const jenisKategori = document.getElementById('jenis-slip')?.value || "gaji";
-            const pendapatan = parseInt(document.getElementById('ocr-pendapatan')?.value, 10) || 0;
-            const potongan = parseInt(document.getElementById('ocr-potongan')?.value, 10) || 0;
-            // Saldo bersih hasil pembulatan/netto
-            const netto = parseInt(document.getElementById('ocr-netto-pembulatan')?.value, 10) || 0;
+            
+            // ─── PERBAIKAN: Ambil angka murni (buang separator titik/karakter non-angka) ───
+            const ambilAngkaInput = (id) => {
+                const el = document.getElementById(id);
+                if (!el) return 0;
+                // Utamakan dari dataset jika ada, jika tidak bersihkan value string-nya
+                if (el.dataset && el.dataset.nilaiMurni !== undefined && el.dataset.nilaiMurni !== "") {
+                    return parseInt(el.dataset.nilaiMurni, 10) || 0;
+                }
+                const murni = (el.value || el.innerText || "").toString().replace(/[^0-9]/g, '');
+                return parseInt(murni, 10) || 0;
+            };
+
+            const pendapatan = ambilAngkaInput('ocr-pendapatan');
+            const potongan = ambilAngkaInput('ocr-potongan');
+            
+            // Ambil saldo bersih hasil pembulatan/netto
+            let netto = ambilAngkaInput('ocr-netto-pembulatan');
+            
+            // Fallback jika ocr-netto-pembulatan kosong, gunakan ocr-bersih
+            if (netto === 0 && (pendapatan > 0 || potongan > 0)) {
+                netto = ambilAngkaInput('ocr-bersih');
+            }
 
             // --- PARSING PERIODE DARI <input type="month"> SECARA DINAMIS ---
             const inputPeriode = document.getElementById('ocr-periode');
@@ -3719,6 +3738,7 @@
             let formatPeriodeClean = `${namaBulanIndo[bulanTargetIndex].toLowerCase()}_${tahunTargetAngka}`;
 
             console.log(`✨ [Aturan Main Slip] Slip Asli: ${periodeAsliTeks} ⏩ Dialokasikan ke Buku: ${periodeBukuTeks}`);
+            console.log(`💰 [Nominal Murni OCR] Pendapatan: ${pendapatan}, Potongan: ${potongan}, Netto: ${netto}`);
 
             if (pendapatan <= 0) {
                 if (typeof tampilAlert === 'function') {
@@ -3846,40 +3866,49 @@
             // 1. Ambil elemen input
             const elPendapatan = document.getElementById('ocr-pendapatan');
             const elPotongan = document.getElementById('ocr-potongan');
+            const elBersih = document.getElementById('ocr-bersih');
+            const elPembulatan = document.getElementById('ocr-netto-pembulatan');
 
-            // 2. Bersihkan karakter non-angka & format visual input secara realtime saat diketik
+            // 2. Format visual input realtime & amankan nilai murni
             if (elPendapatan && document.activeElement === elPendapatan) {
-                let murni = elPendapatan.value.replace(/[^0-9]/g, '');
-                elPendapatan.value = murni === "" ? "" : parseInt(murni, 10).toLocaleString('id-ID');
+                let murniP = elPendapatan.value.replace(/[^0-9]/g, '');
+                elPendapatan.value = murniP === "" ? "" : parseInt(murniP, 10).toLocaleString('id-ID');
             }
             if (elPotongan && document.activeElement === elPotongan) {
-                let murni = elPotongan.value.replace(/[^0-9]/g, '');
-                elPotongan.value = murni === "" ? "" : parseInt(murni, 10).toLocaleString('id-ID');
+                let murniPot = elPotongan.value.replace(/[^0-9]/g, '');
+                elPotongan.value = murniPot === "" ? "" : parseInt(murniPot, 10).toLocaleString('id-ID');
             }
 
-            // 3. Ambil nilai angka murni (tanpa titik) untuk kalkulasi matematika sistem
+            // 3. Ambil nilai angka murni (membuang semua karakter non-angka)
             const pendapatan = elPendapatan ? (parseInt(elPendapatan.value.replace(/[^0-9]/g, ''), 10) || 0) : 0;
             const potongan = elPotongan ? (parseInt(elPotongan.value.replace(/[^0-9]/g, ''), 10) || 0) : 0;
             
-            // 4. Hitung netto murni menggunakan rumus matematika dasar
+            // 4. Hitung netto murni
             const nettoAsli = pendapatan - potongan;
             
-            // 5. Pembulatan ke bawah ke RATUSAN terdekat (Membuang 2 digit terakhir)
+            // 5. Pembulatan ke bawah ke RATUSAN terdekat
             let hasilPembulatan = 0;
             if (nettoAsli > 0) {
                 hasilPembulatan = Math.floor(nettoAsli / 100) * 100;
             }
 
-            // 6. Injeksi hasil kalkulasi ke input dengan format ber-separator ribuan (.toLocaleString)
-            // Gunakan pengkondisian tanda minus jika hasil netto asli di bawah 0 (negatif)
-            if (nettoAsli < 0) {
-                const nettoPositif = Math.abs(nettoAsli);
-                document.getElementById('ocr-bersih').value = `-${nettoPositif.toLocaleString('id-ID')}`;
-            } else {
-                document.getElementById('ocr-bersih').value = nettoAsli.toLocaleString('id-ID');
+            // 6. Injeksi ke UI + SIMPAN ANGKA MURNI KE DATASET (Mencegah Angka Terpotong Jadi 1 Digit)
+            if (elBersih) {
+                if (nettoAsli < 0) {
+                    const nettoPositif = Math.abs(nettoAsli);
+                    elBersih.value = `-${nettoPositif.toLocaleString('id-ID')}`;
+                } else {
+                    elBersih.value = nettoAsli.toLocaleString('id-ID');
+                }
+                // KUNCI UTAMA: Simpan angka murni di dataset
+                elBersih.dataset.nilaiMurni = nettoAsli;
             }
             
-            document.getElementById('ocr-netto-pembulatan').value = hasilPembulatan === 0 ? "0" : hasilPembulatan.toLocaleString('id-ID');
+            if (elPembulatan) {
+                elPembulatan.value = hasilPembulatan === 0 ? "0" : hasilPembulatan.toLocaleString('id-ID');
+                // KUNCI UTAMA: Simpan angka murni di dataset
+                elPembulatan.dataset.nilaiMurni = hasilPembulatan;
+            }
         };
 
         // Fungsi Reset & Tutup Modal Universal
@@ -5071,35 +5100,32 @@
                     ? window.firebaseConfig.databaseURL.replace(/^https?:\/\//, '').replace(/\/$/, '')
                     : "dompetq-app-default-rtdb.asia-southeast1.firebasedatabase.app";
 
-                // Ambil data gambar dari node RTDB milik user aktif (/users/{uid}/{keyGambar})
-                const urlTarget = `https://${rtdbHost}/users/${uid}/${keyGambar}.json?auth=${userToken}`;
-                const respon = await fetch(urlTarget);
+                // PERBAIKAN: Targetkan jalur sub-node /slip_images/
+                let urlTarget = `https://${rtdbHost}/users/${uid}/slip_images/${keyGambar}.json?auth=${userToken}`;
+                let respon = await fetch(urlTarget);
+                let jsonResult = await respon.json();
 
-                if (!respon.ok) throw new Error("Gagal mengunduh data gambar dari server RTDB.");
-
-                const jsonResult = await respon.json();
+                // FALLBACK: Jika di sub-node null, coba cek di root user
+                if (!jsonResult || !jsonResult.berkasGambar) {
+                    urlTarget = `https://${rtdbHost}/users/${uid}/${keyGambar}.json?auth=${userToken}`;
+                    respon = await fetch(urlTarget);
+                    jsonResult = await respon.json();
+                }
 
                 if (jsonResult && jsonResult.berkasGambar) {
-                    
-                    // Ambil elemen dari Modal Pratinjau Slip
                     const elModal = document.getElementById('modal-pratinjau-slip');
                     const elImg = document.getElementById('img-pratinjau-slip-target');
                     const elTitle = document.getElementById('modal-pratinjau-title');
 
                     if (elModal && elImg) {
-                        // Suntikkan base64 data ke tag img src
                         elImg.src = jsonResult.berkasGambar;
-                        
-                        // Berikan judul dinamis sesuai nama berkas kunci gambar
                         if (elTitle) elTitle.innerText = `Pratinjau Slip - ${keyGambar}`;
 
-                        // Tampilkan modal secara presisi menggunakan kelas Tailwind
                         elModal.classList.remove('hidden');
                         elModal.style.display = 'flex';
                         
-                        console.log(`✅ Sukses merender slip [${keyGambar}] untuk user [${uid}] ke dalam Modal Mandiri.`);
+                        console.log(`✅ Sukses merender slip [${keyGambar}] untuk user [${uid}]`);
                     } else {
-                        // Darurat jika elemen HTML modal pratinjau tidak ditemukan
                         const blobWindow = window.open();
                         if (blobWindow) {
                             blobWindow.document.write(`<body style="margin:0;background:#1e293b;display:flex;justify-content:center;align-items:center;height:100vh;"><img src="${jsonResult.berkasGambar}" style="max-width:100%;max-height:100vh;object-fit:contain;"/></body>`);
@@ -6414,15 +6440,40 @@
             }
         }
 
+        // =================================================================
+        // MODUL DATA KENDARAAN (FIRESTORE REST API - MULTI-USER ISOLATED)
+        // =================================================================
+
+        // --- HELPER FUNCTION: RESET / SET DEFAULT DATA KENDARAAN ---
+        window.setDefaultDataKendaraan = function(force = true) {
+            if (force || !window.dataKendaraan) {
+                window.dataKendaraan = {
+                    1: { nama: "Kendaraan 1", plat: "" },
+                    2: { nama: "Kendaraan 2", plat: "" },
+                    3: { nama: "Kendaraan 3", plat: "" }
+                };
+            }
+        };
+
+        // --- HELPER FUNCTION: UPDATE DROPDOWN & HEADER UI ---
+        window.updateUINavigasiKendaraan = function() {
+            if (typeof window.updateDropdownKendaraanOptions === 'function') {
+                window.updateDropdownKendaraanOptions();
+            }
+            if (typeof window.perbaruiTampilanIdentitasKendaraanUI === 'function') {
+                window.perbaruiTampilanIdentitasKendaraanUI();
+            }
+        };
+
         // =========================================================
-        // 1. FETCH DATA KENDARAAN DARI FIRESTORE (MULTI-USER SINGLE SOURCE OF TRUTH)
+        // 1. FETCH DATA KENDARAAN DARI FIRESTORE (SINGLE SOURCE OF TRUTH)
         // =========================================================
         window.muatDataKendaraanDariFirestore = async function() {
-            // 1. CEK SESI LOGIN USER (MULTI-USER SAFE)
+            // 1. CEK SESI LOGIN USER
             const userAktif = window.currentUser || (window.auth ? window.auth.currentUser : null);
-            if (!userAktif) {
-                console.warn("User belum login, menggunakan data kendaraan default.");
-                window.setDefaultDataKendaraan();
+            if (!userAktif || !userAktif.uid) {
+                console.warn("User belum login / logout, mereset data kendaraan ke default.");
+                window.setDefaultDataKendaraan(true);
                 window.updateUINavigasiKendaraan();
                 return;
             }
@@ -6434,7 +6485,9 @@
             const endpoint = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/pengaturan_aplikasi/data_kendaraan`;
 
             try {
-                // Ambil ID Token dengan kondisi dipaksa/fresh agar tidak terhalang 401/403
+                // PERBAIKAN: Reset state lokal terlebih dahulu sebelum fetch agar data user lama hilang
+                window.setDefaultDataKendaraan(true);
+
                 const userToken = await userAktif.getIdToken(true);
                 const headers = { 
                     'Authorization': `Bearer ${userToken}`,
@@ -6458,60 +6511,38 @@
                             plat: fields.v2_plat?.stringValue || fields.v2?.mapValue?.fields?.plat?.stringValue || "" 
                         },
                         3: { 
-                            nama: fields.v3_nama?.stringValue || fields.v3?.mapValue?.fields?.nama?.stringValue || "Kendaraan 3", 
+                            nama: fields.v3_nama?.stringValue || fields.v3?.mapValue?.fields?.plat?.stringValue || "Kendaraan 3", 
                             plat: fields.v3_plat?.stringValue || fields.v3?.mapValue?.fields?.plat?.stringValue || "" 
                         }
                     };
+                    console.log(`✅ Sukses memuat data kendaraan khusus UID: ${uid}`);
                 } else if (res.status === 404) {
                     console.log(`Pengaturan kendaraan belum dibuat untuk UID: ${uid}. Menggunakan default.`);
-                    window.setDefaultDataKendaraan();
+                    window.setDefaultDataKendaraan(true);
                 } else {
                     console.error(`Gagal mengambil data kendaraan (${res.status}): ${res.statusText}`);
-                    window.setDefaultDataKendaraan();
+                    window.setDefaultDataKendaraan(true);
                 }
             } catch (err) {
                 console.error("Gagal memuat identitas kendaraan dari Firestore:", err);
-                window.setDefaultDataKendaraan();
+                window.setDefaultDataKendaraan(true);
             }
 
             // UPDATE UI DROPDOWN & IDENTITAS KENDARAAN
             window.updateUINavigasiKendaraan();
         };
 
-        // --- HELPER FUNCTION: SET DEFAULT DATA KENDARAAN ---
-        window.setDefaultDataKendaraan = function() {
-            if (!window.dataKendaraan) {
-                window.dataKendaraan = {
-                    1: { nama: "Kendaraan 1", plat: "" },
-                    2: { nama: "Kendaraan 2", plat: "" },
-                    3: { nama: "Kendaraan 3", plat: "" }
-                };
-            }
-        };
-
-        // --- HELPER FUNCTION: UPDATE DROPDOWN & HEADER UI ---
-        window.updateUINavigasiKendaraan = function() {
-            if (typeof window.updateDropdownKendaraanOptions === 'function') {
-                window.updateDropdownKendaraanOptions();
-            }
-            if (typeof window.perbaruiTampilanIdentitasKendaraanUI === 'function') {
-                window.perbaruiTampilanIdentitasKendaraanUI();
-            }
-        };
-
         // =========================================================
-        // 2. PEMBARUAN SEMUA TAMPILAN UI KENDARAAN (KARTU SERVIS & DROPDOWN MODAL)
+        // 2. PEMBARUAN SEMUA TAMPILAN UI KENDARAAN
         // =========================================================
         window.perbaruiTampilanIdentitasKendaraanUI = function() {
             if (!window.dataKendaraan) return;
 
-            // A. Update Teks Judul Card Tab Servis (Mencakup id servis-v1-nama-plat dan label-k1)
+            // A. Update Teks Judul Card Tab Servis
             for (let i = 1; i <= 3; i++) {
                 const kData = window.dataKendaraan[i] || { nama: `Kendaraan ${i}`, plat: "" };
-                const teksPlat = kData.plat ? ` (${kData.plat})` : "";
                 const teksJudulLengkap = kData.plat ? `${kData.nama} - ${kData.plat}` : kData.nama;
 
-                // Cek beberapa kemungkinan ID elemen header di HTML
                 const elJudul = document.getElementById(`servis-v${i}-nama-plat`);
                 const elNama = document.getElementById(`label-k${i}-nama`);
                 const elPlat = document.getElementById(`label-k${i}-plat`);
@@ -6526,14 +6557,12 @@
         };
 
         window.updateDropdownKendaraanOptions = function() {
-            // Kumpulan elemen dropdown yang menggunakan data kendaraan (jika ada lebih dari 1)
             const selectIds = ['out-servis-kendaraan', 'filter-servis-kendaraan'];
 
             selectIds.forEach(id => {
                 const select = document.getElementById(id);
                 if (!select || !window.dataKendaraan) return;
 
-                // Simpan nilai pilihan yang sedang aktif agar tidak ter-reset
                 const currentValue = select.value;
 
                 const k1 = window.dataKendaraan[1] || { nama: "Kendaraan 1", plat: "" };
@@ -6548,7 +6577,6 @@
                     <option value="3">${formatLabel(k3)}</option>
                 `;
 
-                // Kembalikan ke pilihan sebelumnya jika masih ada dalam opsi
                 if (currentValue) {
                     select.value = currentValue;
                 }
@@ -6556,7 +6584,7 @@
         };
 
         // =========================================================
-        // 2. SIMPAN IDENTITAS KENDARAAN KE FIRESTORE (REST API MULTI-USER)
+        // 3. SIMPAN IDENTITAS KENDARAAN KE FIRESTORE (REST API MULTI-USER)
         // =========================================================
         window.simpanIdentitasKendaraan = async function(event) {
             if (event) event.preventDefault();
@@ -6572,9 +6600,9 @@
                 return;
             }
 
-            // 1. CEK SESI LOGIN USER (MULTI-USER SAFE)
+            // 1. CEK SESI LOGIN USER
             const userAktif = window.currentUser || (window.auth ? window.auth.currentUser : null);
-            if (!userAktif) {
+            if (!userAktif || !userAktif.uid) {
                 if (typeof tampilAlert === 'function') {
                     tampilAlert("Sesi login tidak ditemukan. Silakan login kembali.", "error");
                 }
@@ -6585,9 +6613,8 @@
             const emailUser = userAktif.email || "User";
             const namaUserSistem = emailUser.includes('@') ? emailUser.split('@')[0] : emailUser;
 
-            // Pastikan state lokal initialized
             if (!window.dataKendaraan) {
-                window.setDefaultDataKendaraan();
+                window.setDefaultDataKendaraan(false);
             }
 
             // 2. Perbarui State Lokal
@@ -6597,21 +6624,17 @@
             };
 
             // Update UI Lokal Langsung
-            if (typeof window.perbaruiTampilanIdentitasKendaraanUI === 'function') {
-                window.perbaruiTampilanIdentitasKendaraanUI();
-            }
+            window.perbaruiTampilanIdentitasKendaraanUI();
 
-            // Tutup Modal jika fungsi tersedia
+            // Tutup Modal
             if (typeof tutupModalEditKendaraan === 'function') {
                 tutupModalEditKendaraan();
             } else if (typeof window.tutupModalEditKendaraan === 'function') {
                 window.tutupModalEditKendaraan();
             }
 
-            // 3. Persiapkan Payload & Endpoint Firestore REST API Privat User
+            // 3. Persiapkan Payload & Endpoint Firestore REST API
             const projectId = window.firebaseConfig?.projectId || "dompetq-app";
-            
-            // Path Privat Multi-User: /users/{uid}/pengaturan_aplikasi/data_kendaraan
             const endpoint = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/pengaturan_aplikasi/data_kendaraan`;
 
             const k1 = window.dataKendaraan[1] || { nama: "Kendaraan 1", plat: "" };
@@ -6633,7 +6656,6 @@
             };
 
             try {
-                // Ambil token paling baru
                 const userToken = await userAktif.getIdToken(true);
                 const headers = {
                     'Content-Type': 'application/json',
@@ -6641,7 +6663,7 @@
                 };
 
                 const response = await fetch(endpoint, {
-                    method: 'PATCH', // Automatic Upsert (Create/Update)
+                    method: 'PATCH',
                     headers: headers,
                     body: JSON.stringify(payload)
                 });
@@ -6654,7 +6676,6 @@
                     tampilAlert("Identitas kendaraan berhasil disimpan!", "success");
                 }
 
-                // Re-render riwayat servis jika data riwayat tersedia
                 if (window.lastDataServis && typeof window.renderTabServis === 'function') {
                     window.renderTabServis(window.lastDataServis);
                 }
@@ -6670,37 +6691,22 @@
         // =========================================================
         // LOGIKA MODAL EDIT IDENTITAS KENDARAAN (NAMA & PLAT)
         // =========================================================
-
-        // 1. Fungsi Buka Modal Edit Identitas
         window.bukaModalEditKendaraan = function(index) {
-            // Pastikan state dataKendaraan sudah di-initialize
             if (!window.dataKendaraan) {
-                if (typeof window.setDefaultDataKendaraan === 'function') {
-                    window.setDefaultDataKendaraan();
-                } else {
-                    window.dataKendaraan = {
-                        1: { nama: "Kendaraan 1", plat: "" },
-                        2: { nama: "Kendaraan 2", plat: "" },
-                        3: { nama: "Kendaraan 3", plat: "" }
-                    };
-                }
+                window.setDefaultDataKendaraan(false);
             }
 
-            // Simpan index kendaraan yang sedang diedit ke input hidden
             const elIndex = document.getElementById('edit-kendaraan-index');
             if (elIndex) elIndex.value = index;
 
-            // Ambil data kendaraan dari state lokal berdasarkan index
             const currentData = window.dataKendaraan[index] || { nama: `Kendaraan ${index}`, plat: "" };
 
-            // Isikan data ke form input di dalam modal
             const elNama = document.getElementById('edit-nama-kendaraan');
             const elPlat = document.getElementById('edit-plat-kendaraan');
             
             if (elNama) elNama.value = currentData.nama || "";
             if (elPlat) elPlat.value = currentData.plat || "";
 
-            // Tampilkan Modal Edit Kendaraan
             const modal = document.getElementById('modal-edit-kendaraan');
             if (modal) {
                 modal.classList.remove('hidden');
@@ -6709,7 +6715,6 @@
             }
         };
 
-        // 2. Fungsi Tutup Modal Edit Identitas
         window.tutupModalEditKendaraan = function() {
             const modal = document.getElementById('modal-edit-kendaraan');
             if (modal) modal.classList.add('hidden');
@@ -6719,199 +6724,107 @@
         // STATE GLOBAL & PENGATURAN HARGA BBM (MULTI-USER CLOUD SYNC)
         // =========================================================
 
-        // State Global Master Harga BBM (Default Fallback)
-        window.configBBM = {
-            hargaPertalite: 10000,
-            hargaPertamax: 12950,
-            lastUpdate: "-"
-        };
-
-        // Fungsi Muat Pengaturan BBM dari Firestore Privat User
-        window.muatPengaturanBBM = async function() {
-            const userAktif = window.currentUser || (window.auth ? window.auth.currentUser : null);
-            
-            if (!userAktif) {
-                console.warn("User belum login, menggunakan konfigurasi BBM default.");
-                return;
-            }
-
-            const uid = userAktif.uid;
-            const projectId = window.firebaseConfig?.projectId || "dompetq-app";
-            
-            // Dynamic Path Multi-User: /users/{uid}/pengaturan_aplikasi/bbm_config
-            const endpoint = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/pengaturan_aplikasi/bbm_config`;
-
-            try {
-                const userToken = await userAktif.getIdToken(true);
-                const response = await fetch(endpoint, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${userToken}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    const fields = data.fields || {};
-
-                    window.configBBM = {
-                        hargaPertalite: parseInt(fields.hargaPertalite?.integerValue || 10000, 10),
-                        hargaPertamax: parseInt(fields.hargaPertamax?.integerValue || 12950, 10),
-                        lastUpdate: fields.lastUpdate?.stringValue || "-"
-                    };
-                } else if (response.status === 404) {
-                    console.log(`Konfigurasi BBM belum ada di cloud untuk UID: ${uid}. Menggunakan default.`);
-                }
-            } catch (error) {
-                console.error("Gagal memuat pengaturan BBM dari Cloud Firestore:", error);
-            }
-
-            // Perbarui Tampilan Form/UI jika elemen input harga BBM ada di halaman
-            const inputPertalite = document.getElementById('bbm-harga-pertalite');
-            const inputPertamax = document.getElementById('bbm-harga-pertamax');
-            if (inputPertalite) inputPertalite.value = window.configBBM.hargaPertalite;
-            if (inputPertamax) inputPertamax.value = window.configBBM.hargaPertamax;
-        };
-
-        // Fungsi Simpan Pengaturan BBM ke Firestore Privat User
-        window.simpanPengaturanBBM = async function(event) {
-            if (event) event.preventDefault();
-
-            const userAktif = window.currentUser || (window.auth ? window.auth.currentUser : null);
-            if (!userAktif) {
-                if (typeof tampilAlert === 'function') tampilAlert("Sesi login tidak ditemukan!", "error");
-                return;
-            }
-
-            const elPertalite = document.getElementById('bbm-harga-pertalite');
-            const elPertamax = document.getElementById('bbm-harga-pertamax');
-
-            const rawPertalite = elPertalite ? elPertalite.value.replace(/[^0-9]/g, "") : "10000";
-            const rawPertamax = elPertamax ? elPertamax.value.replace(/[^0-9]/g, "") : "12950";
-
-            const pertaliteVal = parseInt(rawPertalite, 10) || 10000;
-            const pertamaxVal = parseInt(rawPertamax, 10) || 12950;
-            const tglHariIni = new Date().toISOString().split('T')[0];
-
-            window.configBBM = {
-                hargaPertalite: pertaliteVal,
-                hargaPertamax: pertamaxVal,
-                lastUpdate: tglHariIni
-            };
-
-            const uid = userAktif.uid;
-            const projectId = window.firebaseConfig?.projectId || "dompetq-app";
-            const endpoint = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/pengaturan_aplikasi/bbm_config`;
-
-            const payload = {
-                fields: {
-                    hargaPertalite: { integerValue: pertaliteVal.toString() },
-                    hargaPertamax: { integerValue: pertamaxVal.toString() },
-                    lastUpdate: { stringValue: tglHariIni },
-                    waktuServer: { timestampValue: new Date().toISOString() }
-                }
-            };
-
-            try {
-                const userToken = await userAktif.getIdToken(true);
-                const response = await fetch(endpoint, {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `Bearer ${userToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-                if (typeof tampilAlert === 'function') tampilAlert("Pengaturan harga BBM berhasil disimpan ke Cloud!", "success");
-            } catch (err) {
-                console.error("Gagal menyimpan harga BBM ke Cloud:", err);
-                if (typeof tampilAlert === 'function') tampilAlert("Gagal menyimpan ke Cloud. Cek koneksi internet.", "error");
-            }
-        };
-
-        // Auto load saat aplikasi terbuka / DOM Ready
-        document.addEventListener("DOMContentLoaded", function() {
-            // Jika auth sudah initialized, langsung muat BBM
-            if (window.currentUser || window.auth?.currentUser) {
-                window.muatPengaturanBBM();
-            }
-        });
-
-        // ─── 1. LOAD DATA DARI LOCALSTORAGE / FIRESTORE (MULTI-USER SAFE) ───
-        window.muatPengaturanBBM = async function() {
-            // 1. Ambil Sesi User Login saat ini
-            const userAktif = window.currentUser || (window.auth ? window.auth.currentUser : null);
-            const uid = userAktif ? userAktif.uid : "guest";
-
-            // Standardize State Default
-            if (!window.configBBM) {
+        // --- HELPER FUNCTION: RESET / SET DEFAULT CONFIG BBM ---
+        window.setDefaultConfigBBM = function(force = true) {
+            if (force || !window.configBBM) {
                 window.configBBM = {
                     hargaPertalite: 10000,
                     hargaPertamax: 12950,
                     lastUpdate: "-"
                 };
             }
+        };
+
+        // =========================================================
+        // 1. LOAD DATA HARGA BBM DARI LOCALSTORAGE & FIRESTORE
+        // =========================================================
+        window.muatPengaturanBBM = async function() {
+            // 1. Ambil Sesi User Login saat ini
+            const userAktif = window.currentUser || (window.auth ? window.auth.currentUser : null);
+
+            // Reset state lokal dahulu saat memuat data baru
+            window.setDefaultConfigBBM(true);
+
+            if (!userAktif || !userAktif.uid) {
+                console.warn("User belum login / logout, menggunakan konfigurasi BBM default.");
+                window.updateUIPengaturanBBM();
+                return;
+            }
+
+            const uid = userAktif.uid;
 
             // 2. Baca Cache LocalStorage Privat per-User (jika ada)
             const localPertalite = localStorage.getItem(`dompetq_harga_pertalite_${uid}`);
             const localPertamax = localStorage.getItem(`dompetq_harga_pertamax_${uid}`);
             const localUpdate = localStorage.getItem(`dompetq_update_bbm_${uid}`);
 
-            if (localPertalite) window.configBBM.hargaPertalite = parseInt(localPertalite, 10);
-            if (localPertamax) window.configBBM.hargaPertamax = parseInt(localPertamax, 10);
+            if (localPertalite) window.configBBM.hargaPertalite = parseInt(localPertalite, 10) || 10000;
+            if (localPertamax) window.configBBM.hargaPertamax = parseInt(localPertamax, 10) || 12950;
             if (localUpdate) window.configBBM.lastUpdate = localUpdate;
 
-            // 3. Sync dari Cloud Firestore Privat User jika User Sudah Login
-            if (userAktif) {
-                try {
-                    const userToken = await userAktif.getIdToken(true);
-                    const projectId = window.firebaseConfig?.projectId || "dompetq-app";
-                    
-                    // Path Privat Multi-User: /users/{uid}/pengaturan_aplikasi/bbm_config
-                    const endpoint = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/pengaturan_aplikasi/bbm_config`;
+            // 3. Sync dari Cloud Firestore Privat User
+            try {
+                const userToken = await userAktif.getIdToken(true);
+                const projectId = window.firebaseConfig?.projectId || "dompetq-app";
+                
+                // Path Privat Multi-User: /users/{uid}/pengaturan_aplikasi/bbm_config
+                const endpoint = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/pengaturan_aplikasi/bbm_config`;
 
-                    const res = await fetch(endpoint, {
-                        headers: { 
-                            'Authorization': `Bearer ${userToken}`,
-                            'Content-Type': 'application/json' 
-                        }
-                    });
-
-                    if (res.ok) {
-                        const data = await res.json();
-                        const fields = data.fields || {};
-                        
-                        if (fields.hargaPertalite?.integerValue) {
-                            window.configBBM.hargaPertalite = parseInt(fields.hargaPertalite.integerValue, 10);
-                            localStorage.setItem(`dompetq_harga_pertalite_${uid}`, window.configBBM.hargaPertalite.toString());
-                        }
-                        if (fields.hargaPertamax?.integerValue) {
-                            window.configBBM.hargaPertamax = parseInt(fields.hargaPertamax.integerValue, 10);
-                            localStorage.setItem(`dompetq_harga_pertamax_${uid}`, window.configBBM.hargaPertamax.toString());
-                        }
-                        if (fields.lastUpdate?.stringValue) {
-                            window.configBBM.lastUpdate = fields.lastUpdate.stringValue;
-                            localStorage.setItem(`dompetq_update_bbm_${uid}`, window.configBBM.lastUpdate);
-                        }
-                    } else if (res.status === 404) {
-                        console.log(`Konfigurasi BBM belum diset di cloud untuk user ${uid}. Menggunakan default.`);
+                const res = await fetch(endpoint, {
+                    headers: { 
+                        'Authorization': `Bearer ${userToken}`,
+                        'Content-Type': 'application/json' 
                     }
-                } catch (e) {
-                    console.warn("Gagal fetch BBM dari Firestore:", e);
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    const fields = data.fields || {};
+                    
+                    if (fields.hargaPertalite?.integerValue) {
+                        window.configBBM.hargaPertalite = parseInt(fields.hargaPertalite.integerValue, 10);
+                        localStorage.setItem(`dompetq_harga_pertalite_${uid}`, window.configBBM.hargaPertalite.toString());
+                    }
+                    if (fields.hargaPertamax?.integerValue) {
+                        window.configBBM.hargaPertamax = parseInt(fields.hargaPertamax.integerValue, 10);
+                        localStorage.setItem(`dompetq_harga_pertamax_${uid}`, window.configBBM.hargaPertamax.toString());
+                    }
+                    if (fields.lastUpdate?.stringValue) {
+                        window.configBBM.lastUpdate = fields.lastUpdate.stringValue;
+                        localStorage.setItem(`dompetq_update_bbm_${uid}`, window.configBBM.lastUpdate);
+                    }
+                    console.log(`✅ Sukses memuat harga BBM khusus UID: ${uid}`);
+                } else if (res.status === 404) {
+                    console.log(`Konfigurasi BBM belum diset di cloud untuk user ${uid}. Menggunakan default.`);
                 }
+            } catch (e) {
+                console.warn("Gagal fetch BBM dari Firestore:", e);
             }
 
-            // 4. Update Nilai Input di Form/UI jika elemen HTML tersedia
+            // 4. Update Nilai Input di Form/UI
+            window.updateUIPengaturanBBM();
+        };
+
+        // Helper Update Tampilan UI BBM (Form Utama & Modal)
+        window.updateUIPengaturanBBM = function() {
+            if (!window.configBBM) window.setDefaultConfigBBM(false);
+
+            // Form Input Utama
             const elPertaliteInput = document.getElementById('bbm-harga-pertalite');
             const elPertamaxInput = document.getElementById('bbm-harga-pertamax');
             if (elPertaliteInput) elPertaliteInput.value = window.configBBM.hargaPertalite;
             if (elPertamaxInput) elPertamaxInput.value = window.configBBM.hargaPertamax;
 
-            // Refresh kalkulasi/pilihan jenis BBM di form pengeluaran/servis
+            // Modal Input Setelan BBM
+            const cfgPertalite = document.getElementById('cfg-harga-pertalite');
+            const cfgPertamax = document.getElementById('cfg-harga-pertamax');
+            const cfgLabelUpdate = document.getElementById('label-last-update-bbm');
+
+            if (cfgPertalite) cfgPertalite.value = window.configBBM.hargaPertalite.toLocaleString('id-ID');
+            if (cfgPertamax) cfgPertamax.value = window.configBBM.hargaPertamax.toLocaleString('id-ID');
+            if (cfgLabelUpdate) cfgLabelUpdate.textContent = window.configBBM.lastUpdate || "Belum ada catatan";
+
+            // Refresh kalkulasi jenis BBM jika fungsi aktif
             if (typeof window.pilihJenisBBMForm === 'function') {
                 window.pilihJenisBBMForm(window.jenisBBMAktif || 'Pertalite');
             }
@@ -6921,18 +6834,7 @@
         // 2. BUKA & TUTUP MODAL SETELAN BBM
         // =========================================================
         window.bukaModalPengaturanBBM = function() {
-            // Pastikan state configBBM terisi
-            if (!window.configBBM) {
-                window.configBBM = { hargaPertalite: 10000, hargaPertamax: 12950, lastUpdate: "-" };
-            }
-
-            const elPertalite = document.getElementById('cfg-harga-pertalite');
-            const elPertamax = document.getElementById('cfg-harga-pertamax');
-            const elLabelUpdate = document.getElementById('label-last-update-bbm');
-
-            if (elPertalite) elPertalite.value = window.configBBM.hargaPertalite.toLocaleString('id-ID');
-            if (elPertamax) elPertamax.value = window.configBBM.hargaPertamax.toLocaleString('id-ID');
-            if (elLabelUpdate) elLabelUpdate.textContent = window.configBBM.lastUpdate || "Belum ada catatan";
+            window.updateUIPengaturanBBM();
 
             const elModal = document.getElementById('modal-pengaturan-bbm');
             if (elModal) {
@@ -6950,14 +6852,14 @@
         };
 
         // =========================================================
-        // 3. SIMPAN KEDUA HARGA BBM KE DALAM FIRESTORE (PRIVAT USER)
+        // 3. SIMPAN HARGA BBM KE FIRESTORE & LOCALSTORAGE (PRIVAT USER)
         // =========================================================
         window.simpanPengaturanBBM = async function(event) {
             if (event) event.preventDefault();
 
             // 1. Cek Sesi User Login
             const userAktif = window.currentUser || (window.auth ? window.auth.currentUser : null);
-            if (!userAktif) {
+            if (!userAktif || !userAktif.uid) {
                 if (typeof tampilAlert === 'function') {
                     tampilAlert("Sesi login tidak ditemukan. Silakan login kembali.", "error");
                 } else {
@@ -6967,8 +6869,13 @@
             }
 
             const uid = userAktif.uid;
-            const valPertalite = parseInt((document.getElementById('cfg-harga-pertalite')?.value || "0").replace(/\D/g, ''), 10);
-            const valPertamax = parseInt((document.getElementById('cfg-harga-pertamax')?.value || "0").replace(/\D/g, ''), 10);
+
+            // Cek sumber input (dari modal `cfg-` atau input form `bbm-`)
+            const inputCfgPertalite = document.getElementById('cfg-harga-pertalite')?.value || document.getElementById('bbm-harga-pertalite')?.value || "0";
+            const inputCfgPertamax = document.getElementById('cfg-harga-pertamax')?.value || document.getElementById('bbm-harga-pertamax')?.value || "0";
+
+            const valPertalite = parseInt(inputCfgPertalite.replace(/\D/g, ''), 10) || 0;
+            const valPertamax = parseInt(inputCfgPertamax.replace(/\D/g, ''), 10) || 0;
 
             if (valPertalite <= 0 || valPertamax <= 0) {
                 if (typeof tampilAlert === 'function') {
@@ -6994,6 +6901,9 @@
             localStorage.setItem(`dompetq_harga_pertalite_${uid}`, valPertalite.toString());
             localStorage.setItem(`dompetq_harga_pertamax_${uid}`, valPertamax.toString());
             localStorage.setItem(`dompetq_update_bbm_${uid}`, tglTeks);
+
+            // Update Tampilan UI Langsung
+            window.updateUIPengaturanBBM();
 
             // 4. Patch Dokumen Firestore Privat User
             try {
@@ -7037,10 +6947,7 @@
                 }
             }
 
-            // 5. Sync Form Pengeluaran & Tutup Modal
-            if (typeof window.pilihJenisBBMForm === 'function') {
-                window.pilihJenisBBMForm(window.jenisBBMAktif || 'Pertalite');
-            }
+            // 5. Tutup Modal
             window.tutupModalPengaturanBBM();
         };
     </script>
