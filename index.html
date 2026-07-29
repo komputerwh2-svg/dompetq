@@ -234,42 +234,6 @@
                             </button>
                         </div>
                     </div>
-
-                    <div class="lg:col-span-2 bg-white border border-gray-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-center relative overflow-hidden min-h-[140px]">
-                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Akses Cepat</h3>
-                        
-                        <div class="grid grid-cols-3 gap-3 text-center">
-                            <button onclick="getarTombol(); proteksiAksesUpload()" class="flex flex-col items-center justify-center space-y-2 group transition transform active:scale-95">
-                                <div class="w-14 h-14 rounded-2xl bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center text-blue-600 transition shadow-xs">
-                                    <i class="fas fa-upload text-xl"></i>
-                                </div>
-                                <span class="text-xs font-bold text-gray-700 group-hover:text-blue-600 transition">Upload Slip</span>
-                            </button>
-                            
-                            <button onclick="getarTombol(); proteksiAksesQuickTab('Tabungan')" class="flex flex-col items-center justify-center space-y-2 group transition transform active:scale-95">
-                                <div class="w-14 h-14 rounded-2xl bg-gray-50 group-hover:bg-gray-100 flex items-center justify-center text-gray-600 group-hover:text-gray-800 transition shadow-xs">
-                                    <i class="fas fa-wallet text-xl"></i>
-                                </div>
-                                <span class="text-xs font-bold text-gray-700 group-hover:text-gray-900 transition">TF Tabungan</span>
-                            </button>
-                            
-                            <button onclick="getarTombol(); proteksiAksesQuickTab('Servis')" class="flex flex-col items-center justify-center space-y-2 group transition transform active:scale-95">
-                                <div class="w-14 h-14 rounded-2xl bg-gray-50 group-hover:bg-gray-100 flex items-center justify-center text-gray-600 group-hover:text-gray-800 transition shadow-xs">
-                                    <i class="fas fa-wrench text-xl"></i>
-                                </div>
-                                <span class="text-xs font-bold text-gray-700 group-hover:text-gray-900 transition">TF Servis</span>
-                            </button>
-                        </div>
-
-                        <div id="quick-lock-overlay" class="absolute inset-0 bg-white/95 backdrop-blur-xs flex flex-col items-center justify-center text-center p-4 transition-all duration-300">
-                            <div class="w-9 h-9 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center border border-gray-200 shadow-xs mb-1">
-                                <i class="fas fa-bolt text-xs"></i>
-                            </div>
-                            <p class="text-xs font-bold text-gray-800">Akses Cepat Terkunci</p>
-                            <p class="text-[10px] text-gray-400 max-w-[200px] mt-0.5">Otentikasi akun Anda diperlukan untuk menggunakan pintasan menu.</p>
-                        </div>
-                    </div>
-
                 </div>
 
                 <div class="bg-white border border-gray-200/80 rounded-2xl p-5 shadow-xs w-full relative overflow-hidden min-h-[180px]">
@@ -3818,10 +3782,70 @@
 
                 if (respon.ok) {
                     const dataJson = await respon.json();
-                    const documents = dataJson.documents || [];
+                    const rawDocuments = dataJson.documents || [];
+                    let normalizedDocs = [];
+
+                    // 🚀 PROSES PENELUSURAN DOKUMEN (TERMASUK SUB-COLLECTION TRANSPORTASI)
+                    for (const doc of rawDocuments) {
+                        const namaPath = doc.name || "";
+                        const docId = namaPath.split('/').pop() || "";
+                        const fields = doc.fields || {};
+
+                        // 🔍 Jika dokumen merupakan wadah Transportasi (misal: out_transportasi_juli_2026)
+                        if (docId.startsWith("out_transportasi_")) {
+                            try {
+                                const endpointSub = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/rekap_finansial/${docId}/rincian_transaksi?pageSize=100`;
+                                const resSub = await fetch(endpointSub, {
+                                    method: 'GET',
+                                    headers: {
+                                        'Authorization': `Bearer ${userToken}`,
+                                        'Content-Type': 'application/json'
+                                    }
+                                });
+
+                                if (resSub.ok) {
+                                    const dataSub = await resSub.json();
+                                    const subDocs = dataSub.documents || [];
+
+                                    subDocs.forEach(subDoc => {
+                                        const sf = subDoc.fields || {};
+                                        const subDocId = subDoc.name.split('/').pop() || "";
+                                        
+                                        normalizedDocs.push({
+                                            idDokumen: subDocId,
+                                            idParent: docId,
+                                            fields: {
+                                                periode: fields.periode || { stringValue: periodeBulanSekarang },
+                                                kategori: sf.kategori || { stringValue: "transportasi" },
+                                                subKategori: sf.subKategori || sf.subModeKendaraan || { stringValue: "bensin" },
+                                                keterangan: sf.keterangan || { stringValue: "Transaksi Kendaraan" },
+                                                namaUser: sf.namaUser || { stringValue: "system" },
+                                                potongan: sf.hargaTotal || sf.potongan || { integerValue: 0 },
+                                                pendapatan: sf.pendapatan || { integerValue: 0 },
+                                                waktuTransaksi: sf.waktuTransaksi || sf.updatedAt || { timestampValue: new Date().toISOString() },
+                                                jenisBBM: sf.jenisBBM || sf.jenis_bbm || { stringValue: "" },
+                                                jumlahLiter: sf.jumlahLiter || sf.jumlah_liter || { doubleValue: 0 },
+                                                kmOdometer: sf.kmAkhir || sf.kmOdometer || { integerValue: 0 },
+                                                tripKM: sf.tripKM || { integerValue: 0 }
+                                            }
+                                        });
+                                    });
+                                }
+                            } catch (errSub) {
+                                console.warn(`Gagal membaca sub-collection rincian_transaksi untuk ${docId}:`, errSub);
+                            }
+                        } else {
+                            // Dokumen transaksi regular
+                            normalizedDocs.push({
+                                idDokumen: docId,
+                                idParent: null,
+                                fields: fields
+                            });
+                        }
+                    }
 
                     // Urutkan transaksi dari waktu terbaru (descending) agar pengelompokan harian runtut
-                    documents.sort((a, b) => {
+                    normalizedDocs.sort((a, b) => {
                         const timeA = new Date(a.fields?.waktuTransaksi?.timestampValue || 0);
                         const timeB = new Date(b.fields?.waktuTransaksi?.timestampValue || 0);
                         return timeB - timeA;
@@ -3829,8 +3853,8 @@
 
                     let counterItem = 0;
 
-                    documents.forEach(doc => {
-                        const fields = doc.fields || {};
+                    normalizedDocs.forEach(item => {
+                        const fields = item.fields || {};
                         const teksPeriodeDoc = fields.periode?.stringValue || "";
 
                         if (teksPeriodeDoc.trim().toLowerCase() === periodeBulanSekarang.trim().toLowerCase()) {
@@ -3925,9 +3949,7 @@
                                     jenisTransaksi = "pemasukan_manual";
                                 }
 
-                                // Mengambil ID dokumen Firestore
-                                const namaPath = doc.name || "";
-                                const idDokumen = namaPath.split('/').pop() || "";
+                                const idDokumen = item.idDokumen;
 
                                 // ─── 1. KELOMPOK HARIAN (ALA GOPAY) ───
                                 if (tanggalTampil !== tanggalSebelumnya) {
