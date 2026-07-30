@@ -719,19 +719,24 @@
             </div>
         </div>
 
-        <div id="modal-login" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+        <div id="modal-login" class="fixed inset-0 bg-slate-900 z-[9999] flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl transition-all flex flex-col max-h-[85vh]">
                 
+                <!-- Header Modal (Tombol Close Dihapus Agar Tidak Bisa Ditutup Sebelum Login) -->
                 <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 flex-shrink-0">
-                    <span class="font-bold text-sm text-gray-800">
-                        <i onclick="window.masukModeDeveloperCepat()" class="fas fa-shield-alt mr-1.5 text-blue-600 cursor-pointer select-none active:scale-95 transition-transform" title="Dev Mode Bypass"></i> 
+                    <span class="font-bold text-sm text-gray-800 flex items-center">
+                        <i onclick="window.masukModeDeveloperCepat()" class="fas fa-shield-alt mr-2 text-blue-600 cursor-pointer select-none active:scale-95 transition-transform" title="Dev Mode Bypass"></i> 
                         Keamanan DompetQ
                     </span>
-                    <button onclick="tutupLoginModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+                    <!-- Badge Pengunci Data -->
+                    <span class="text-[10px] font-semibold bg-red-100 text-red-600 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <i class="fas fa-lock text-[9px]"></i> Terkunci
+                    </span>
                 </div>
 
                 <div class="p-5 overflow-y-auto space-y-4 flex-1 text-gray-700">
                     
+                    <!-- FORM AUTH UTAMA -->
                     <div id="auth-form-container" class="space-y-4 py-3">
                         <div class="text-center space-y-1">
                             <p class="text-xs font-bold text-gray-800">Selamat Datang di DompetQ</p>
@@ -757,6 +762,7 @@
                         </button>
                     </div>
 
+                    <!-- PANEL PENDAFTARAN BIOMETRIK -->
                     <div id="biometric-setup-panel" class="hidden text-center space-y-4 py-2">
                         <div class="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 mx-auto border border-blue-100">
                             <i class="fas fa-fingerprint text-2xl animate-pulse"></i>
@@ -772,6 +778,7 @@
                         </div>
                     </div>
 
+                    <!-- PANEL POPUP SENSOR FINGERPRINT -->
                     <div id="biometric-quick-login" class="hidden text-center space-y-4 py-4">
                         <button onclick="loginDenganFingerprint()" class="w-16 h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center mx-auto shadow-lg transition transform active:scale-95 animate-bounce">
                             <i class="fas fa-fingerprint text-3xl"></i>
@@ -2292,11 +2299,13 @@
         window.daftarkanFingerprint = async function() {
             if (typeof getarTombol === 'function') getarTombol();
             
+            // Cek Dukungan Browser
             if (!window.PublicKeyCredential) {
                 if (typeof tampilAlert === 'function') tampilAlert("Perangkat atau browser Anda tidak mendukung sistem biometrik.", "error");
                 return;
             }
 
+            // Cek Sesi User Active
             const userSesi = window.currentUser || (window.auth ? window.auth.currentUser : null);
             if (!userSesi || !userSesi.email) {
                 if (typeof tampilAlert === 'function') tampilAlert("Sesi login tidak ditemukan. Silakan masuk lewat Google dulu.", "warning");
@@ -2337,7 +2346,14 @@
 
                 if (credential) {
                     const userEmail = userSesi.email;
-                    const credentialIdBase64 = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+                    
+                    // Konversi ArrayBuffer rawId ke Base64 dengan aman
+                    const uint8Array = new Uint8Array(credential.rawId);
+                    let binary = '';
+                    for (let i = 0; i < uint8Array.byteLength; i++) {
+                        binary += String.fromCharCode(uint8Array[i]);
+                    }
+                    const credentialIdBase64 = btoa(binary);
 
                     // Simpan kunci khusus terisolasi per email user
                     localStorage.setItem('dompetq_last_email', userEmail);
@@ -2353,12 +2369,19 @@
                     if (typeof tampilAlert === 'function') tampilAlert("Sidik jari berhasil terdaftar untuk akun ini!", "success");
                     
                     userSudahLogin = true;
-                    if (typeof kontrolVisibilitasDashboard === 'function') kontrolVisibilitasDashboard(true);
-                    tutupLoginModal();
+                    
+                    // Sinkronkan UI & Status Toggle Setelan secara Otomatis
+                    if (typeof window.kontrolVisibilitasDashboard === 'function') window.kontrolVisibilitasDashboard(true);
+                    if (typeof window.muatStatusBiometrik === 'function') window.muatStatusBiometrik();
+                    if (typeof tutupLoginModal === 'function') tutupLoginModal();
                 }
             } catch (err) {
                 console.error("Gagal mendaftarkan sidik jari ke hardware:", err);
-                if (typeof tampilAlert === 'function') tampilAlert("Gagal aktivasi: Perangkat menolak pendaftaran atau dibatalkan.", "error");
+                if (err.name === 'NotAllowedError') {
+                    if (typeof tampilAlert === 'function') tampilAlert("Pendaftaran sidik jari dibatalkan.", "warning");
+                } else {
+                    if (typeof tampilAlert === 'function') tampilAlert("Gagal aktivasi: Perangkat tidak mendukung atau bermasalah.", "error");
+                }
             }
         };
 
@@ -2370,7 +2393,7 @@
             const lastUserEmail = localStorage.getItem('dompetq_last_email');
             if (!lastUserEmail) {
                 if (typeof tampilAlert === 'function') tampilAlert("Silakan masuk menggunakan Google terlebih dahulu.", "warning");
-                window.tukarKeFormGoogle();
+                if (typeof window.tukarKeFormGoogle === 'function') window.tukarKeFormGoogle();
                 return;
             }
 
@@ -2380,14 +2403,27 @@
 
             if (!emailTersimpan || !tokenTersimpan || !credIdTersimpan) {
                 if (typeof tampilAlert === 'function') tampilAlert("Sidik jari belum terdaftar untuk akun " + lastUserEmail, "warning");
-                window.tukarKeFormGoogle();
+                if (typeof window.tukarKeFormGoogle === 'function') window.tukarKeFormGoogle();
                 return;
             }
 
             try {
                 const challenge = new Uint8Array(32);
                 window.crypto.getRandomValues(challenge);
-                const rawCredId = new Uint8Array(atob(credIdTersimpan).split("").map(c => c.charCodeAt(0)));
+
+                // Utility konversi Base64/Base64URL ke Uint8Array yang aman
+                const safeBase64ToUint8Array = (base64) => {
+                    const padding = '='.repeat((4 - base64.length % 4) % 4);
+                    const b64 = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+                    const rawData = window.atob(b64);
+                    const outputArray = new Uint8Array(rawData.length);
+                    for (let i = 0; i < rawData.length; ++i) {
+                        outputArray[i] = rawData.charCodeAt(i);
+                    }
+                    return outputArray;
+                };
+
+                const rawCredId = safeBase64ToUint8Array(credIdTersimpan);
 
                 const getOptions = {
                     publicKey: {
@@ -2420,7 +2456,7 @@
                     }
 
                     if (typeof kontrolVisibilitasDashboard === 'function') kontrolVisibilitasDashboard(true);
-                    tutupLoginModal();
+                    if (typeof tutupLoginModal === 'function') tutupLoginModal();
                     
                     // Muat data Firestore spesifik milik UID user ini
                     if (typeof muatRekapFinansialDashboard === 'function') {
@@ -2442,7 +2478,11 @@
                 }
             } catch (err) {
                 console.error("Error autentikasi hardware fingerprint:", err);
-                if (typeof tampilAlert === 'function') tampilAlert("Login Ditolak: Fingerprint tidak cocok atau dibatalkan.", "error");
+                if (err.name === 'NotAllowedError') {
+                    if (typeof tampilAlert === 'function') tampilAlert("Verifikasi fingerprint dibatalkan.", "warning");
+                } else {
+                    if (typeof tampilAlert === 'function') tampilAlert("Login Ditolak: Fingerprint tidak cocok atau bermasalah.", "error");
+                }
             }
         };
 
@@ -2463,51 +2503,109 @@
         }     
         
         // 1. FUNGSI PENGECEKAN STATUS TOGGLE BIOMETRIK
-        window.muatStatusBiometrik = function() {
-            const toggle = document.getElementById('toggleBiometric');
-            if (!toggle) return;
+        window.muatStatusBiometrik = async function() {
+            const toggleBiometrik = document.getElementById('toggleBiometrik'); // Sesuaikan ID checkbox toggle Anda
+            const statusTextBiometrik = document.getElementById('statusTextBiometrik'); // Sesuaikan ID text status (opsional)
 
-            // Dapatkan email user aktif dari Firebase atau simpanan terakhir
-            let userEmail = null;
+            // Jika elemen toggle tidak ditemukan di DOM, hentikan eksekusi
+            if (!toggleBiometrik) return;
 
-            if (window.currentUser && window.currentUser.email) {
-                userEmail = window.currentUser.email;
-            } else if (window.auth && window.auth.currentUser && window.auth.currentUser.email) {
-                userEmail = window.auth.currentUser.email;
-            } else {
-                // Fallback: Ambil dari histori email terakhir jika Firebase auth masih async/loading
-                userEmail = localStorage.getItem('dompetq_last_email');
+            // 1. Ambil email user yang sedang login atau email terakhir
+            const currentEmail = (window.currentUser && window.currentUser.email) 
+                ? window.currentUser.email 
+                : localStorage.getItem('dompetq_last_email');
+
+            if (!currentEmail) {
+                toggleBiometrik.checked = false;
+                toggleBiometrik.disabled = true;
+                if (statusTextBiometrik) statusTextBiometrik.textContent = "Silakan login terlebih dahulu";
+                return;
             }
 
-            if (userEmail) {
-                // Cek status terdaftar berdasarkan email
-                const isRegistered = localStorage.getItem(`dompetq_fp_terdaftar_${userEmail}`) === 'true';
-                toggle.checked = isRegistered;
-            } else {
-                toggle.checked = false;
+            // 2. Cek apakah perangkat mendukung hardware WebAuthn / Biometric
+            const isHardwareSupported = window.PublicKeyCredential && 
+                await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+
+            if (!isHardwareSupported) {
+                toggleBiometrik.checked = false;
+                toggleBiometrik.disabled = true;
+                if (statusTextBiometrik) statusTextBiometrik.textContent = "Perangkat tidak mendukung Fingerprint";
+                return;
+            }
+
+            // 3. Cek apakah sidik jari sudah terdaftar di localStorage untuk email ini
+            const emailTersimpan = localStorage.getItem(`dompetq_fp_email_${currentEmail}`);
+            const tokenTersimpan = localStorage.getItem(`dompetq_fp_token_${currentEmail}`);
+            const credIdTersimpan = localStorage.getItem(`dompetq_fp_cred_id_${currentEmail}`);
+
+            const isRegistered = Boolean(emailTersimpan && tokenTersimpan && credIdTersimpan);
+
+            // 4. Update status toggle UI
+            toggleBiometrik.disabled = false;
+            toggleBiometrik.checked = isRegistered;
+
+            if (statusTextBiometrik) {
+                statusTextBiometrik.textContent = isRegistered 
+                    ? "Fingerprint Aktif (" + currentEmail + ")" 
+                    : "Fingerprint Belum Didaftarkan";
             }
         };
 
-        // 2. INTEGRASI PENGUNCIAN OTOMATIS DENGAN FIREBASE AUTH STATE
+        // 2. INTEGRASI PENGUNCIAN OTOMATIS DENGAN FIREBASE AUTH STATE (REVISI)
         if (window.auth) {
             window.auth.onAuthStateChanged(function(user) {
                 if (user) {
+                    // --- KONDISI 1: User Login via Firebase (Google/Email) ---
                     window.currentUser = user;
                     if (typeof userSudahLogin !== 'undefined') userSudahLogin = true;
                     
-                    // Buka Kunci Data
-                    window.kontrolVisibilitasDashboard(true);
+                    // Simpan email terakhir secara otomatis untuk referensi login fingerprint berikutnya
+                    if (user.email) {
+                        localStorage.setItem('dompetq_last_email', user.email);
+                    }
+                    
+                    // Buka Kunci Data & Muat Dashboard
+                    if (typeof window.kontrolVisibilitasDashboard === 'function') {
+                        window.kontrolVisibilitasDashboard(true);
+                    }
                     
                     // Sinkronkan Toggle Biometrik di Setelan
                     if (typeof window.muatStatusBiometrik === 'function') {
                         window.muatStatusBiometrik();
                     }
+
+                    // Muat Data Firestore otomatis berdasarkan UID Google
+                    if (typeof muatRekapFinansialDashboard === 'function') {
+                        muatRekapFinansialDashboard(user.uid);
+                    }
+                    if (typeof window.muatDataKendaraanDariFirestore === 'function') {
+                        window.muatDataKendaraanDariFirestore(user.uid);
+                    }
+
+                    // Update foto profil di header
+                    const profilBtn = document.querySelector('button[onclick="openLoginModal()"]');
+                    if (profilBtn && user.photoURL) {
+                        profilBtn.innerHTML = `<img src="${user.photoURL}" class="w-full h-full object-cover rounded-full border border-blue-200">`;
+                    }
                 } else {
-                    window.currentUser = null;
-                    if (typeof userSudahLogin !== 'undefined') userSudahLogin = false;
+                    // --- KONDISI 2: Firebase Auth bernilai NULL (Logout / Unauthenticated) ---
                     
-                    // Kunci Data Kembali
-                    window.kontrolVisibilitasDashboard(false);
+                    // CEK DULU: Apakah user saat ini sedang aktif menggunakan sesi Fingerprint (Lokal)?
+                    const isFingerprintSession = (typeof userSudahLogin !== 'undefined' && userSudahLogin === true) && 
+                                                (window.currentUser && window.currentUser.uid);
+
+                    if (!isFingerprintSession) {
+                        // Jika BENAR-BENAR tidak login (baik via Firebase maupun Fingerprint), kunci aplikasi!
+                        window.currentUser = null;
+                        if (typeof userSudahLogin !== 'undefined') userSudahLogin = false;
+                        
+                        // Kunci Data Kembali
+                        if (typeof window.kontrolVisibilitasDashboard === 'function') {
+                            window.kontrolVisibilitasDashboard(false);
+                        }
+                    } else {
+                        console.log("Firebase Auth null, tetapi Sesi Fingerprint Lokal sedang Aktif. Dashboard tetap dibuka.");
+                    }
                 }
             });
         }
