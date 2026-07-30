@@ -174,12 +174,7 @@
 
             <div class="flex items-center space-x-4">
                 <p class="text-xs font-semibold hidden sm:block text-blue-200/80">Senin, 29 Juni 2026</p>
-                
-                <button onclick="openNotifModal()" class="relative p-2 rounded-xl hover:bg-white/10 text-white transition transform active:scale-95 flex items-center justify-center">
-                    <i class="far fa-bell text-xl"></i>
-                    <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-blue-700"></span>
-                </button>
-                
+                   
                 <button onclick="openLoginModal()" class="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 border border-white/30 flex items-center justify-center font-bold text-xs text-white shadow-inner transition transform active:scale-95 overflow-hidden group">
                     <span class="group-hover:scale-105 transition duration-200">ID</span>
                 </button>
@@ -192,7 +187,7 @@
             <div id="rekap" class="tab-content active-content space-y-6 w-full">
 
                 <!-- Grid Layout: Lebar Otomatis Sama & Simetris -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full items-stretch">
+                <div class="grid grid-cols-1 lg:grid-cols-1 gap-6 w-full items-stretch">
                     
                     <!-- Card Rekap Utama -->
                     <div class="bg-white border border-gray-200/80 rounded-2xl p-5 shadow-xs relative overflow-hidden flex flex-col justify-between w-full">
@@ -233,8 +228,8 @@
                             </div>
                         </div>
 
-                        <!-- Overlay Lock Auth -->
-                        <div id="auth-lock-overlay" class="absolute inset-0 bg-white/95 backdrop-blur-xs flex flex-col items-center justify-center text-center p-4 transition-all duration-300">
+                        <!-- Overlay Lock Auth (Dibuat Solid White & Z-Index Tinggi) -->
+                        <div id="auth-lock-overlay" class="absolute inset-0 bg-white z-20 flex flex-col items-center justify-center text-center p-4 transition-all duration-200">
                             <div class="w-10 h-10 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center border border-gray-200 shadow-xs mb-2">
                                 <i class="fas fa-lock text-sm"></i>
                             </div>
@@ -260,7 +255,7 @@
                         </div>
 
                         <!-- Overlay Lock Auth -->
-                        <div id="tx-lock-overlay" class="absolute inset-0 bg-white/95 backdrop-blur-xs flex flex-col items-center justify-center text-center p-4 transition-all duration-300">
+                        <div id="tx-lock-overlay" class="absolute inset-0 bg-white z-20 flex flex-col items-center justify-center text-center p-4 transition-all duration-200">
                             <div class="w-9 h-9 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center border border-gray-200 shadow-xs mb-1.5">
                                 <i class="fas fa-shield-alt text-xs"></i>
                             </div>
@@ -550,7 +545,7 @@
                     </div>
 
                     <!-- 3. Menu Keluar (Diselaraskan Model Card Red Theme) -->
-                    <div onclick="window.auth.signOut()" class="flex items-center justify-between p-4 bg-rose-50/40 hover:bg-rose-50/80 rounded-2xl border border-rose-100 shadow-xs cursor-pointer transition">
+                    <div onclick="window.handleLogout()" class="flex items-center justify-between p-4 bg-rose-50/40 hover:bg-rose-50/80 rounded-2xl border border-rose-100 shadow-xs cursor-pointer transition">
                         <div class="flex items-center space-x-3">
                             <div class="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
                                 <i class="fas fa-sign-out-alt text-lg"></i>
@@ -723,42 +718,6 @@
 
             </div>
         </div>
-
-        <div id="modal-notif" class="fixed z-50 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 divide-y divide-gray-100 hidden opacity-0 transition-all duration-200 transform origin-top-right scale-95">
-            <div class="p-3.5 flex justify-between items-center bg-gray-50/50 rounded-t-2xl">
-                <h4 class="text-xs font-black text-gray-800 tracking-wide uppercase">Notifikasi Sistem</h4>
-                <button onclick="bersihkanNotif()" class="text-[10px] text-blue-600 font-bold hover:underline">Tandai Dibaca</button>
-            </div>
-
-            <div class="max-h-60 overflow-y-auto divide-y divide-gray-50">
-                <div class="p-3 flex items-start space-x-3 hover:bg-gray-50/60 transition">
-                    <div class="w-7 h-7 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 text-xs shadow-xs">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-xs font-bold text-gray-800 leading-snug">Sistem Keamanan Aktif</p>
-                        <p class="text-[10px] text-gray-400 mt-0.5 leading-relaxed">Selamat! Otentikasi Google DompetQ Anda berhasil dikonfigurasi.</p>
-                        <p class="text-[9px] text-gray-400 mt-1 font-medium">Baru saja</p>
-                    </div>
-                </div>
-
-                <div class="p-3 flex items-start space-x-3 hover:bg-gray-50/60 transition">
-                    <div class="w-7 h-7 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 text-xs shadow-xs">
-                        <i class="fas fa-cloud"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-xs font-bold text-gray-800 leading-snug">Sinc Cloud Pending</p>
-                        <p class="text-[10px] text-gray-400 mt-0.5 leading-relaxed">Hubungkan Cloud Firestore untuk mengaktifkan pencatatan permanen.</p>
-                        <p class="text-[9px] text-gray-400 mt-1 font-medium">10 menit yang lalu</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-2.5 text-center bg-gray-50/30 rounded-b-2xl">
-                <p class="text-[10px] text-gray-400 font-medium">Menampilkan 2 pesan terbaru</p>
-            </div>
-        </div>
-
 
         <div id="modal-login" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl transition-all flex flex-col max-h-[85vh]">
@@ -1934,21 +1893,22 @@
     <script>
         
         document.addEventListener("DOMContentLoaded", function() {
-            // 1. Inisialisasi awal UI saat aplikasi dibuka
+            // 1. Kunci total UI & Dashboard sejak awal sebelum verifikasi berhasil
             if (typeof userSudahLogin !== 'undefined') {
                 userSudahLogin = false;
             }
             
+            // Pastikan overlay pengunci saldo & riwayat tampil 100% (Solid White)
             if (typeof kontrolVisibilitasDashboard === 'function') {
                 kontrolVisibilitasDashboard(false); 
             }
 
-            // Update elemen visual statis (non-Firestore) jika ada
+            // Update label statis (misal: "Saldo Dompet Bulan Juli 2026")
             if (typeof updateLabelBulanDinamis === 'function') {
                 updateLabelBulanDinamis();
             }
 
-            // 2. Cek apakah ada Sesi Fingerprint yang terikat pada Email / User terakhir di HP ini
+            // 2. Ambil data sesi sidik jari dari LocalStorage
             const lastUserEmail = localStorage.getItem('dompetq_last_email') || '';
             const fpKey = lastUserEmail ? `dompetq_fp_terdaftar_${lastUserEmail}` : 'dompetq_fp_terdaftar';
             const credKey = lastUserEmail ? `dompetq_fp_cred_id_${lastUserEmail}` : 'dompetq_fp_cred_id';
@@ -1960,10 +1920,16 @@
             const biometricQuickLogin = document.getElementById('biometric-quick-login');
             const biometricSetupPanel = document.getElementById('biometric-setup-panel');
 
-            // 3. Atur Tampilan Panel Modal Login
+            // Synchronize toggle status di menu setelan
+            if (typeof window.muatStatusBiometrik === 'function') {
+                window.muatStatusBiometrik();
+            }
+
+            // 3. Evaluasi Sesi Login & Biometrik
             if (fpTerdaftar === 'true' && credIdTersimpan) {
                 console.log("Fingerprint terdeteksi untuk akun:", lastUserEmail || "Default User");
                 
+                // Tampilkan Modal Login dalam keadaan tertutup/terkunci rapat
                 if (typeof openLoginModal === 'function') {
                     openLoginModal();
                 }
@@ -1972,15 +1938,20 @@
                 if (biometricSetupPanel) biometricSetupPanel.classList.add('hidden');
                 if (biometricQuickLogin) biometricQuickLogin.classList.remove('hidden');
 
-                // Otomatis picu scanner fingerprint
+                // Berikan jeda 700ms agar DOM & Modal Login selesai ter-render sempurna
+                // baru kemudian memicu prompt sensor biometrik bawaan HP
                 setTimeout(() => {
                     if (typeof window.loginDenganFingerprint === 'function') {
+                        // Pastikan UI tetap terkunci saat prompt biometrik aktif
+                        if (typeof kontrolVisibilitasDashboard === 'function') {
+                            kontrolVisibilitasDashboard(false);
+                        }
                         window.loginDenganFingerprint();
                     }
-                }, 500);
+                }, 700);
 
             } else {
-                // Jika belum ada fingerprint, arahkan langsung ke opsi Login Google
+                // Jika belum mendaftarkan biometrik, tampilkan opsi Login standar (Google/Email)
                 if (typeof openLoginModal === 'function') {
                     openLoginModal();
                 }
@@ -2048,76 +2019,6 @@
             setTimeout(() => {
                 modal.classList.add("hidden");
             }, 200); // Sinkron dengan waktu durasi transisi
-        }
-
-        // Fungsi Membuka Modal Notifikasi Tepat di Bawah Tombol Lonceng
-        window.openNotifModal = function() {
-            if (typeof getarTombol === 'function') getarTombol();
-
-            const btnNotif = document.querySelector('button[onclick="openNotifModal()"]');
-            const modalNotif = document.getElementById("modal-notif");
-
-            if (!btnNotif || !modalNotif) return;
-
-            // Jika modal sedang terbuka, klik lagi akan menutupnya (Toggle)
-            if (!modalNotif.classList.contains("hidden")) {
-                tutupNotifModal();
-                return;
-            }
-
-            // Hitung posisi koordinat tombol lonceng secara presisi di layar
-            const koordinat = btnNotif.getBoundingClientRect();
-            
-            // Atur posisi modal notif agar pas di bawah tombol (rata kanan tombol)
-            modalNotif.style.top = `${koordinat.bottom + window.scrollY + 8}px`; // Beri jarak 8px di bawah tombol
-            modalNotif.style.left = `${koordinat.right - 288}px`; // 288px adalah lebar w-72 modal
-
-            // Tampilkan dengan efek animasi mikro
-            modalNotif.classList.remove("hidden");
-            setTimeout(() => {
-                modalNotif.classList.remove("opacity-0", "scale-95");
-                modalNotif.classList.add("opacity-100", "scale-100");
-            }, 10);
-
-            // Pasang deteksi klik di luar modal untuk otomatis menutup
-            setTimeout(() => {
-                document.addEventListener("click", klikLuarNotif);
-            }, 50);
-        }
-
-        // Fungsi Menutup Modal Notifikasi
-        function tutupNotifModal() {
-            const modalNotif = document.getElementById("modal-notif");
-            if (!modalNotif) return;
-
-            modalNotif.classList.remove("opacity-100", "scale-100");
-            modalNotif.classList.add("opacity-0", "scale-95");
-            
-            setTimeout(() => {
-                modalNotif.classList.add("hidden");
-            }, 200);
-
-            document.removeEventListener("click", klikLuarNotif);
-        }
-
-        // Handler Deteksi Klik Luar Elemen
-        function klikLuarNotif(e) {
-            const modalNotif = document.getElementById("modal-notif");
-            const btnNotif = document.querySelector('button[onclick="openNotifModal()"]');
-            
-            if (modalNotif && !modalNotif.contains(e.target) && !btnNotif.contains(e.target)) {
-                tutupNotifModal();
-            }
-        }
-
-        // Aksi membersihkan tanda merah notifikasi baru
-        window.bersihkanNotif = function() {
-            // Sembunyikan titik merah di tombol lonceng
-            const dotNotif = document.querySelector('button[onclick="openNotifModal()"] span');
-            if (dotNotif) dotNotif.classList.add("hidden");
-            
-            tampilAlert("Semua notifikasi ditandai sebagai dibaca", "success");
-            tutupNotifModal();
         }
 
         // Array global sementara untuk menampung detail slip terfilter
@@ -2235,8 +2136,13 @@
                 if (btnTabungan) btnTabungan.style.opacity = "1";
                 if (btnServis) btnServis.style.opacity = "1";
                 if (btnSmart) btnSmart.style.opacity = "1";
+
+                // Sinkronkan status sakelar Biometrik di menu Setelan
+                if (typeof window.muatStatusBiometrik === 'function') {
+                    window.muatStatusBiometrik();
+                }
             } else {
-                // 1. Tutup kembali seluruh tirai pengunci data
+                // 1. Tutup kembali seluruh tirai pengunci data (Gunakan Solid Overlay)
                 if (lockSaldo) lockSaldo.classList.remove("hidden");
                 if (lockTransaksi) lockTransaksi.classList.remove("hidden");
                 if (lockAksesCepat) lockAksesCepat.classList.remove("hidden");
@@ -2250,21 +2156,23 @@
             }
         }
 
-        // FUNGSI HELPER: Reset Angka & Tabel ke Status Kosong/Default
+        // FUNGSI HELPER: Reset Angka & Container ke Status Kosong/Default
         function resetTampilanUIDashboard() {
-            // Reset angka-angka ringkasan
-            const saldoUtama = document.getElementById("total-saldo");
-            const totalPemasukan = document.getElementById("total-pemasukan");
-            const totalPengeluaran = document.getElementById("total-pengeluaran");
-            const tabelRiwayat = document.getElementById("tabel-riwayat-transaksi"); // Sesuaikan ID tabel riwayat Anda
+            // Reset angka-angka ringkasan (Disesuaikan dengan ID DOM Terbaru)
+            const saldoUtama = document.getElementById("txt-saldo-utama");
+            const saldoLalu = document.getElementById("txt-saldo-lalu");
+            const totalPemasukan = document.getElementById("txt-pemasukan");
+            const totalPengeluaran = document.getElementById("txt-pengeluaran");
+            const containerRiwayat = document.getElementById("container-riwayat-transaksi");
 
             if (saldoUtama) saldoUtama.innerText = "Rp 0";
+            if (saldoLalu) saldoLalu.innerText = "Rp 0";
             if (totalPemasukan) totalPemasukan.innerText = "Rp 0";
             if (totalPengeluaran) totalPengeluaran.innerText = "Rp 0";
             
-            // Kosongkan tabel transaksi agar user baru tidak melihat riwayat user sebelumnya
-            if (tabelRiwayat) {
-                tabelRiwayat.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-400">Silakan login untuk melihat data</td></tr>`;
+            // Kosongkan container transaksi agar user baru tidak melihat riwayat user sebelumnya
+            if (containerRiwayat) {
+                containerRiwayat.innerHTML = `<div class="text-center py-6 text-[11px] text-gray-400 font-medium">Silakan login untuk melihat data</div>`;
             }
         }
 
@@ -2580,13 +2488,26 @@
             }
         };
 
-        // 2. PASTI-KAN STATUS DIPERBARUI SAAT FIREBASE AUTH SELESAI LOADING
+        // 2. INTEGRASI PENGUNCIAN OTOMATIS DENGAN FIREBASE AUTH STATE
         if (window.auth) {
             window.auth.onAuthStateChanged(function(user) {
                 if (user) {
                     window.currentUser = user;
-                    // Panggil ulang pengecekan saat sesi user terverifikasi
-                    window.muatStatusBiometrik();
+                    if (typeof userSudahLogin !== 'undefined') userSudahLogin = true;
+                    
+                    // Buka Kunci Data
+                    window.kontrolVisibilitasDashboard(true);
+                    
+                    // Sinkronkan Toggle Biometrik di Setelan
+                    if (typeof window.muatStatusBiometrik === 'function') {
+                        window.muatStatusBiometrik();
+                    }
+                } else {
+                    window.currentUser = null;
+                    if (typeof userSudahLogin !== 'undefined') userSudahLogin = false;
+                    
+                    // Kunci Data Kembali
+                    window.kontrolVisibilitasDashboard(false);
                 }
             });
         }
@@ -2727,7 +2648,89 @@
             setTimeout(() => {
                 window.muatStatusBiometrik();
             }, 50);
+
+            // INISIALISASI TIMER SAAT PERTAMA KALI HALAMAN DI-LOAD
+            resetTimerIdle();
         });
+
+        // ==========================================
+        // LOGIKA AUTO LOGOUT & LOCK (IDLE & BACKGROUND)
+        // ==========================================
+
+        const WAKTU_IDLE_MAX = 10 * 60 * 1000; // 10 Menit (dalam milidetik)
+        let timerIdle = null;
+
+        // 1. FUNGSI UNTUK MERESET TIMER INAKTIVITAS
+        function resetTimerIdle() {
+            // Hanya jalankan timer jika user sedang dalam kondisi login
+            if (typeof userSudahLogin !== 'undefined' && !userSudahLogin) return;
+
+            // Hapus timer lama
+            if (timerIdle) clearTimeout(timerIdle);
+
+            // Pasang timer baru untuk 10 menit ke depan
+            timerIdle = setTimeout(() => {
+                pemicuAutoLogout("Sesi berakhir karena tidak ada aktivitas selama 10 menit.");
+            }, WAKTU_IDLE_MAX);
+        }
+
+        // 2. FUNGSI EKSEKUSI AUTO LOGOUT
+        function pemicuAutoLogout(pesanAlert) {
+            if (typeof userSudahLogin !== 'undefined' && !userSudahLogin) return;
+
+            console.warn("Auto-Logout dipicu:", pesanAlert);
+
+            // Kunci total UI & reset tampilan
+            if (typeof kontrolVisibilitasDashboard === 'function') {
+                kontrolVisibilitasDashboard(false);
+            }
+
+            // Jika menggunakan Firebase Auth, lakukan sign out
+            if (window.auth && typeof window.auth.signOut === 'function') {
+                window.auth.signOut().catch(err => console.error("Gagal signOut:", err));
+            }
+
+            // Tampilkan pesan pemberitahuan ke user
+            if (typeof tampilAlert === 'function') {
+                tampilAlert(pesanAlert || "Sesi Anda telah berakhir. Silakan login kembali.", "info");
+            }
+
+            // Buka modal login/biometric
+            if (typeof openLoginModal === 'function') {
+                openLoginModal();
+            }
+        }
+
+        // 3. EVENT LISTENERS: DETEKSI INTERAKSI PENGGUNA (Layar Disentuh/Ditekan)
+        const daftarEventInteraksi = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+
+        daftarEventInteraksi.forEach(namaEvent => {
+            document.addEventListener(namaEvent, resetTimerIdle, { passive: true });
+        });
+
+        // 4. DETEKSI SAAT APLIKASI DITINGGALKAN / DITUTUP (BACKGROUND CHECK)
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                // Saat aplikasi dipindah ke background / tab ditutup:
+                // Langsung kunci UI agar data tidak bocor saat preview app switcher HP
+                if (typeof kontrolVisibilitasDashboard === 'function') {
+                    kontrolVisibilitasDashboard(false);
+                }
+            } else {
+                // Saat aplikasi kembali dibuka ke foreground:
+                // Jika status belum/tidak login, langsung tampilkan modal login/biometrik
+                if (typeof userSudahLogin !== 'undefined' && !userSudahLogin) {
+                    if (typeof openLoginModal === 'function') {
+                        openLoginModal();
+                    }
+                } else {
+                    // Jika masih login, reset kembali timer 10 menitnya
+                    resetTimerIdle();
+                }
+            }
+        });
+
+        
 
 
         // Variable global untuk memantau tab yang sedang aktif (default: rekap)
