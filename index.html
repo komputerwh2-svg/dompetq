@@ -9,6 +9,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.5/dist/tesseract.min.js"></script>
 
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#1e293b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DompetQ">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+
     
     <style>
     /* ─── PENGATURAN TAB CONTENT ─── */
@@ -7025,6 +7033,40 @@
             // 5. Tutup Modal
             window.tutupModalPengaturanBBM();
         };
+    </script>
+
+    <!-- Registrasi Service Worker & Tombol Install PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('✅ Service Worker terdaftar:', reg.scope))
+                .catch(err => console.error('❌ Service Worker gagal:', err));
+            });
+        }
+
+        // Handle Event Prompt Install PWA
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Tampilkan tombol install khusus di UI jika kamu menyediakannya
+            const btnInstallPWA = document.getElementById('btn-install-pwa');
+            if (btnInstallPWA) {
+            btnInstallPWA.classList.remove('hidden');
+            btnInstallPWA.addEventListener('click', () => {
+                btnInstallPWA.classList.add('hidden');
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User menerima install PWA');
+                }
+                deferredPrompt = null;
+                });
+            });
+            }
+        });
     </script>
 </body>
 </html>
