@@ -3,14 +3,10 @@
   "name": "DompetQ - Aplikasi Keuangan",
   "icons": [
     {
-      "src": "icons/icon-192.png",
+      "src": "./icon.png",
       "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "192x192 512x512",
+      "purpose": "any maskable"
     }
   ],
   "start_url": "./index.html",
