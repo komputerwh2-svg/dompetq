@@ -2385,11 +2385,11 @@
             }
         };
 
-        // 2. REVISI FUNGSI: VERIFIKASI SIDIK JARI BERBASIS AKUN TERAKHIR
+        // REVISI: FUNGSI LOGIN FINGERPRINT DISINKRONKAN DENGAN ONAUTHSTATECHANGED
         window.loginDenganFingerprint = async function() {
             if (typeof getarTombol === 'function') getarTombol();
             
-            // Ambil email pengguna terakhir yang terdaftar di perangkat ini
+            // 1. Ambil info akun terakhir
             const lastUserEmail = localStorage.getItem('dompetq_last_email');
             if (!lastUserEmail) {
                 if (typeof tampilAlert === 'function') tampilAlert("Silakan masuk menggunakan Google terlebih dahulu.", "warning");
@@ -2411,7 +2411,6 @@
                 const challenge = new Uint8Array(32);
                 window.crypto.getRandomValues(challenge);
 
-                // Utility konversi Base64/Base64URL ke Uint8Array yang aman
                 const safeBase64ToUint8Array = (base64) => {
                     const padding = '='.repeat((4 - base64.length % 4) % 4);
                     const b64 = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -2442,38 +2441,51 @@
                 const assertion = await navigator.credentials.get(getOptions);
 
                 if (assertion) {
-                    if (typeof tampilAlert === 'function') tampilAlert("Sidik Jari Cocok! Selamat Datang.", "success");
+                    // --- FINGERPRINT COCOK ---
                     
-                    userSudahLogin = true;
+                    // Cek apakah ada user aktif di Firebase Auth SDK
+                    let currentUser = window.auth ? window.auth.currentUser : null;
 
-                    // Buat objek sesi sementara jika Firebase Auth belum sempat me-restore sesi
-                    if (!window.currentUser) {
-                        window.currentUser = {
-                            uid: tokenTersimpan,
+                    // Jika di Mode Dev / Localhost
+                    const IS_DEV_MODE = window.location.hostname === "localhost" || 
+                                        window.location.hostname === "127.0.0.1" || 
+                                        window.location.protocol === "file:";
+
+                    if (!currentUser && IS_DEV_MODE) {
+                        currentUser = {
+                            uid: typeof secureDevUid !== 'undefined' ? secureDevUid : tokenTersimpan, 
                             email: emailTersimpan,
-                            photoURL: localStorage.getItem(`dompetq_fp_photo_${lastUserEmail}`) || ''
+                            displayName: "Dev User",
+                            photoURL: localStorage.getItem(`dompetq_fp_photo_${lastUserEmail}`) || ""
                         };
                     }
 
-                    if (typeof kontrolVisibilitasDashboard === 'function') kontrolVisibilitasDashboard(true);
-                    if (typeof tutupLoginModal === 'function') tutupLoginModal();
-                    
-                    // Muat data Firestore spesifik milik UID user ini
-                    if (typeof muatRekapFinansialDashboard === 'function') {
-                        muatRekapFinansialDashboard(tokenTersimpan);
-                    }
-                    if (typeof window.muatDataKendaraanDariFirestore === 'function') {
-                        window.muatDataKendaraanDariFirestore(tokenTersimpan);
-                    }
+                    if (currentUser) {
+                        if (typeof tampilAlert === 'function') tampilAlert("Sidik jari cocok! Selamat datang.", "success");
 
-                    const profilBtn = document.querySelector('button[onclick="openLoginModal()"]');
-                    if (profilBtn) {
-                        const fotoTersimpan = localStorage.getItem(`dompetq_fp_photo_${lastUserEmail}`);
-                        if (fotoTersimpan) {
-                            profilBtn.innerHTML = `<img src="${fotoTersimpan}" class="w-full h-full object-cover rounded-full border border-blue-200">`;
-                        } else {
-                            profilBtn.innerHTML = `<div class="w-full h-full bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xs"><i class="fas fa-user"></i></div>`;
+                        // 1. Eksekusi handler UI (Sama seperti Google Login)
+                        handleSuksesAuth(currentUser);
+
+                        // 2. Muat ulang data Firestore secara eksplisit menggunakan UID User resmi
+                        console.log("📥 [Fingerprint Login] Memuat data Firestore untuk UID:", currentUser.uid);
+
+                        if (typeof muatRekapFinansialDashboard === 'function') {
+                            await muatRekapFinansialDashboard(currentUser.uid);
                         }
+                        if (typeof window.muatDataKendaraanDariFirestore === 'function') {
+                            await window.muatDataKendaraanDariFirestore(currentUser.uid);
+                        }
+                        // Panggil loader riwayat transaksi jika ada
+                        if (typeof window.muatRiwayatTransaksi === 'function') {
+                            await window.muatRiwayatTransaksi(currentUser.uid);
+                        }
+
+                    } else {
+                        // Sesi Firebase di LocalStorage sudah terhapus / expired
+                        if (typeof tampilAlert === 'function') {
+                            tampilAlert("Sesi Google telah berakhir. Silakan login dengan akun Google sekali untuk memperbarui kunci.", "warning");
+                        }
+                        if (typeof window.tukarKeFormGoogle === 'function') window.tukarKeFormGoogle();
                     }
                 }
             } catch (err) {
@@ -2481,7 +2493,7 @@
                 if (err.name === 'NotAllowedError') {
                     if (typeof tampilAlert === 'function') tampilAlert("Verifikasi fingerprint dibatalkan.", "warning");
                 } else {
-                    if (typeof tampilAlert === 'function') tampilAlert("Login Ditolak: Fingerprint tidak cocok atau bermasalah.", "error");
+                    if (typeof tampilAlert === 'function') tampilAlert("Fingerprint tidak cocok.", "error");
                 }
             }
         };
