@@ -550,7 +550,7 @@
                     </div>
 
                     <!-- 3. Menu Keluar (Diselaraskan Model Card Red Theme) -->
-                    <div onclick="tutupLoginModal()" class="flex items-center justify-between p-4 bg-rose-50/40 hover:bg-rose-50/80 rounded-2xl border border-rose-100 shadow-xs cursor-pointer transition">
+                    <div onclick="window.auth.signOut()" class="flex items-center justify-between p-4 bg-rose-50/40 hover:bg-rose-50/80 rounded-2xl border border-rose-100 shadow-xs cursor-pointer transition">
                         <div class="flex items-center space-x-3">
                             <div class="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
                                 <i class="fas fa-sign-out-alt text-lg"></i>
@@ -760,7 +760,7 @@
         </div>
 
 
-        <div id="modal-login" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden backdrop-blur-xs">
+        <div id="modal-login" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl transition-all flex flex-col max-h-[85vh]">
                 
                 <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 flex-shrink-0">
@@ -2554,20 +2554,42 @@
             return activeUser.username || activeUser.id || 'default_user';
         }     
         
-        // FUNGSI UNTUK MENYESUAIKAN CHECKBOX SAAT LAMAN DIBUKA
+        // 1. FUNGSI PENGECEKAN STATUS TOGGLE BIOMETRIK
         window.muatStatusBiometrik = function() {
-            const userSesi = window.currentUser || (window.auth ? window.auth.currentUser : null);
             const toggle = document.getElementById('toggleBiometric');
-
             if (!toggle) return;
 
-            if (userSesi && userSesi.email) {
-                const isRegistered = localStorage.getItem(`dompetq_fp_terdaftar_${userSesi.email}`) === 'true';
+            // Dapatkan email user aktif dari Firebase atau simpanan terakhir
+            let userEmail = null;
+
+            if (window.currentUser && window.currentUser.email) {
+                userEmail = window.currentUser.email;
+            } else if (window.auth && window.auth.currentUser && window.auth.currentUser.email) {
+                userEmail = window.auth.currentUser.email;
+            } else {
+                // Fallback: Ambil dari histori email terakhir jika Firebase auth masih async/loading
+                userEmail = localStorage.getItem('dompetq_last_email');
+            }
+
+            if (userEmail) {
+                // Cek status terdaftar berdasarkan email
+                const isRegistered = localStorage.getItem(`dompetq_fp_terdaftar_${userEmail}`) === 'true';
                 toggle.checked = isRegistered;
             } else {
                 toggle.checked = false;
             }
         };
+
+        // 2. PASTI-KAN STATUS DIPERBARUI SAAT FIREBASE AUTH SELESAI LOADING
+        if (window.auth) {
+            window.auth.onAuthStateChanged(function(user) {
+                if (user) {
+                    window.currentUser = user;
+                    // Panggil ulang pengecekan saat sesi user terverifikasi
+                    window.muatStatusBiometrik();
+                }
+            });
+        }
 
         // Handler saat Toggle Biometrik Diubah
         window.handleBiometricToggle = async function(checkbox) {
@@ -2701,7 +2723,10 @@
 
         // Panggil muatStatusBiometrik saat halaman selesai di-load atau saat user beroperasi
         document.addEventListener("DOMContentLoaded", function() {
-            window.muatStatusBiometrik();
+            // Sinkronkan status toggle saat tab setelan ditampilkan
+            setTimeout(() => {
+                window.muatStatusBiometrik();
+            }, 50);
         });
 
 
