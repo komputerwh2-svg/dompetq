@@ -3470,20 +3470,48 @@
         window.toggleFormOtomotifServis = function() {
             const kat = document.getElementById('out-kategori')?.value;
             const panelServis = document.getElementById('panel-khusus-servis');
-            
             const elKeteranganInput = document.getElementById('out-keterangan');
             const containerKeterangan = elKeteranganInput ? elKeteranganInput.closest('div') : null;
+            
+            // Elemen Nominal Pengeluaran Utama
+            const elNominal = document.getElementById('out-nominal');
 
             if (kat === 'transportasi') {
                 if (panelServis) panelServis.classList.remove('hidden');
                 if (containerKeterangan) containerKeterangan.classList.add('hidden');
                 
-                // Panggil perbarui dropdown
-                window.updateDropdownKendaraanOptions();
-                window.updateKmAwalDariPilihanKendaraan();
+                // Panggil perbarui dropdown & KM awal bawaan Anda
+                if (typeof window.updateDropdownKendaraanOptions === 'function') {
+                    window.updateDropdownKendaraanOptions();
+                }
+                if (typeof window.updateKmAwalDariPilihanKendaraan === 'function') {
+                    window.updateKmAwalDariPilihanKendaraan();
+                }
+
+                // Cek mode sub-kategori kendaraan (Bensin vs Servis)
+                const subMode = document.querySelector('input[name="sub_kategori_kendaraan"]:checked')?.value || "bensin";
+                if (subMode === "bensin") {
+                    // Jika bensin, kalkulasi & kunci nominal
+                    if (typeof window.kalkulasiNominalTransportasi === 'function') {
+                        window.kalkulasiNominalTransportasi();
+                    }
+                } else if (elNominal) {
+                    // Jika servis, biarkan nominal bisa diisi manual
+                    elNominal.readOnly = false;
+                    elNominal.classList.remove('bg-gray-100', 'cursor-not-allowed', 'opacity-75');
+                }
+
             } else {
+                // ─── PENDAPATAN / KATEGORI NON-TRANSPORTASI ───
                 if (panelServis) panelServis.classList.add('hidden');
                 if (containerKeterangan) containerKeterangan.classList.remove('hidden');
+
+                // BUKA KUNCI & RESET NOMINAL (Solusi Bug Utamanya)
+                if (elNominal) {
+                    elNominal.readOnly = false;
+                    elNominal.value = ""; // Reset angka agar tidak nyangkut dari kategori sebelumnya
+                    elNominal.classList.remove('bg-gray-100', 'cursor-not-allowed', 'opacity-75');
+                }
             }
         };
 
@@ -4535,12 +4563,11 @@
                             const netto = parseInt(fields.totalBersihNetto?.integerValue || fields.totalBersihNetto?.stringValue || 0, 10);
                             
                             const kategoriRaw = (fields.kategori?.stringValue || "umum").toLowerCase();
-                            const subKategori = (fields.subKategori?.stringValue || fields.sub_kategori?.stringValue || "").toLowerCase();
-                            const kategori = kategoriRaw.toUpperCase();
-                            const keterangan = fields.keterangan?.stringValue || "Transaksi Tanpa Memo";
+                            const subKategoriRaw = (fields.subKategori?.stringValue || fields.sub_kategori?.stringValue || "").toLowerCase();
+                            const keteranganMemo = fields.keterangan?.stringValue || "Tanpa Memo";
                             const namaUser = fields.namaUser?.stringValue || "system";
 
-                            // Metadata Tambahan
+                            // Metadata Tambahan Transportasi
                             const jenisBBM = fields.jenisBBM?.stringValue || fields.jenis_bbm?.stringValue || "";
                             const jumlahLiter = fields.jumlahLiter?.doubleValue || fields.jumlahLiter?.integerValue || fields.jumlah_liter?.stringValue || 0;
                             const kmAwal = parseInt(fields.kmAwal?.integerValue || fields.kmAwal?.stringValue || 0, 10);
@@ -4575,10 +4602,13 @@
                             let teksNominal = "";
                             let jenisTransaksi = ""; 
                             let badgeSubDetail = ""; 
-                            let teksSubKategoriUser = `${kategori} (${namaUser})`; 
 
-                            const isBensin = subKategori.includes("bensin") || subKategori.includes("bbm") || kategoriRaw.includes("bensin") || (kategoriRaw === "transportasi" && subKategori !== "servis");
-                            const isServis = subKategori.includes("servis") || kategoriRaw.includes("servis");
+                            const isBensin = subKategoriRaw.includes("bensin") || subKategoriRaw.includes("bbm") || kategoriRaw.includes("bensin") || (kategoriRaw === "transportasi" && subKategoriRaw !== "servis");
+                            const isServis = subKategoriRaw.includes("servis") || kategoriRaw.includes("servis");
+
+                            // 🔄 SWAP TAMPILAN: Judul Atas = Kategori, Sub-judul Bawah = Keterangan Memo + User
+                            let judulKategori = subKategoriRaw ? `${kategoriRaw.toUpperCase()} - ${subKategoriRaw.toUpperCase()}` : kategoriRaw.toUpperCase();
+                            let teksKeteranganUser = `${keteranganMemo})`;
 
                             if (isSlipDokumen || (pendapatan > 0 && potongan === 0)) {
                                 // 🟢 PEMASUKAN / SLIP GAJI
@@ -4589,17 +4619,23 @@
                                 const nominalTampil = isSlipDokumen ? (netto > 0 ? netto : (pendapatan - potongan)) : pendapatan;
                                 teksNominal = `+Rp ${nominalTampil.toLocaleString('id-ID')}`;
                                 jenisTransaksi = isSlipDokumen ? "slip" : "pemasukan_manual";
+                                
+                                // Badge untuk Pemasukan/Gaji
+                                badgeSubDetail = `<span class="inline-block mt-0.5 text-[9px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded">${kategoriRaw.toUpperCase()}</span>`;
+
                             } else if (potongan > 0) {
-                                // 🔴 PENGELUARAN / MUTASI / BENSIN / SERVIS
+                                // 🔴 PENGELUARAN / MUTASI / BENSIN / SERVIS / LAINNYA
                                 if (isServis) {
                                     iconClass = "fas fa-tools";
                                     iconBg = "bg-amber-50 text-amber-600";
                                     warnaNominal = "text-amber-700 font-black text-xs";
                                     jenisTransaksi = "servis";
+                                    judulKategori = "SERVIS KENDARAAN";
 
-                                    teksSubKategoriUser = ketServis ? `Servis: ${ketServis}` : `SERVIS KENDARAAN (${namaUser})`;
+                                    if (ketServis) teksKeteranganUser = `${ketServis} (${namaUser})`;
                                     let infoTrip = tripKM ? `Trip: ${tripKM} KM` : (kmAkhir ? `KM: ${kmAkhir}` : "Servis");
                                     badgeSubDetail = `<span class="inline-block mt-0.5 text-[9px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded">${infoTrip}</span>`;
+
                                 } else if (isBensin) {
                                     iconClass = "fas fa-gas-pump";
                                     iconBg = "bg-blue-50 text-blue-600";
@@ -4608,25 +4644,36 @@
                                     
                                     const calcTrip = tripKM || (kmAkhir > kmAwal && kmAwal > 0 ? kmAkhir - kmAwal : 0);
                                     if (kmAwal || kmAkhir) {
-                                        teksSubKategoriUser = `KM: ${kmAwal.toLocaleString('id-ID')} - ${kmAkhir.toLocaleString('id-ID')} (${calcTrip.toLocaleString('id-ID')} KM)`;
+                                        judulKategori = `BBM (${kmAwal.toLocaleString('id-ID')} - ${kmAkhir.toLocaleString('id-ID')} KM)`;
                                     } else {
-                                        teksSubKategoriUser = `BBM (${namaUser})`;
+                                        judulKategori = "BBM / BENSIN";
                                     }
 
                                     let infoBBM = jenisBBM ? `${jenisBBM}` : "BBM";
                                     let infoLiter = jumlahLiter ? ` • ${jumlahLiter}L` : "";
                                     badgeSubDetail = `<span class="inline-block mt-0.5 text-[9px] font-bold bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded">${infoBBM}${infoLiter}</span>`;
+
                                 } else if (isMutasi) {
                                     iconClass = "fas fa-exchange-alt";
                                     iconBg = "bg-purple-50 text-purple-600";
                                     warnaNominal = "text-purple-600 font-black text-xs";
                                     jenisTransaksi = "mutasi";
+                                    judulKategori = "MUTASI SALDO";
+
+                                    badgeSubDetail = `<span class="inline-block mt-0.5 text-[9px] font-bold bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded">MUTASI</span>`;
+
                                 } else {
+                                    // 🛒 PENGELUARAN UMUM (Pulsa, Makan, Belanja, Hiburan, dll.)
                                     iconClass = "fas fa-arrow-down";
                                     iconBg = "bg-rose-50 text-rose-600";
                                     warnaNominal = "text-rose-600 font-black text-xs";
                                     jenisTransaksi = "pengeluaran";
+
+                                    // Badge Dinamis Kategori Umum (Pulsa, Makan, Belanja, dll)
+                                    const labelBadge = subKategoriRaw ? subKategoriRaw.toUpperCase() : kategoriRaw.toUpperCase();
+                                    badgeSubDetail = `<span class="inline-block mt-0.5 text-[9px] font-bold bg-rose-100 text-rose-800 px-1.5 py-0.2 rounded">${labelBadge}</span>`;
                                 }
+
                                 teksNominal = `-Rp ${potongan.toLocaleString('id-ID')}`;
                             }
 
@@ -4650,8 +4697,8 @@
                                             <i class="${iconClass}"></i>
                                         </div>
                                         <div class="min-w-0 space-y-0.5">
-                                            <p class="font-bold text-xs text-gray-800 uppercase truncate">${keterangan}</p>
-                                            <p class="text-[10px] text-gray-400 truncate">${teksSubKategoriUser}</p>
+                                            <p class="font-bold text-xs text-gray-800 uppercase truncate">${judulKategori}</p>
+                                            <p class="text-[10px] text-gray-400 truncate">${teksKeteranganUser}</p>
                                             ${badgeSubDetail}
                                             <div class="pt-0.5">
                                                 <span class="${warnaNominal}">${teksNominal}</span>
