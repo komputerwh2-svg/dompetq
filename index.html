@@ -917,37 +917,45 @@
 
                 <!-- Informasi Profil User Aktif -->
                 <div class="bg-slate-50 border border-slate-100 rounded-2xl p-3 flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                    <div id="pengaturan-avatar-bg" class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm transition-all">
                         <span id="pengaturan-user-avatar"><i class="fas fa-user"></i></span>
                     </div>
                     <div class="flex-1 overflow-hidden">
-                        <p id="pengaturan-user-nama" class="text-xs font-bold text-slate-800 truncate">Sesi Aktif</p>
-                        <p id="pengaturan-user-email" class="text-[10px] text-slate-500 truncate">user@email.com</p>
+                        <p id="pengaturan-user-nama" class="text-xs font-bold text-slate-800 truncate">-</p>
+                        <p id="pengaturan-user-email" class="text-[10px] text-slate-500 truncate">-</p>
                     </div>
                 </div>
 
-                <!-- Detail Status Kredensial & Firebase -->
+                <!-- Detail Status Kredensial & Firebase (Real Data) -->
                 <div class="space-y-2 pt-1 text-[11px]">
+                    <!-- Status Firestore -->
                     <div class="flex justify-between items-center px-1 text-slate-600">
                         <span class="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
-                            <i class="fas fa-database text-xs text-emerald-500"></i> Cloud Firestore
+                            <i id="icon-status-cloud" class="fas fa-database text-xs text-emerald-500"></i> Cloud Firestore
                         </span>
-                        <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">Terhubung</span>
+                        <span id="badge-status-cloud" class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                            Terhubung
+                        </span>
+                    </div>
+
+                    <!-- Status Sesi / User ID -->
+                    <div class="flex justify-between items-center px-1 text-slate-600">
+                        <span class="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
+                            <i class="fas fa-key text-xs text-slate-400"></i> UID Sesi
+                        </span>
+                        <span id="pengaturan-user-uid" class="text-[9px] font-mono text-slate-500 truncate max-w-[110px]">
+                            -
+                        </span>
                     </div>
                 </div>
 
                 <!-- Tombol Aksi Login / Logout -->
                 <div class="pt-2 space-y-2">
-                    <button type="button" onclick="window.eksekusiLogoutAkun()" class="w-full py-2.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition active:scale-95">
+                    <button id="btn-aksi-logout" type="button" onclick="window.eksekusiLogoutAkun()" class="w-full py-2.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition active:scale-95">
                         <i class="fas fa-sign-out-alt"></i>
                         <span>Keluar Akun (Logout)</span>
                     </button>
-
-                    <button type="button" onclick="window.tutupModalPengaturan()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-semibold text-xs transition">
-                        Batal / Tutup
-                    </button>
                 </div>
-
             </div>
         </div>
 
@@ -2923,28 +2931,81 @@
             }
         });
 
-        // --- KONTROL MODAL PENGATURAN AKUN ---
-        // Fungsi Buka Modal Pengaturan & Render Info User
+        // --- KONTROL MODAL PENGATURAN AKUN (REAL DATA) ---
         window.bukaModalPengaturan = function() {
+            // 1. Ambil objek user aktif dari Firebase
             const userAktif = window.currentUser || (window.auth ? window.auth.currentUser : null);
 
             const elemNama = document.getElementById('pengaturan-user-nama');
             const elemEmail = document.getElementById('pengaturan-user-email');
             const elemAvatar = document.getElementById('pengaturan-user-avatar');
+            const elemUid = document.getElementById('pengaturan-user-uid');
+            const avatarBg = document.getElementById('pengaturan-avatar-bg');
+            
+            const badgeCloud = document.getElementById('badge-status-cloud');
+            const iconCloud = document.getElementById('icon-status-cloud');
+            const btnLogout = document.getElementById('btn-aksi-logout');
 
+            // 2. Render Data User Asli
             if (userAktif) {
-                let nama = userAktif.displayName || (userAktif.email ? userAktif.email.split('@')[0] : "Pengguna");
-                let email = userAktif.email || "Sesi Tamu Terhubung";
+                const email = userAktif.email || "-";
+                const nama = userAktif.displayName || (userAktif.email ? userAktif.email.split('@')[0] : "Pengguna");
 
                 if (elemNama) elemNama.innerText = nama;
                 if (elemEmail) elemEmail.innerText = email;
-                if (elemAvatar) elemAvatar.innerText = nama.charAt(0).toUpperCase();
+                if (elemUid) elemUid.innerText = userAktif.uid || "-";
+                
+                if (elemAvatar) {
+                    elemAvatar.innerText = nama !== "-" ? nama.charAt(0).toUpperCase() : "U";
+                }
+
+                if (avatarBg) {
+                    avatarBg.className = "w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm transition-all";
+                }
+
+                if (btnLogout) btnLogout.style.display = "flex";
+
             } else {
+                // Jika tidak ada user login
                 if (elemNama) elemNama.innerText = "Belum Login";
-                if (elemEmail) elemEmail.innerText = "Tidak ada akun aktif";
-                if (elemAvatar) elemAvatar.innerHTML = `<i class="fas fa-user-slash"></i>`;
+                if (elemEmail) elemEmail.innerText = "Sesi Tidak Ditemukan";
+                if (elemUid) elemUid.innerText = "Offline / Guest";
+                
+                if (elemAvatar) {
+                    elemAvatar.innerHTML = `<i class="fas fa-user-slash"></i>`;
+                }
+
+                if (avatarBg) {
+                    avatarBg.className = "w-10 h-10 rounded-full bg-slate-400 text-white flex items-center justify-center font-bold text-sm shadow-sm transition-all";
+                }
+
+                if (btnLogout) btnLogout.style.display = "none";
             }
 
+            // 3. Cek Status Real Koneksi & Cloud Firestore
+            const isOnline = navigator.onLine;
+
+            if (isOnline && userAktif) {
+                if (badgeCloud) {
+                    badgeCloud.className = "text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100";
+                    badgeCloud.innerText = "Terhubung";
+                }
+                if (iconCloud) iconCloud.className = "fas fa-database text-xs text-emerald-500";
+            } else if (isOnline && !userAktif) {
+                if (badgeCloud) {
+                    badgeCloud.className = "text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100";
+                    badgeCloud.innerText = "Perlu Login";
+                }
+                if (iconCloud) iconCloud.className = "fas fa-database text-xs text-amber-500";
+            } else {
+                if (badgeCloud) {
+                    badgeCloud.className = "text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100";
+                    badgeCloud.innerText = "Terputus";
+                }
+                if (iconCloud) iconCloud.className = "fas fa-database text-xs text-rose-500";
+            }
+
+            // 4. Tampilkan Modal
             const modal = document.getElementById('modal-pengaturan');
             if (modal) {
                 modal.style.display = 'flex';
@@ -2952,7 +3013,6 @@
             }
         };
 
-        // Fungsi Tutup Modal Pengaturan
         window.tutupModalPengaturan = function() {
             const modal = document.getElementById('modal-pengaturan');
             if (modal) {
@@ -3722,47 +3782,51 @@
         
         // --- KONTROL ROUTING UNTUK MODAL MUTASI ---
         window.pilihTransaksiMutasi = function() {
+            // 1. Tutup modal pilihan transaksi
             window.tutupPilihanTransaksi();
-            
-            // Set default bulan berjalan di input mutasi
-            const skrg = new Date();
-            const formatBulan = `${skrg.getFullYear()}-${String(skrg.getMonth() + 1).padStart(2, '0')}`;
-            const targetPeriodeMutasi = document.getElementById('mutasi-periode');
-            if (targetPeriodeMutasi) targetPeriodeMutasi.value = formatBulan;
 
-            // Pakai ID modal yang sesuai (sesuaikan 'modal-form-mutasi-tabungan' atau 'modal-mutasi-saldo')
-            const modalMutasi = document.getElementById('modal-form-mutasi-tabungan') || document.getElementById('modal-mutasi-saldo');
-            
+            // 2. Tutup modal pengaturan (jika sempat terbuka otomatis)
+            const modalPengaturan = document.getElementById('modal-pengaturan');
+            if (modalPengaturan) {
+                modalPengaturan.classList.add('hidden');
+                modalPengaturan.style.display = 'none';
+            }
+
+            // 3. Set default tanggal mutasi
+            const skrg = new Date();
+            const formatTanggal = `${skrg.getFullYear()}-${String(skrg.getMonth() + 1).padStart(2, '0')}-${String(skrg.getDate()).padStart(2, '0')}`;
+            const targetTanggal = document.getElementById('mutasi-tanggal');
+            if (targetTanggal) targetTanggal.value = formatTanggal;
+
+            // 4. Buka Modal Mutasi secara Bersih
+            const modalMutasi = document.getElementById('modal-mutasi-saldo') || document.getElementById('modal-form-mutasi-tabungan');
             if (modalMutasi) {
-                modalMutasi.style.display = 'flex'; // Reset display agar pembukaan modal konsisten
                 modalMutasi.classList.remove('hidden');
+                modalMutasi.style.display = 'flex';
             }
         };
 
         window.tutupModalMutasi = function() {
-            const modal = document.getElementById('modal-form-mutasi-tabungan') || document.getElementById('modal-mutasi-saldo');
-            
+            // 1. Ambil modal mutasi (cek kedua variasi ID)
+            const modal = document.getElementById('modal-mutasi-saldo') || document.getElementById('modal-form-mutasi-tabungan');
             if (modal) {
                 modal.classList.add('hidden');
-                modal.style.display = ''; // Dikosongkan (bukan 'none') agar mengikuti class Tailwind 'hidden'
-                
-                // ─── RESET ELEMEN INPUT FORM ───
-                const formMutasi = modal.querySelector('form');
-                if (formMutasi) formMutasi.reset();
-
-                if (document.getElementById('mutasi-keterangan')) document.getElementById('mutasi-keterangan').value = "";
-                if (document.getElementById('mutasi-nominal')) document.getElementById('mutasi-nominal').value = "";
-                if (document.getElementById('mutasi-nominal-display')) document.getElementById('mutasi-nominal-display').value = "";
-                
-                // ─── UTAMA: Kembalikan fungsi tombol simpan ke mode awal (Tambah Baru) ───
-                const btnSimpan = modal.querySelector('button[onclick*="prosesUpdateTransaksiUmum"]') || modal.querySelector('button[type="submit"]');
-                if (btnSimpan) {
-                    btnSimpan.innerHTML = `<i class="fas fa-paper-plane"></i> Kirim Alokasi`;
-                    btnSimpan.setAttribute('onclick', 'window.simpanMutasiSaldo()');
-                }
+                modal.style.display = 'none'; // Sembunyikan total
             }
+
+            // 2. Pastikan modal pengaturan TIDAK ikut mengunci layar jika tidak sengaja terbuka
+            const modalPengaturan = document.getElementById('modal-pengaturan');
+            if (modalPengaturan && !modalPengaturan.classList.contains('hidden')) {
+                // Jika tidak sedang sengaja dibuka dari menu SETELAN, tutup juga
+                modalPengaturan.classList.add('hidden');
+                modalPengaturan.style.display = 'none';
+            }
+
+            // 3. Reset form mutasi
+            if (document.getElementById('mutasi-keterangan')) document.getElementById('mutasi-keterangan').value = "";
+            if (document.getElementById('mutasi-nominal')) document.getElementById('mutasi-nominal').value = "";
             
-            // Hapus sisa tanda metadata edit global
+            // Reset status edit global
             window.idDokumenSedangDiedit = null;
             window.jenisTransaksiSedangDiedit = null;
         };
