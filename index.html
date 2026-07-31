@@ -1400,7 +1400,7 @@
             </div>
         </div>
 
-        <!-- MODAL MUTASI DANA INTERNAL (MENGGUNAKAN FUNGSI FORMAT RIBAAN LAMA) -->
+        <!-- MODAL MUTASI DANA INTERNAL (MENGGUNAKAN FUNGSI FORMAT RIBUAN LAMA) -->
         <div id="modal-form-mutasi-tabungan" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-xs transition-opacity duration-300 p-4">
             <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-xl transform transition-all duration-300 scale-100 animate__animated animate__zoomIn animate__fast">
                 
@@ -1438,6 +1438,7 @@
                                 <option value="dompet">💳 Dompet Utama</option>
                                 <option value="utama">🏦 Tabungan Utama</option>
                                 <option value="darurat">🚨 Tabungan Darurat</option>
+                                <option value="kendaraan">🛵 Tabungan Kendaraan</option>
                             </select>
                         </div>
 
@@ -1447,6 +1448,7 @@
                             <select id="mutasi-tujuan" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-2 text-xs font-semibold text-gray-700 focus:outline-none focus:border-emerald-500 transition">
                                 <option value="utama" selected>🏦 Tabungan Utama</option>
                                 <option value="darurat">🚨 Tabungan Darurat</option>
+                                <option value="kendaraan">🛵 Tabungan Kendaraan</option>
                                 <option value="dompet">💳 Dompet Utama</option>
                             </select>
                         </div>
@@ -1455,16 +1457,16 @@
                     <!-- Keterangan -->
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Keterangan / Catatan</label>
-                        <input type="text" id="mutasi-ket-tabungan" placeholder="Contoh: Sisihan gaji, pindah saldo" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 placeholder-gray-400 focus:outline-none focus:border-emerald-500 transition" required>
+                        <input type="text" id="mutasi-ket-tabungan" placeholder="Contoh: Sisihan gaji, servis motor" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 placeholder-gray-400 focus:outline-none focus:border-emerald-500 transition" required>
                     </div>
 
-                    <!-- Nominal (Menggunakan Fungsi Format Ribuan Lama Anda) -->
+                    <!-- Nominal -->
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Nominal Mutasi Tabungan</label>
                         <input type="text" id="mutasi-nominal-display" placeholder="0" oninput="window.formatInputRibuan(this)" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-gray-800 placeholder-gray-400 focus:outline-none focus:border-emerald-500 transition" required>
                     </div>
 
-                    <!-- Tombol Aksi (Batal & Simpan Sejajar) -->
+                    <!-- Tombol Aksi -->
                     <div class="grid grid-cols-2 gap-2 pt-2">
                         <button type="button" onclick="document.getElementById('modal-form-mutasi-tabungan').classList.add('hidden')" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-2.5 rounded-xl text-xs transition">
                             Batal
@@ -1515,16 +1517,17 @@
                         <select id="tarik-sumber-tabungan" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 focus:outline-none focus:border-purple-500 transition">
                             <option value="utama">🏦 Tabungan Utama</option>
                             <option value="darurat">🚨 Tabungan Darurat</option>
+                            <option value="kendaraan">🛵 Tabungan Kendaraan</option>
                         </select>
                     </div>
 
                     <!-- Keterangan Keperluan -->
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Keterangan / Keperluan</label>
-                        <input type="text" id="tarik-ket-tabungan" placeholder="Contoh: Beli keperluan mendesak" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 placeholder-gray-400 focus:outline-none focus:border-purple-500 transition" required>
+                        <input type="text" id="tarik-ket-tabungan" placeholder="Contoh: Beli sparepart / keperluan servis" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 placeholder-gray-400 focus:outline-none focus:border-purple-500 transition" required>
                     </div>
 
-                    <!-- Nominal Keluar (Menggunakan format ribuan yang sudah ada) -->
+                    <!-- Nominal Keluar -->
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Nominal Tarik Tabungan</label>
                         <input type="text" id="tarik-nominal-display" placeholder="0" oninput="window.formatInputRibuan(this)" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-gray-800 placeholder-gray-400 focus:outline-none focus:border-purple-500 transition" required>
@@ -1585,6 +1588,12 @@
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Target Tabungan Darurat (Rp)</label>
                         <input type="text" id="target-nominal-darurat-display" placeholder="0" oninput="window.formatInputRibuan(this)" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-gray-800 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition" required>
+                    </div>
+
+                    <!-- Target Tabungan Kendaraan (Format Ribuan) -->
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Target Tabungan Kendaraan (Rp)</label>
+                        <input type="text" id="target-nominal-kendaraan-display" placeholder="0" oninput="window.formatInputRibuan(this)" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-gray-800 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition" required>
                     </div>
 
                     <!-- Tombol Aksi (Batal & Simpan Sejajar) -->
@@ -1979,7 +1988,7 @@
                         if (typeof kontrolVisibilitasDashboard === 'function') {
                             kontrolVisibilitasDashboard(false);
                         }
-                        //window.loginDenganFingerprint();
+                        window.loginDenganFingerprint();
                     }
                 }, 700);
 
@@ -6019,9 +6028,9 @@
             }
 
             // 3. Ambil Target Batas Dinamis milik User dari Cloud Firestore via REST API
-            let limitTargetUtama = window.targetUtama || 5000000; // fallback default awal
-            let limitTargetDarurat = window.targetDarurat || 2000000; // fallback default awal
-            let limitTargetKendaraan = window.targetKendaraan || 3000000; // fallback default awal
+            let limitTargetUtama = window.targetUtama || 0; // fallback default awal
+            let limitTargetDarurat = window.targetDarurat || 0; // fallback default awal
+            let limitTargetKendaraan = window.targetKendaraan || 0; // fallback default awal
 
             try {
                 const urlTarget = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/pengaturan_aplikasi/target_tabungan`;
