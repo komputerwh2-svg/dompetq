@@ -270,9 +270,10 @@
 
             <div id="tabungan" class="tab-content space-y-5 w-full animate__animated animate__fadeIn">
     
-                <!-- ── 1. TOP SECTION: 2 PANEL KARTU TABUNGAN (GRID) ── -->
-                <div class="grid grid-cols-2 gap-3.5 w-full">
-                    <!-- Panel Tabungan Utama -->
+                <!-- ── 1. TOP SECTION: 3 PANEL KARTU TABUNGAN (GRID) ── -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 w-full">
+                    
+                    <!-- Panel 1: Tabungan Utama -->
                     <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
                         <div>
                             <div class="flex items-center space-x-2 mb-2">
@@ -296,7 +297,7 @@
                         </div>
                     </div>
 
-                    <!-- Panel Tabungan Darurat -->
+                    <!-- Panel 2: Tabungan Darurat -->
                     <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
                         <div>
                             <div class="flex items-center space-x-2 mb-2">
@@ -319,6 +320,31 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Panel 3: Tabungan Kendaraan (BARU) -->
+                    <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center space-x-2 mb-2">
+                                <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs">
+                                    <i class="fas fa-motorcycle"></i>
+                                </div>
+                                <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Tabungan Kendaraan</span>
+                            </div>
+                            <h4 class="text-sm font-black text-gray-900" id="tabungan-kendaraan-saldo">Rp 0</h4>
+                            <p class="text-[9px] text-gray-400 mt-0.5" id="tabungan-kendaraan-target">Target: Rp 0</p>
+                        </div>
+                        
+                        <div class="space-y-1 mt-4">
+                            <div class="flex justify-between text-[10px] font-bold">
+                                <span class="text-gray-400">Progres</span>
+                                <span class="text-amber-600" id="tabungan-kendaraan-persen">0%</span>
+                            </div>
+                            <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                <div id="tabungan-kendaraan-bar" class="bg-amber-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- ── 2. BOTTOM SECTION: PANEL RIWAYAT MUTASI GRUP PER TANGGAL ── -->
@@ -330,7 +356,7 @@
 
                     <!-- Kontainer List Riwayat Kelompok Tanggal -->
                     <div id="container-riwayat-mutasi-tabungan" class="space-y-4">
-                        <!-- Data dinamis akan dimasukkan oleh fungsi JavaScript di bawah -->
+                        <!-- Data dinamis akan dimasukkan oleh fungsi JavaScript -->
                         <div class="flex flex-col items-center justify-center py-8 text-center text-gray-400">
                             <i class="fas fa-receipt text-xl mb-1.5 text-gray-300"></i>
                             <p class="text-[10px] font-bold">Memuat data transaksi...</p>
@@ -1953,7 +1979,7 @@
                         if (typeof kontrolVisibilitasDashboard === 'function') {
                             kontrolVisibilitasDashboard(false);
                         }
-                        window.loginDenganFingerprint();
+                        //window.loginDenganFingerprint();
                     }
                 }, 700);
 
@@ -2594,6 +2620,12 @@
                         window.muatDataKendaraanDariFirestore(user.uid);
                     }
 
+                    // Cek jika tab yang sedang aktif saat ini adalah tab tabungan
+                    const tabTabunganAktif = document.getElementById('tab-tabungan');
+                    if (tabTabunganAktif && !tabTabunganAktif.classList.contains('hidden')) {
+                        await window.renderKontenTabTabungan();
+                    }
+
                     // Update foto profil di header
                     const profilBtn = document.querySelector('button[onclick="openLoginModal()"]');
                     if (profilBtn && user.photoURL) {
@@ -2846,7 +2878,7 @@
         // Variable global untuk memantau tab yang sedang aktif (default: rekap)
         let currentTab = 'rekap'; 
 
-        // REVISI 1: Fungsi Perpindahan Tab + Update State Tombol Tengah
+        // REVISI 1: Fungsi Perpindahan Tab + Update State Tombol Tengah + Auto Load Data Tabungan
         function openTab(evt, tabName) {
             // 1. Simpan nama tab aktif saat ini ke variable global
             currentTab = tabName;
@@ -2864,28 +2896,48 @@
             }
 
             // 4. Aktifkan tab dan tombol yang diklik user
-            document.getElementById(tabName).classList.add("active-content");
-            evt.currentTarget.classList.add("active-tab");
+            const targetContent = document.getElementById(tabName);
+            if (targetContent) targetContent.classList.add("active-content");
+            if (evt && evt.currentTarget) evt.currentTarget.classList.add("active-tab");
 
             // REVISI ICON TOMBOL TENGAH (Dinamis Sesuai Request Baru)
             const btnTengah = document.getElementById('smart-plus-btn');
             const plusIcon = document.querySelector('#smart-plus-btn i');
             
             if (plusIcon && btnTengah) {
-                // Kembalikan dulu display tombol tengah ke normal (jika sebelumnya disembunyikan/diubah)
+                // Kembalikan dulu display tombol tengah ke normal
                 btnTengah.style.opacity = "1";
                 btnTengah.style.pointerEvents = "auto";
 
                 if (tabName === 'rekap') {
-                    plusIcon.className = 'fas fa-qrcode'; // Tampilan default utama
+                    plusIcon.className = 'fas fa-qrcode'; 
                 } else if (tabName === 'tabungan') {
-                    plusIcon.className = 'fas fa-pen'; // Tabungan pakai logo pen
+                    plusIcon.className = 'fas fa-pen'; 
                 } else if (tabName === 'servis') {
-                    plusIcon.className = 'fas fa-plus'; // Servis pakai logo plus
+                    plusIcon.className = 'fas fa-plus'; 
                 } else if (tabName === 'pengaturan') {
-                    plusIcon.className = 'fas fa-ban'; // Beri ikon penanda tidak aktif (atau sesuaikan keinginan)
-                    btnTengah.style.opacity = "0.4"; // Dibuat agak transparan sebagai indikator non-aktif
-                    btnTengah.style.pointerEvents = "none"; // Mematikan fungsi klik secara total di CSS/Browser
+                    plusIcon.className = 'fas fa-ban'; 
+                    btnTengah.style.opacity = "0.4"; 
+                    btnTengah.style.pointerEvents = "none"; 
+                }
+            }
+
+            // 🚀 HIT OTOMATIS: Dapatkan & Render Data REST API saat Tab Tabungan dibuka
+            if (tabName === 'tabungan') {
+                const containerRiwayat = document.getElementById('container-riwayat-mutasi-tabungan');
+                
+                // Tampilkan loading spinner sementara agar UX terasa responsif
+                if (containerRiwayat) {
+                    containerRiwayat.innerHTML = `
+                        <div class="text-center py-10 text-gray-400 animate-pulse">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2 block text-blue-500"></i>
+                            <p class="text-[10px] font-bold">Memuat data tabungan...</p>
+                        </div>`;
+                }
+
+                // Panggil fungsi render tabungan
+                if (typeof window.renderKontenTabTabungan === 'function') {
+                    window.renderKontenTabTabungan();
                 }
             }
         }
@@ -4553,7 +4605,7 @@
                                 tanggalTampil = new Date(tanggalRaw).toLocaleDateString('id-ID', optTgl);
                             }
 
-                            // 🚀 REVISI LOGIKA KALKULASI PINTAR
+                            // 🚀 LOGIKA KALKULASI PINTAR
                             const isSlipDokumen = ["gaji", "thr", "ksp"].includes(kategoriRaw);
                             const isMutasi = kategoriRaw.startsWith("mutasi_");
 
@@ -4572,14 +4624,17 @@
                             let warnaNominal = "text-emerald-600 font-black text-xs"; 
                             let teksNominal = "";
                             let jenisTransaksi = ""; 
-                            let badgeSubDetail = ""; 
+                            
+                            // REVISI TAMPILAN:
+                            // 1. Judul Utama (Menggantikan Kategori)
+                            let judulUtama = subKategoriRaw ? subKategoriRaw.toUpperCase() : kategoriRaw.toUpperCase();
+                            // 2. Keterangan
+                            let teksKeteranganUser = keteranganMemo;
+                            // 3. Info Tambahan (Trip / Odometri / BBM / Servis Detail)
+                            let infoDetailTambahan = "";
 
                             const isBensin = subKategoriRaw.includes("bensin") || subKategoriRaw.includes("bbm") || kategoriRaw.includes("bensin") || (kategoriRaw === "transportasi" && subKategoriRaw !== "servis");
                             const isServis = subKategoriRaw.includes("servis") || kategoriRaw.includes("servis");
-
-                            // 🔄 SWAP TAMPILAN: Judul Atas = Kategori, Sub-judul Bawah = Keterangan Memo + User
-                            let judulKategori = subKategoriRaw ? `${kategoriRaw.toUpperCase()} - ${subKategoriRaw.toUpperCase()}` : kategoriRaw.toUpperCase();
-                            let teksKeteranganUser = `${keteranganMemo})`;
 
                             if (isSlipDokumen || (pendapatan > 0 && potongan === 0)) {
                                 // 🟢 PEMASUKAN / SLIP GAJI
@@ -4591,8 +4646,7 @@
                                 teksNominal = `+Rp ${nominalTampil.toLocaleString('id-ID')}`;
                                 jenisTransaksi = isSlipDokumen ? "slip" : "pemasukan_manual";
                                 
-                                // Badge untuk Pemasukan/Gaji
-                                badgeSubDetail = `<span class="inline-block mt-0.5 text-[9px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded">${kategoriRaw.toUpperCase()}</span>`;
+                                judulUtama = subKategoriRaw ? `${kategoriRaw.toUpperCase()} (${subKategoriRaw.toUpperCase()})` : kategoriRaw.toUpperCase();
 
                             } else if (potongan > 0) {
                                 // 🔴 PENGELUARAN / MUTASI / BENSIN / SERVIS / LAINNYA
@@ -4601,11 +4655,16 @@
                                     iconBg = "bg-amber-50 text-amber-600";
                                     warnaNominal = "text-amber-700 font-black text-xs";
                                     jenisTransaksi = "servis";
-                                    judulKategori = "SERVIS KENDARAAN";
-
-                                    if (ketServis) teksKeteranganUser = `${ketServis} (${namaUser})`;
-                                    let infoTrip = tripKM ? `Trip: ${tripKM} KM` : (kmAkhir ? `KM: ${kmAkhir}` : "Servis");
-                                    badgeSubDetail = `<span class="inline-block mt-0.5 text-[9px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded">${infoTrip}</span>`;
+                                    
+                                    judulUtama = "SERVIS KENDARAAN";
+                                    if (ketServis) teksKeteranganUser = ketServis;
+                                    
+                                    const calcTripServis = tripKM || (kmAkhir > kmAwal && kmAwal > 0 ? kmAkhir - kmAwal : 0);
+                                    let detailTrip = calcTripServis ? `Trip: ${calcTripServis.toLocaleString('id-ID')} KM` : (kmAkhir ? `KM Odometer: ${kmAkhir.toLocaleString('id-ID')}` : "");
+                                    
+                                    if (detailTrip) {
+                                        infoDetailTambahan = `<span class="inline-block mt-0.5 text-[9px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded">${detailTrip}</span>`;
+                                    }
 
                                 } else if (isBensin) {
                                     iconClass = "fas fa-gas-pump";
@@ -4614,24 +4673,25 @@
                                     jenisTransaksi = "bensin";
                                     
                                     const calcTrip = tripKM || (kmAkhir > kmAwal && kmAwal > 0 ? kmAkhir - kmAwal : 0);
+                                    
                                     if (kmAwal || kmAkhir) {
-                                        judulKategori = `BBM (${kmAwal.toLocaleString('id-ID')} - ${kmAkhir.toLocaleString('id-ID')} KM)`;
+                                        judulUtama = `BBM (${kmAwal.toLocaleString('id-ID')} - ${kmAkhir.toLocaleString('id-ID')} KM)`;
                                     } else {
-                                        judulKategori = "BBM / BENSIN";
+                                        judulUtama = "BBM / BENSIN";
                                     }
 
-                                    let infoBBM = jenisBBM ? `${jenisBBM}` : "BBM";
+                                    let infoBBM = jenisBBM ? jenisBBM.toUpperCase() : "BBM";
                                     let infoLiter = jumlahLiter ? ` • ${jumlahLiter}L` : "";
-                                    badgeSubDetail = `<span class="inline-block mt-0.5 text-[9px] font-bold bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded">${infoBBM}${infoLiter}</span>`;
+                                    let infoTripText = calcTrip ? ` • Trip: ${calcTrip.toLocaleString('id-ID')} KM` : "";
+
+                                    infoDetailTambahan = `<span class="inline-block mt-0.5 text-[9px] font-bold bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded">${infoBBM}${infoLiter}${infoTripText}</span>`;
 
                                 } else if (isMutasi) {
                                     iconClass = "fas fa-exchange-alt";
                                     iconBg = "bg-purple-50 text-purple-600";
                                     warnaNominal = "text-purple-600 font-black text-xs";
                                     jenisTransaksi = "mutasi";
-                                    judulKategori = "MUTASI SALDO";
-
-                                    badgeSubDetail = `<span class="inline-block mt-0.5 text-[9px] font-bold bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded">MUTASI</span>`;
+                                    judulUtama = "MUTASI SALDO";
 
                                 } else {
                                     // 🛒 PENGELUARAN UMUM (Pulsa, Makan, Belanja, Hiburan, dll.)
@@ -4640,9 +4700,7 @@
                                     warnaNominal = "text-rose-600 font-black text-xs";
                                     jenisTransaksi = "pengeluaran";
 
-                                    // Badge Dinamis Kategori Umum (Pulsa, Makan, Belanja, dll)
-                                    const labelBadge = subKategoriRaw ? subKategoriRaw.toUpperCase() : kategoriRaw.toUpperCase();
-                                    badgeSubDetail = `<span class="inline-block mt-0.5 text-[9px] font-bold bg-rose-100 text-rose-800 px-1.5 py-0.2 rounded">${labelBadge}</span>`;
+                                    judulUtama = subKategoriRaw ? subKategoriRaw.toUpperCase() : kategoriRaw.toUpperCase();
                                 }
 
                                 teksNominal = `-Rp ${potongan.toLocaleString('id-ID')}`;
@@ -4668,9 +4726,15 @@
                                             <i class="${iconClass}"></i>
                                         </div>
                                         <div class="min-w-0 space-y-0.5">
-                                            <p class="font-bold text-xs text-gray-800 uppercase truncate">${judulKategori}</p>
-                                            <p class="text-[10px] text-gray-400 truncate">${teksKeteranganUser}</p>
-                                            ${badgeSubDetail}
+                                            <!-- 1. JUDUL DENGAN FORMAT BADGE/LABEL -->
+                                            <p class="font-black text-xs text-gray-800 uppercase truncate">${judulUtama}</p>
+                                            
+                                            <!-- 2. KETERANGAN / MEMO -->
+                                            <p class="text-[10px] text-gray-500 truncate">${teksKeteranganUser}</p>
+                                            
+                                            <!-- 3. DETAIL TRIP / BBM / SERVIS (JIKA ADA) -->
+                                            ${infoDetailTambahan}
+                                            
                                             <div class="pt-0.5">
                                                 <span class="${warnaNominal}">${teksNominal}</span>
                                             </div>
@@ -5915,7 +5979,7 @@
         };
 
 
-        // KONTEN UTAMA TAB TABUNGAN: Render Konten Dinamis Tabungan Utama & Darurat via REST API (MULTI-USER)
+        // KONTEN UTAMA TAB TABUNGAN: Render Konten Dinamis Tabungan Utama, Darurat & Kendaraan via REST API (MULTI-USER)
         window.renderKontenTabTabungan = async function() {
             const containerRiwayat = document.getElementById('container-riwayat-mutasi-tabungan');
             
@@ -5936,7 +6000,10 @@
                 console.warn("Gagal mengambil idToken:", tokenErr);
             }
 
-            const headersRest = userToken ? { 'Authorization': `Bearer ${userToken}` } : {};
+            const headersRest = userToken ? { 
+                'Authorization': `Bearer ${userToken}`,
+                'Content-Type': 'application/json'
+            } : {};
 
             // 2. Dapatkan Periode Aktif dari Dashboard Utama untuk Filter Riwayat Bulanan
             let bulanTahunFormat = "juli_2026"; 
@@ -5944,19 +6011,19 @@
 
             if (window.dompetQState && window.dompetQState.periodeAktif) {
                 const tglAktif = new Date(window.dompetQState.periodeAktif);
-                const namaBulanIndo = tglAktif.toLocaleString('id-ID', { month: 'long' }).toLowerCase();
+                const namaBulanIndo = tglAktif.toLocaleString('id-ID', { month: 'long' });
                 const tahun = tglAktif.getFullYear();
                 
-                bulanTahunFormat = `${namaBulanIndo}_${tahun}`;
-                periodeTeksTampilan = tglAktif.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+                bulanTahunFormat = `${namaBulanIndo.toLowerCase()}_${tahun}`;
+                periodeTeksTampilan = `${namaBulanIndo.charAt(0).toUpperCase() + namaBulanIndo.slice(1)} ${tahun}`;
             }
 
             // 3. Ambil Target Batas Dinamis milik User dari Cloud Firestore via REST API
             let limitTargetUtama = window.targetUtama || 5000000; // fallback default awal
             let limitTargetDarurat = window.targetDarurat || 2000000; // fallback default awal
+            let limitTargetKendaraan = window.targetKendaraan || 3000000; // fallback default awal
 
             try {
-                // Dynamic Path Multi-User: /users/{uid}/pengaturan_aplikasi/target_tabungan
                 const urlTarget = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/pengaturan_aplikasi/target_tabungan`;
                 const responTarget = await fetch(urlTarget, { method: 'GET', headers: headersRest });
                 
@@ -5965,10 +6032,11 @@
                     if (resData.fields) {
                         limitTargetUtama = parseInt(resData.fields.targetUtama?.integerValue || resData.fields.targetUtama?.stringValue || limitTargetUtama, 10);
                         limitTargetDarurat = parseInt(resData.fields.targetDarurat?.integerValue || resData.fields.targetDarurat?.stringValue || limitTargetDarurat, 10);
+                        limitTargetKendaraan = parseInt(resData.fields.targetKendaraan?.integerValue || resData.fields.targetKendaraan?.stringValue || limitTargetKendaraan, 10);
                         
-                        // Sinkronkan ke variabel global
                         window.targetUtama = limitTargetUtama;
                         window.targetDarurat = limitTargetDarurat;
+                        window.targetKendaraan = limitTargetKendaraan;
                     }
                 }
             } catch (err) {
@@ -5978,11 +6046,11 @@
             // Inisialisasi variabel akumulasi saldo
             let saldoUtama = 0;
             let saldoDarurat = 0;
+            let saldoKendaraan = 0;
             let gabunganTransaksiMutasiBulanIni = [];
 
             try {
                 // 4. Ambil Dokumen dalam Sub-koleksi 'rekap_finansial' milik User via REST API
-                // Dynamic Path Multi-User: /users/{uid}/rekap_finansial
                 const urlKoleksi = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/rekap_finansial?pageSize=100`;
                 const responKoleksi = await fetch(urlKoleksi, { method: 'GET', headers: headersRest });
                 
@@ -5991,18 +6059,19 @@
                     const documents = dataKoleksi.documents || [];
 
                     documents.forEach((doc) => {
-                        // Ekstrak ID Dokumen dari string path penuh
                         const parts = doc.name.split('/');
                         const idDokumen = parts[parts.length - 1];
                         const fields = doc.fields || {};
 
                         const netto = parseInt(fields.totalBersihNetto?.integerValue || fields.totalBersihNetto?.stringValue || 0, 10);
+                        const teksPeriodeDoc = fields.periode?.stringValue || "";
 
                         // Normalisasi struktur data REST JSON
                         const dataNormal = {
-                            kategori: fields.kategori?.stringValue || "mutasi",
+                            id: idDokumen,
+                            kategori: fields.kategori?.stringValue || "mutasi_tabungan",
                             keterangan: fields.keterangan?.stringValue || "Transaksi Tabungan",
-                            periode: fields.periode?.stringValue || "",
+                            periode: teksPeriodeDoc,
                             pendapatan: parseInt(fields.pendapatan?.integerValue || fields.pendapatan?.stringValue || 0, 10),
                             potongan: parseInt(fields.potongan?.integerValue || fields.potongan?.stringValue || 0, 10),
                             totalBersihNetto: netto,
@@ -6010,48 +6079,66 @@
                             namaUser: fields.namaUser?.stringValue || ""
                         };
 
-                        // Akumulasikan saldo dari SEMUA periode berdasarkan pola nama dokumen
+                        // Akumulasikan saldo dari SEMUA dokumen mutasi tabungan
                         if (idDokumen.startsWith("mutasi_tabungan1_")) {
-                            saldoUtama += netto;
+                            saldoUtama += Math.abs(netto); // Akumulasi total saldo tabungan utama
                             
-                            // Jika dokumen ini milik bulan aktif saat ini, masukkan ke list riwayat bawah
-                            if (idDokumen === `mutasi_tabungan1_${bulanTahunFormat}`) {
-                                gabunganTransaksiMutasiBulanIni.push({ id: idDokumen, ...dataNormal });
+                            // Filter untuk riwayat bulan aktif
+                            if (idDokumen.includes(`_${bulanTahunFormat}`) || teksPeriodeDoc.trim().toLowerCase() === periodeTeksTampilan.trim().toLowerCase()) {
+                                gabunganTransaksiMutasiBulanIni.push({ ...dataNormal, jenisTabungan: 'Tabungan Utama' });
                             }
                         } 
                         else if (idDokumen.startsWith("mutasi_tabungan2_")) {
-                            saldoDarurat += netto;
+                            saldoDarurat += Math.abs(netto); // Akumulasi total saldo tabungan darurat
                             
-                            // Jika dokumen ini milik bulan aktif saat ini, masukkan ke list riwayat bawah
-                            if (idDokumen === `mutasi_tabungan2_${bulanTahunFormat}`) {
-                                gabunganTransaksiMutasiBulanIni.push({ id: idDokumen, ...dataNormal });
+                            // Filter untuk riwayat bulan aktif
+                            if (idDokumen.includes(`_${bulanTahunFormat}`) || teksPeriodeDoc.trim().toLowerCase() === periodeTeksTampilan.trim().toLowerCase()) {
+                                gabunganTransaksiMutasiBulanIni.push({ ...dataNormal, jenisTabungan: 'Tabungan Darurat' });
+                            }
+                        }
+                        else if (idDokumen.startsWith("mutasi_tabungan3_")) {
+                            saldoKendaraan += Math.abs(netto); // Akumulasi total saldo tabungan kendaraan
+                            
+                            // Filter untuk riwayat bulan aktif
+                            if (idDokumen.includes(`_${bulanTahunFormat}`) || teksPeriodeDoc.trim().toLowerCase() === periodeTeksTampilan.trim().toLowerCase()) {
+                                gabunganTransaksiMutasiBulanIni.push({ ...dataNormal, jenisTabungan: 'Tabungan Kendaraan' });
                             }
                         }
                     });
                 }
 
-                // Setel ke variabel global agar bisa dibaca secara real-time oleh fungsi proteksi penarikan saldo
+                // Setel ke variabel global agar bisa dibaca secara real-time
                 window.saldoUtama = saldoUtama;
                 window.saldoDarurat = saldoDarurat;
+                window.saldoKendaraan = saldoKendaraan;
 
             } catch (error) {
                 console.error("Gagal mengambil data tabungan akumulatif dari Firestore REST API: ", error);
             }
 
-            // 5. Hitung Persentase Kemajuan Target (Berdasarkan Saldo Akumulasi Seluruh Periode)
+            // 5. Hitung Persentase Kemajuan Target
             const persenUtama = limitTargetUtama > 0 ? Math.min(Math.round((Math.max(0, saldoUtama) / limitTargetUtama) * 100), 100) : 0;
             const persenDarurat = limitTargetDarurat > 0 ? Math.min(Math.round((Math.max(0, saldoDarurat) / limitTargetDarurat) * 100), 100) : 0;
+            const persenKendaraan = limitTargetKendaraan > 0 ? Math.min(Math.round((Math.max(0, saldoKendaraan) / limitTargetKendaraan) * 100), 100) : 0;
 
             // Render Nilai Kumulatif ke Elemen Dashboard Panel Atas
+            // --- Tabungan Utama ---
             if(document.getElementById('tabungan-utama-saldo')) document.getElementById('tabungan-utama-saldo').innerText = `Rp ${saldoUtama.toLocaleString('id-ID')}`;
             if(document.getElementById('tabungan-utama-target')) document.getElementById('tabungan-utama-target').innerText = `Target: Rp ${limitTargetUtama.toLocaleString('id-ID')}`;
             if(document.getElementById('tabungan-utama-persen')) document.getElementById('tabungan-utama-persen').innerText = `${persenUtama}%`;
             if(document.getElementById('tabungan-utama-bar')) document.getElementById('tabungan-utama-bar').style.width = `${persenUtama}%`;
 
+            // --- Tabungan Darurat ---
             if(document.getElementById('tabungan-darurat-saldo')) document.getElementById('tabungan-darurat-saldo').innerText = `Rp ${saldoDarurat.toLocaleString('id-ID')}`;
             if(document.getElementById('tabungan-darurat-target')) document.getElementById('tabungan-darurat-target').innerText = `Target: Rp ${limitTargetDarurat.toLocaleString('id-ID')}`;
             if(document.getElementById('tabungan-darurat-persen')) document.getElementById('tabungan-darurat-persen').innerText = `${persenDarurat}%`;
             if(document.getElementById('tabungan-darurat-bar')) document.getElementById('tabungan-darurat-bar').style.width = `${persenDarurat}%`;
+
+            // --- Tabungan Kendaraan ---
+            if(document.getElementById('tabungan-kendaraan-saldo')) document.getElementById('tabungan-kendaraan-saldo').innerText = `Rp ${saldoKendaraan.toLocaleString('id-ID')}`;
+            if(document.getElementById('tabungan-kendaraan-target')) document.getElementById('tabungan-kendaraan-target').innerText = `Target: Rp ${limitTargetKendaraan.toLocaleString('id-ID')}`;
+            if(document.getElementById('tabungan-kendaraan-persen')) document.getElementById('tabungan-kendaraan-persen').innerText = `${persenKendaraan}%`;
+            if(document.getElementById('tabungan-kendaraan-bar')) document.getElementById('tabungan-kendaraan-bar').style.width = `${persenKendaraan}%`;
 
 
             // 6. RENDERING LIST RIWAYAT BULANAN DIKELOMPOKKAN PER TANGGAL
@@ -6066,7 +6153,7 @@
                 return;
             }
 
-            // Urutkan transaksi dari yang terbaru berdasarkan string ISO timestamp waktuTransaksi
+            // Urutkan transaksi dari yang terbaru
             gabunganTransaksiMutasiBulanIni.sort((a, b) => new Date(b.waktuTransaksi).getTime() - new Date(a.waktuTransaksi).getTime());
 
             // Pengelompokan Berdasarkan Tanggal Teks Tampilan Indonesia
@@ -6094,22 +6181,24 @@
                 kelompokTanggal[tanggal].forEach(item => {
                     const nominalMasuk = item.pendapatan;
                     const nominalKeluar = item.potongan;
-                    const keterangan = item.keterangan;
-                    const kategori = item.kategori;
+                    const keterangan = item.keterangan || "Tabungan";
+                    const kategoriLabel = item.jenisTabungan || item.kategori.replace('_', ' ');
                     
                     let ikonHtml = "";
                     let textNominal = "";
                     let kelasWarna = "";
 
-                    // Deteksi penanda visual arus dana berdasarkan pendapatan / potongan
-                    if (nominalMasuk > 0) {
-                        ikonHtml = `<div class="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-[10px]"><i class="fas fa-arrow-down"></i></div>`;
+                    // Jika potongan > 0 = Setor Tabungan (Uang keluar dari dompet ke tabungan)
+                    if (nominalKeluar > 0) {
+                        ikonHtml = `<div class="w-7 h-7 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center text-[10px]"><i class="fas fa-arrow-down"></i></div>`;
+                        textNominal = `-Rp ${nominalKeluar.toLocaleString('id-ID')}`;
+                        kelasWarna = "text-purple-600 font-bold";
+                    } 
+                    // Jika pendapatan > 0 = Tarik Tabungan (Uang masuk dari tabungan ke dompet)
+                    else {
+                        ikonHtml = `<div class="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-[10px]"><i class="fas fa-arrow-up"></i></div>`;
                         textNominal = `+Rp ${nominalMasuk.toLocaleString('id-ID')}`;
                         kelasWarna = "text-emerald-600 font-bold";
-                    } else {
-                        ikonHtml = `<div class="w-7 h-7 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center text-[10px]"><i class="fas fa-arrow-up"></i></div>`;
-                        textNominal = `-Rp ${nominalKeluar.toLocaleString('id-ID')}`;
-                        kelasWarna = "text-purple-600 font-semibold";
                     }
 
                     htmlHasil += `
@@ -6118,7 +6207,7 @@
                                 ${ikonHtml}
                                 <div class="truncate">
                                     <p class="text-xs font-bold text-gray-800 uppercase tracking-wide truncate">${keterangan}</p>
-                                    <p class="text-[9px] text-gray-400 font-medium capitalize">${kategori.replace('_', ' ')}</p>
+                                    <p class="text-[9px] text-gray-400 font-medium capitalize">${kategoriLabel}</p>
                                 </div>
                             </div>
                             <div class="text-right flex-shrink-0">
@@ -6175,27 +6264,74 @@
 
         window.aksiBukaFormTabungan = function(jenis) {
             // Tutup dulu modal pilihan utama agar tidak menumpuk
-            document.getElementById('modal-pilihan-tabungan').classList.add('hidden');
+            const modalPilihan = document.getElementById('modal-pilihan-tabungan');
+            if (modalPilihan) modalPilihan.classList.add('hidden');
             
             // Buka modal spesifik sesuai pilihan transaksi
             if (jenis === 'mutasi_masuk') {
-                document.getElementById('modal-form-mutasi-tabungan').classList.remove('hidden');
-            } else if (jenis === 'transaksi_keluar') {
-                document.getElementById('modal-form-tarik-tabungan').classList.remove('hidden');
-            } else if (jenis === 'atur_target') {
-                document.getElementById('modal-form-target-tabungan').classList.remove('hidden');
-                
-                // Opsional: Isi otomatis input target dengan nilai yang sudah ada saat ini jika fungsi tersedia
-                if (typeof dataTargetUtama !== 'undefined') {
-                    document.getElementById('target-nominal-utama').value = dataTargetUtama;
-                    document.getElementById('target-nominal-darurat').value = dataTargetDarurat;
+                const modalMutasi = document.getElementById('modal-form-mutasi-tabungan');
+                if (modalMutasi) {
+                    modalMutasi.classList.remove('hidden');
+                    if (typeof window.inisialisasiTanggalMutasi === 'function') {
+                        window.inisialisasiTanggalMutasi();
+                    }
+                }
+            } 
+            else if (jenis === 'transaksi_keluar') {
+                const modalTarik = document.getElementById('modal-form-tarik-tabungan');
+                if (modalTarik) {
+                    modalTarik.classList.remove('hidden');
+                    if (typeof window.inisialisasiTanggalTarik === 'function') {
+                        window.inisialisasiTanggalTarik();
+                    }
+                }
+            } 
+            else if (jenis === 'atur_target') {
+                const modalTarget = document.getElementById('modal-form-target-tabungan');
+                if (modalTarget) {
+                    modalTarget.classList.remove('hidden');
+                    
+                    if (typeof window.inisialisasiTanggalTarget === 'function') {
+                        window.inisialisasiTanggalTarget();
+                    }
+
+                    // Isi otomatis input target dengan nilai variabel global yang ada saat ini (Utama, Darurat, Kendaraan)
+                    const targetUtamaVal = window.targetUtama || 0;
+                    const targetDaruratVal = window.targetDarurat || 0;
+                    const targetKendaraanVal = window.targetKendaraan || 0;
+
+                    // Update ke input murni (raw input jika ada)
+                    if (document.getElementById('target-nominal-utama')) document.getElementById('target-nominal-utama').value = targetUtamaVal;
+                    if (document.getElementById('target-nominal-darurat')) document.getElementById('target-nominal-darurat').value = targetDaruratVal;
+                    if (document.getElementById('target-nominal-kendaraan')) document.getElementById('target-nominal-kendaraan').value = targetKendaraanVal;
+
+                    // Update ke input display berformat titik ribuan
+                    if (document.getElementById('target-nominal-utama-display')) {
+                        document.getElementById('target-nominal-utama-display').value = targetUtamaVal > 0 ? targetUtamaVal.toLocaleString('id-ID') : "";
+                    }
+                    if (document.getElementById('target-nominal-darurat-display')) {
+                        document.getElementById('target-nominal-darurat-display').value = targetDaruratVal > 0 ? targetDaruratVal.toLocaleString('id-ID') : "";
+                    }
+                    if (document.getElementById('target-nominal-kendaraan-display')) {
+                        document.getElementById('target-nominal-kendaraan-display').value = targetKendaraanVal > 0 ? targetKendaraanVal.toLocaleString('id-ID') : "";
+                    }
                 }
             }
         };
 
-        // Fungsi untuk mengatur tanggal default ke hari ini (Gunakan ini saat memicu buka modal mutasi)
+        // Fungsi untuk mengatur tanggal default ke hari ini (Mutasi Masuk)
         window.inisialisasiTanggalMutasi = function() {
             const inputTanggal = document.getElementById('mutasi-tanggal');
+            if (inputTanggal) {
+                const hariIni = new Date();
+                const zonaWaktuLokal = new Date(hariIni.getTime() - (hariIni.getTimezoneOffset() * 60000));
+                inputTanggal.value = zonaWaktuLokal.toISOString().split('T')[0];
+            }
+        };
+
+        // Fungsi untuk mengatur tanggal default ke hari ini (Tarik Saldo)
+        window.inisialisasiTanggalTarik = function() {
+            const inputTanggal = document.getElementById('tarik-tanggal');
             if (inputTanggal) {
                 const hariIni = new Date();
                 const zonaWaktuLokal = new Date(hariIni.getTime() - (hariIni.getTimezoneOffset() * 60000));
@@ -6409,7 +6545,7 @@
             event.preventDefault();
 
             const tanggalInput = document.getElementById('tarik-tanggal').value;
-            const sumber = document.getElementById('tarik-sumber-tabungan').value;
+            const sumber = document.getElementById('tarik-sumber-tabungan').value; // 'utama', 'darurat', atau 'kendaraan'
             const keteranganInput = document.getElementById('tarik-ket-tabungan').value;
             
             // Konversi string format ribuan ke angka murni
@@ -6426,14 +6562,25 @@
             // Ambil nilai saldo real-time dari window state (sinkron dengan renderKontenTabTabungan)
             const sUtamaAktif = window.saldoUtama || 0;
             const sDaruratAktif = window.saldoDarurat || 0;
+            const sKendaraanAktif = window.saldoKendaraan || 0;
 
             // Proteksi 2: Cek ketersediaan saldo dari pos tabungan yang dipilih (Validasi Lokal)
             let saldoCukup = true;
-            if (sumber === 'utama' && sUtamaAktif < nominal) saldoCukup = false;
-            if (sumber === 'darurat' && sDaruratAktif < nominal) saldoCukup = false;
+            let namaLabelTabungan = "Utama";
+
+            if (sumber === 'utama') {
+                namaLabelTabungan = "Utama";
+                if (sUtamaAktif < nominal) saldoCukup = false;
+            } else if (sumber === 'darurat') {
+                namaLabelTabungan = "Darurat";
+                if (sDaruratAktif < nominal) saldoCukup = false;
+            } else if (sumber === 'kendaraan') {
+                namaLabelTabungan = "Kendaraan";
+                if (sKendaraanAktif < nominal) saldoCukup = false;
+            }
 
             if (!saldoCukup) {
-                const pesanGagal = `Maaf, saldo Tabungan ${sumber === 'utama' ? 'Utama' : 'Darurat'} tidak mencukupi untuk penarikan ini!`;
+                const pesanGagal = `Maaf, saldo Tabungan ${namaLabelTabungan} tidak mencukupi untuk penarikan ini!`;
                 if (typeof tampilAlert === 'function') tampilAlert(pesanGagal, "error");
                 else alert(pesanGagal);
                 return;
@@ -6467,14 +6614,20 @@
             let kategoriNama = "";
             let referenceKey = "";
 
+            const timestampUnique = Date.now();
+
             if (sumber === 'utama') {
-                idDokumen = `mutasi_tabungan1_${bulanTahunFormat}`;
+                idDokumen = `mutasi_tabungan1_${bulanTahunFormat}_${timestampUnique}`;
                 kategoriNama = "mutasi_tabungan1";
                 referenceKey = "MUTASI_TABUNGAN1";
-            } else {
-                idDokumen = `mutasi_tabungan2_${bulanTahunFormat}`;
+            } else if (sumber === 'darurat') {
+                idDokumen = `mutasi_tabungan2_${bulanTahunFormat}_${timestampUnique}`;
                 kategoriNama = "mutasi_tabungan2";
                 referenceKey = "MUTASI_TABUNGAN2";
+            } else if (sumber === 'kendaraan') {
+                idDokumen = `mutasi_tabungan3_${bulanTahunFormat}_${timestampUnique}`;
+                kategoriNama = "mutasi_tabungan3";
+                referenceKey = "MUTASI_TABUNGAN3";
             }
 
             try {
@@ -6490,17 +6643,18 @@
                 const endpointFirestore = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/rekap_finansial/${idDokumen}`;
 
                 // Payload terstruktur menyesuaikan REST API mapping data fields
+                // Penarikan = Pendapatan > 0 (Uang dari tabungan masuk ke dompet)
                 const payloadFirestore = {
                     fields: {
                         kategori: { stringValue: kategoriNama },
                         keterangan: { stringValue: keteranganInput },
                         namaUser: { stringValue: namaUserSistem },
-                        pendapatan: { integerValue: "0" },
-                        potongan: { integerValue: nominal.toString() },
-                        totalBersihNetto: { integerValue: (-nominal).toString() },
+                        pendapatan: { integerValue: nominal.toString() },
+                        potongan: { integerValue: "0" },
+                        totalBersihNetto: { integerValue: nominal.toString() },
                         periode: { stringValue: periodeTeks },
                         referenceKeyImage: { stringValue: referenceKey },
-                        waktuTransaksi: { timestampValue: new Date().toISOString() }
+                        waktuTransaksi: { timestampValue: new Date(tanggalInput).toISOString() }
                     }
                 };
 
@@ -6521,22 +6675,24 @@
                     window.saldoUtama = sUtamaAktif - nominal;
                 } else if (sumber === 'darurat') {
                     window.saldoDarurat = sDaruratAktif - nominal;
+                } else if (sumber === 'kendaraan') {
+                    window.saldoKendaraan = sKendaraanAktif - nominal;
                 }
 
                 // Jalankan alur cadangan riwayat array lokal jika struktur lama masih dipakai
                 if (typeof riwayatTabungan !== 'undefined' && Array.isArray(riwayatTabungan)) {
                     riwayatTabungan.push({
-                        id: Date.now(),
+                        id: timestampUnique,
                         tanggal: tanggalInput,
                         tipe: 'keluar',
-                        kategori: `Tarik Tabungan (${sumber === 'utama' ? 'Utama' : 'Darurat'})`,
+                        kategori: `Tarik Tabungan (${namaLabelTabungan})`,
                         keterangan: keteranganInput,
                         nominal: nominal
                     });
                 }
 
                 // --- SELESAI PROSES & REFRESH UI ---
-                const pesanSukses = `Penarikan Berhasil!\nSaldo Tabungan ${sumber === 'utama' ? 'Utama' : 'Darurat'} terpotong sebesar Rp ${nominal.toLocaleString("id-ID")} dan tercatat via REST API.`;
+                const pesanSukses = `Penarikan Berhasil!\nSaldo Tabungan ${namaLabelTabungan} terpotong sebesar Rp ${nominal.toLocaleString("id-ID")} dan tercatat via REST API.`;
                 if (typeof tampilAlert === 'function') tampilAlert(pesanSukses, "success");
                 else alert(pesanSukses);
 
@@ -6559,9 +6715,10 @@
             }
         };
 
-        // Variabel penampung nilai target global (Pastikan ini dideklarasikan di bagian atas script Anda)
+        // Variabel penampung nilai target global
         window.targetUtama = window.targetUtama || 0;
         window.targetDarurat = window.targetDarurat || 0;
+        window.targetKendaraan = window.targetKendaraan || 0;
 
         // Fungsi mengatur tanggal default pembaruan target ke hari ini
         window.inisialisasiTanggalTarget = function() {
@@ -6585,14 +6742,19 @@
             // Bersihkan titik separator dari input text display untuk diubah ke angka murni
             const rawUtama = document.getElementById('target-nominal-utama-display').value.replace(/[^0-9]/g, "");
             const rawDarurat = document.getElementById('target-nominal-darurat-display').value.replace(/[^0-9]/g, "");
+            
+            // Tambahan target nominal kendaraan
+            const elKendaraan = document.getElementById('target-nominal-kendaraan-display');
+            const rawKendaraan = elKendaraan ? elKendaraan.value.replace(/[^0-9]/g, "") : "0";
 
             const nominalUtama = parseInt(rawUtama, 10) || 0;
             const nominalDarurat = parseInt(rawDarurat, 10) || 0;
+            const nominalKendaraan = parseInt(rawKendaraan, 10) || 0;
 
             // Proteksi: Validasi input target tidak boleh bernilai negatif atau nol
-            if (nominalUtama <= 0 || nominalDarurat <= 0) {
-                if (typeof tampilAlert === 'function') tampilAlert("Masukkan nominal target yang valid (lebih dari 0)!", "error");
-                else alert("Masukkan nominal target yang valid (lebih dari 0)!");
+            if (nominalUtama <= 0 || nominalDarurat <= 0 || nominalKendaraan <= 0) {
+                if (typeof tampilAlert === 'function') tampilAlert("Masukkan nominal target yang valid (lebih dari 0) untuk semua kategori!", "error");
+                else alert("Masukkan nominal target yang valid (lebih dari 0) untuk semua kategori!");
                 return;
             }
 
@@ -6628,6 +6790,7 @@
                     fields: {
                         targetUtama: { integerValue: nominalUtama.toString() },
                         targetDarurat: { integerValue: nominalDarurat.toString() },
+                        targetKendaraan: { integerValue: nominalKendaraan.toString() },
                         terakhirDiperbarui: { stringValue: tanggal },
                         namaUser: { stringValue: namaUserSistem },
                         waktuServer: { timestampValue: new Date().toISOString() }
@@ -6649,15 +6812,18 @@
                 // Perbarui juga variabel global di aplikasi agar sinkronisasi instan tanpa reload halaman
                 window.targetUtama = nominalUtama;
                 window.targetDarurat = nominalDarurat;
+                window.targetKendaraan = nominalKendaraan;
 
                 // --- SINKRONISASI PROGRESS BAR & TEKS PANEL ---
                 // Mengambil saldo real-time saat ini yang sudah dihitung oleh aplikasi
                 const nominalSaldoUtama = typeof window.saldoUtama !== 'undefined' ? window.saldoUtama : 0;
                 const nominalSaldoDarurat = typeof window.saldoDarurat !== 'undefined' ? window.saldoDarurat : 0;
+                const nominalSaldoKendaraan = typeof window.saldoKendaraan !== 'undefined' ? window.saldoKendaraan : 0;
 
                 // Hitung persentase pemenuhan target (maksimal 100%)
                 const persenUtama = window.targetUtama > 0 ? Math.min(Math.round((Math.max(0, nominalSaldoUtama) / window.targetUtama) * 100), 100) : 0;
                 const persenDarurat = window.targetDarurat > 0 ? Math.min(Math.round((Math.max(0, nominalSaldoDarurat) / window.targetDarurat) * 100), 100) : 0;
+                const persenKendaraan = window.targetKendaraan > 0 ? Math.min(Math.round((Math.max(0, nominalSaldoKendaraan) / window.targetKendaraan) * 100), 100) : 0;
 
                 // Perbarui elemen UI secara langsung jika elemennya tersedia di DOM
                 if(document.getElementById('tabungan-utama-target')) document.getElementById('tabungan-utama-target').innerText = `Target: Rp ${window.targetUtama.toLocaleString('id-ID')}`;
@@ -6668,8 +6834,12 @@
                 if(document.getElementById('tabungan-darurat-persen')) document.getElementById('tabungan-darurat-persen').innerText = `${persenDarurat}%`;
                 if(document.getElementById('tabungan-darurat-bar')) document.getElementById('tabungan-darurat-bar').style.width = `${persenDarurat}%`;
 
+                if(document.getElementById('tabungan-kendaraan-target')) document.getElementById('tabungan-kendaraan-target').innerText = `Target: Rp ${window.targetKendaraan.toLocaleString('id-ID')}`;
+                if(document.getElementById('tabungan-kendaraan-persen')) document.getElementById('tabungan-kendaraan-persen').innerText = `${persenKendaraan}%`;
+                if(document.getElementById('tabungan-kendaraan-bar')) document.getElementById('tabungan-kendaraan-bar').style.width = `${persenKendaraan}%`;
+
                 // --- SELESAI PROSES & FEEDBACK ---
-                const pesanSukses = `Target Berhasil Diperbarui!\nTarget Utama: Rp ${window.targetUtama.toLocaleString("id-ID")}\nTarget Darurat: Rp ${window.targetDarurat.toLocaleString("id-ID")}\nData berhasil disinkronkan via REST API.`;
+                const pesanSukses = `Target Berhasil Diperbarui!\nTarget Utama: Rp ${window.targetUtama.toLocaleString("id-ID")}\nTarget Darurat: Rp ${window.targetDarurat.toLocaleString("id-ID")}\nTarget Kendaraan: Rp ${window.targetKendaraan.toLocaleString("id-ID")}\nData berhasil disinkronkan via REST API.`;
                 if (typeof tampilAlert === 'function') tampilAlert(pesanSukses, "success");
                 else alert(pesanSukses);
 
