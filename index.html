@@ -2623,7 +2623,7 @@
                     // Cek jika tab yang sedang aktif saat ini adalah tab tabungan
                     const tabTabunganAktif = document.getElementById('tab-tabungan');
                     if (tabTabunganAktif && !tabTabunganAktif.classList.contains('hidden')) {
-                        await window.renderKontenTabTabungan();
+                        window.renderKontenTabTabungan();
                     }
 
                     // Update foto profil di header
