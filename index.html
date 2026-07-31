@@ -897,15 +897,57 @@
             </div>
         </div>
 
-        <div id="modal-pengaturan" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden z-50">
-            <div class="bg-white p-6 rounded-2xl w-80 shadow-xl">
-                <h3 class="text-lg font-bold text-slate-800 mb-4">Pengaturan Akun</h3>
-                <button onclick="window.auth.signOut(); document.getElementById('modal-pengaturan').classList.add('hidden');" class="w-full py-2 bg-red-600 text-white rounded-xl font-semibold">
-                    Keluar Akun (Logout)
-                </button>
-                <button onclick="document.getElementById('modal-pengaturan').classList.add('hidden')" class="w-full mt-2 py-2 bg-slate-100 text-slate-600 rounded-xl font-medium">
-                    Tutup
-                </button>
+        <!-- MODAL PENGATURAN AKUN -->
+        <div id="modal-pengaturan" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-xs transition-opacity duration-300 p-4">
+            <!-- Kontainer Panel Melayang -->
+            <div class="bg-white w-full max-w-xs rounded-3xl p-5 space-y-4 shadow-xl transform transition-all duration-300 scale-100 animate__animated animate__zoomIn animate__fast">
+                
+                <!-- Header Modal -->
+                <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs">
+                            <i class="fas fa-user-cog"></i>
+                        </div>
+                        <h3 class="text-xs font-black text-gray-800 uppercase tracking-wider">Pengaturan Akun</h3>
+                    </div>
+                    <button type="button" onclick="window.tutupModalPengaturan()" class="w-6 h-6 rounded-full bg-gray-100 text-gray-400 hover:text-gray-600 flex items-center justify-center transition">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Informasi Profil User Aktif -->
+                <div class="bg-slate-50 border border-slate-100 rounded-2xl p-3 flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                        <span id="pengaturan-user-avatar"><i class="fas fa-user"></i></span>
+                    </div>
+                    <div class="flex-1 overflow-hidden">
+                        <p id="pengaturan-user-nama" class="text-xs font-bold text-slate-800 truncate">Sesi Aktif</p>
+                        <p id="pengaturan-user-email" class="text-[10px] text-slate-500 truncate">user@email.com</p>
+                    </div>
+                </div>
+
+                <!-- Detail Status Kredensial & Firebase -->
+                <div class="space-y-2 pt-1 text-[11px]">
+                    <div class="flex justify-between items-center px-1 text-slate-600">
+                        <span class="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
+                            <i class="fas fa-database text-xs text-emerald-500"></i> Cloud Firestore
+                        </span>
+                        <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">Terhubung</span>
+                    </div>
+                </div>
+
+                <!-- Tombol Aksi Login / Logout -->
+                <div class="pt-2 space-y-2">
+                    <button type="button" onclick="window.eksekusiLogoutAkun()" class="w-full py-2.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition active:scale-95">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Keluar Akun (Logout)</span>
+                    </button>
+
+                    <button type="button" onclick="window.tutupModalPengaturan()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-semibold text-xs transition">
+                        Batal / Tutup
+                    </button>
+                </div>
+
             </div>
         </div>
 
@@ -2881,7 +2923,75 @@
             }
         });
 
-        
+        // --- KONTROL MODAL PENGATURAN AKUN ---
+        // Fungsi Buka Modal Pengaturan & Render Info User
+        window.bukaModalPengaturan = function() {
+            const userAktif = window.currentUser || (window.auth ? window.auth.currentUser : null);
+
+            const elemNama = document.getElementById('pengaturan-user-nama');
+            const elemEmail = document.getElementById('pengaturan-user-email');
+            const elemAvatar = document.getElementById('pengaturan-user-avatar');
+
+            if (userAktif) {
+                let nama = userAktif.displayName || (userAktif.email ? userAktif.email.split('@')[0] : "Pengguna");
+                let email = userAktif.email || "Sesi Tamu Terhubung";
+
+                if (elemNama) elemNama.innerText = nama;
+                if (elemEmail) elemEmail.innerText = email;
+                if (elemAvatar) elemAvatar.innerText = nama.charAt(0).toUpperCase();
+            } else {
+                if (elemNama) elemNama.innerText = "Belum Login";
+                if (elemEmail) elemEmail.innerText = "Tidak ada akun aktif";
+                if (elemAvatar) elemAvatar.innerHTML = `<i class="fas fa-user-slash"></i>`;
+            }
+
+            const modal = document.getElementById('modal-pengaturan');
+            if (modal) {
+                modal.style.display = 'flex';
+                modal.classList.remove('hidden');
+            }
+        };
+
+        // Fungsi Tutup Modal Pengaturan
+        window.tutupModalPengaturan = function() {
+            const modal = document.getElementById('modal-pengaturan');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.style.display = '';
+            }
+        };
+
+        // Fungsi Eksekusi Logout secara Aman
+        window.eksekusiLogoutAkun = async function() {
+            try {
+                if (window.auth && typeof window.auth.signOut === 'function') {
+                    await window.auth.signOut();
+                } else if (typeof firebase !== 'undefined' && firebase.auth) {
+                    await firebase.auth().signOut();
+                }
+                
+                window.tutupModalPengaturan();
+
+                if (typeof tampilAlert === 'function') {
+                    tampilAlert("Berhasil keluar akun.", "success");
+                } else {
+                    alert("Berhasil keluar akun.");
+                }
+
+                // Auto reload ke halaman login atau refresh
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+
+            } catch (error) {
+                console.error("Gagal Logout: ", error);
+                if (typeof tampilAlert === 'function') {
+                    tampilAlert(`Gagal Logout: ${error.message}`, "error");
+                } else {
+                    alert("Terjadi kesalahan saat mencoba logout.");
+                }
+            }
+        };
 
 
         // Variable global untuk memantau tab yang sedang aktif (default: rekap)
@@ -3620,22 +3730,32 @@
             const targetPeriodeMutasi = document.getElementById('mutasi-periode');
             if (targetPeriodeMutasi) targetPeriodeMutasi.value = formatBulan;
 
-            const modalMutasi = document.getElementById('modal-mutasi-saldo');
-            if (modalMutasi) modalMutasi.classList.remove('hidden');
+            // Pakai ID modal yang sesuai (sesuaikan 'modal-form-mutasi-tabungan' atau 'modal-mutasi-saldo')
+            const modalMutasi = document.getElementById('modal-form-mutasi-tabungan') || document.getElementById('modal-mutasi-saldo');
+            
+            if (modalMutasi) {
+                modalMutasi.style.display = 'flex'; // Reset display agar pembukaan modal konsisten
+                modalMutasi.classList.remove('hidden');
+            }
         };
 
         window.tutupModalMutasi = function() {
-            const modal = document.getElementById('modal-mutasi-saldo');
+            const modal = document.getElementById('modal-form-mutasi-tabungan') || document.getElementById('modal-mutasi-saldo');
+            
             if (modal) {
                 modal.classList.add('hidden');
-                modal.style.display = 'none';
+                modal.style.display = ''; // Dikosongkan (bukan 'none') agar mengikuti class Tailwind 'hidden'
                 
                 // ─── RESET ELEMEN INPUT FORM ───
+                const formMutasi = modal.querySelector('form');
+                if (formMutasi) formMutasi.reset();
+
                 if (document.getElementById('mutasi-keterangan')) document.getElementById('mutasi-keterangan').value = "";
                 if (document.getElementById('mutasi-nominal')) document.getElementById('mutasi-nominal').value = "";
+                if (document.getElementById('mutasi-nominal-display')) document.getElementById('mutasi-nominal-display').value = "";
                 
                 // ─── UTAMA: Kembalikan fungsi tombol simpan ke mode awal (Tambah Baru) ───
-                const btnSimpan = modal.querySelector('button[onclick*="prosesUpdateTransaksiUmum"]') || modal.querySelector('button[onclick*="simpanMutasiSaldo"]');
+                const btnSimpan = modal.querySelector('button[onclick*="prosesUpdateTransaksiUmum"]') || modal.querySelector('button[type="submit"]');
                 if (btnSimpan) {
                     btnSimpan.innerHTML = `<i class="fas fa-paper-plane"></i> Kirim Alokasi`;
                     btnSimpan.setAttribute('onclick', 'window.simpanMutasiSaldo()');
@@ -6412,16 +6532,16 @@
                 // Saldo lokal acuan sebelum mutasi dijalankan
                 let targetSaldoUtamaLokal = window.saldoUtama || 0;
                 let targetSaldoDaruratLokal = window.saldoDarurat || 0;
+                let targetSaldoKendaraanLokal = window.saldoKendaraan || 0;
 
                 // Objek penampung fetch async
                 let aksiKirimFirestore = [];
 
                 // --- SKENARIO PEMROSESAN REST API FIRESTORE MAP (MULTI-USER PATH) ---
                 
-                // Skenario A & C: Penanganan Mutasi Tabungan Utama
+                // 1. Penanganan Mutasi Tabungan Utama (mutasi_tabungan1)
                 if (asal === 'utama' || tujuan === 'utama') {
                     const keyTransaksi = `mutasi_tabungan1_${bulanTahunFormat}`;
-                    // Dynamic Sub-collection Path: /users/{uid}/rekap_finansial
                     const endpointFirestore = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/rekap_finansial/${keyTransaksi}`;
                     
                     let finalPendapatan = 0;
@@ -6431,11 +6551,11 @@
                     if (asal === 'utama') {
                         finalPotongan = nominal;
                         teksKeterangan = `Mutasi Keluar: ${keteranganInput}`;
-                        targetSaldoUtamaLokal -= nominal; // Akumulasi lokal mutasi keluar
+                        targetSaldoUtamaLokal -= nominal;
                     } else {
                         finalPendapatan = nominal;
                         teksKeterangan = `Mutasi Masuk: ${keteranganInput}`;
-                        targetSaldoUtamaLokal += nominal; // Akumulasi lokal mutasi masuk
+                        targetSaldoUtamaLokal += nominal;
                     }
 
                     const payloadFirestore = {
@@ -6457,10 +6577,9 @@
                     );
                 }
 
-                // Skenario B & D: Penanganan Mutasi Dana Darurat
+                // 2. Penanganan Mutasi Tabungan Darurat (mutasi_tabungan2)
                 if (asal === 'darurat' || tujuan === 'darurat') {
                     const keyTransaksi = `mutasi_tabungan2_${bulanTahunFormat}`;
-                    // Dynamic Sub-collection Path: /users/{uid}/rekap_finansial
                     const endpointFirestore = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/rekap_finansial/${keyTransaksi}`;
                     
                     let finalPendapatan = 0;
@@ -6470,11 +6589,11 @@
                     if (asal === 'darurat') {
                         finalPotongan = nominal;
                         teksKeterangan = `Mutasi Keluar: ${keteranganInput}`;
-                        targetSaldoDaruratLokal -= nominal; // Akumulasi lokal mutasi keluar
+                        targetSaldoDaruratLokal -= nominal;
                     } else {
                         finalPendapatan = nominal;
                         teksKeterangan = `Mutasi Masuk: ${keteranganInput}`;
-                        targetSaldoDaruratLokal += nominal; // Akumulasi lokal mutasi masuk
+                        targetSaldoDaruratLokal += nominal;
                     }
 
                     const payloadFirestore = {
@@ -6496,6 +6615,44 @@
                     );
                 }
 
+                // 3. Penanganan Mutasi Tabungan Kendaraan (mutasi_tabungan3)
+                if (asal === 'kendaraan' || tujuan === 'kendaraan') {
+                    const keyTransaksi = `mutasi_tabungan3_${bulanTahunFormat}`;
+                    const endpointFirestore = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/rekap_finansial/${keyTransaksi}`;
+                    
+                    let finalPendapatan = 0;
+                    let finalPotongan = 0;
+                    let teksKeterangan = "";
+
+                    if (asal === 'kendaraan') {
+                        finalPotongan = nominal;
+                        teksKeterangan = `Mutasi Keluar: ${keteranganInput}`;
+                        targetSaldoKendaraanLokal -= nominal;
+                    } else {
+                        finalPendapatan = nominal;
+                        teksKeterangan = `Mutasi Masuk: ${keteranganInput}`;
+                        targetSaldoKendaraanLokal += nominal;
+                    }
+
+                    const payloadFirestore = {
+                        fields: {
+                            kategori: { stringValue: "mutasi_tabungan3" },
+                            keterangan: { stringValue: teksKeterangan },
+                            namaUser: { stringValue: namaUserSistem },
+                            pendapatan: { integerValue: finalPendapatan.toString() },
+                            potongan: { integerValue: finalPotongan.toString() },
+                            totalBersihNetto: { integerValue: (finalPendapatan - finalPotongan).toString() },
+                            periode: { stringValue: periodeTeks },
+                            referenceKeyImage: { stringValue: "MUTASI_TABUNGAN3" },
+                            waktuTransaksi: { timestampValue: new Date().toISOString() }
+                        }
+                    };
+
+                    aksiKirimFirestore.push(
+                        fetch(endpointFirestore, { method: 'PATCH', headers: headersRest, body: JSON.stringify(payloadFirestore) })
+                    );
+                }
+
                 // Eksekusi pengiriman data ke Cloud Firestore
                 const hasilRespon = await Promise.all(aksiKirimFirestore);
                 for (const respon of hasilRespon) {
@@ -6505,12 +6662,13 @@
                     }
                 }
 
-                // --- UPDATE VARIABEL LOKAL DAN GLOBAL (Jika API Berhasil) ---
+                // --- UPDATE VARIABEL LOKAL DAN GLOBAL ---
                 if (asal === 'dompet' && typeof saldoDompet !== 'undefined') saldoDompet -= nominal;
                 if (tujuan === 'dompet' && typeof saldoDompet !== 'undefined') saldoDompet += nominal;
 
                 window.saldoUtama = targetSaldoUtamaLokal;
                 window.saldoDarurat = targetSaldoDaruratLokal;
+                window.saldoKendaraan = targetSaldoKendaraanLokal;
 
                 // --- SELESAI PROSES & FEEDBACK ---
                 const pesanSukses = `Mutasi Berhasil!\nDana sebesar Rp ${nominal.toLocaleString("id-ID")} dipindahkan dan dicatat ke Cloud Firestore via REST API.`;
