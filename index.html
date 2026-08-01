@@ -6229,22 +6229,22 @@
             } : {};
 
             // 2. Dapatkan Periode Aktif dari Dashboard Utama untuk Filter Riwayat Bulanan
-            let bulanTahunFormat = "juli_2026"; 
-            let periodeTeksTampilan = "Juli 2026";
-
+            let tglAktif = new Date();
             if (window.dompetQState && window.dompetQState.periodeAktif) {
-                const tglAktif = new Date(window.dompetQState.periodeAktif);
-                const namaBulanIndo = tglAktif.toLocaleString('id-ID', { month: 'long' });
-                const tahun = tglAktif.getFullYear();
-                
-                bulanTahunFormat = `${namaBulanIndo.toLowerCase()}_${tahun}`;
-                periodeTeksTampilan = `${namaBulanIndo.charAt(0).toUpperCase() + namaBulanIndo.slice(1)} ${tahun}`;
+                tglAktif = new Date(window.dompetQState.periodeAktif);
             }
 
+            const namaBulanIndo = tglAktif.toLocaleString('id-ID', { month: 'long' });
+            const tahunAktif = tglAktif.getFullYear();
+            const bulanAktifIdx = tglAktif.getMonth(); // 0-indexed (0 = Jan, 7 = Agu)
+
+            const bulanTahunFormat = `${namaBulanIndo.toLowerCase()}_${tahunAktif}`;
+            const periodeTeksTampilan = `${namaBulanIndo.charAt(0).toUpperCase() + namaBulanIndo.slice(1)} ${tahunAktif}`;
+
             // 3. Ambil Target Batas Dinamis milik User dari Cloud Firestore via REST API
-            let limitTargetUtama = window.targetUtama || 0; // fallback default awal
-            let limitTargetDarurat = window.targetDarurat || 0; // fallback default awal
-            let limitTargetKendaraan = window.targetKendaraan || 0; // fallback default awal
+            let limitTargetUtama = window.targetUtama || 0; 
+            let limitTargetDarurat = window.targetDarurat || 0; 
+            let limitTargetKendaraan = window.targetKendaraan || 0; 
 
             try {
                 const urlTarget = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/pengaturan_aplikasi/target_tabungan`;
@@ -6288,6 +6288,7 @@
 
                         const netto = parseInt(fields.totalBersihNetto?.integerValue || fields.totalBersihNetto?.stringValue || 0, 10);
                         const teksPeriodeDoc = fields.periode?.stringValue || "";
+                        const isoWaktu = fields.waktuTransaksi?.timestampValue || fields.waktuTransaksi?.stringValue || new Date().toISOString();
 
                         // Normalisasi struktur data REST JSON
                         const dataNormal = {
@@ -6298,32 +6299,37 @@
                             pendapatan: parseInt(fields.pendapatan?.integerValue || fields.pendapatan?.stringValue || 0, 10),
                             potongan: parseInt(fields.potongan?.integerValue || fields.potongan?.stringValue || 0, 10),
                             totalBersihNetto: netto,
-                            waktuTransaksi: fields.waktuTransaksi?.timestampValue || new Date().toISOString(),
+                            waktuTransaksi: isoWaktu,
                             namaUser: fields.namaUser?.stringValue || ""
                         };
+
+                        // Evaluasi apakah transaksi berada dalam Bulan dan Tahun Periode Aktif
+                        const dTx = new Date(isoWaktu);
+                        const isBulanSama = dTx.getMonth() === bulanAktifIdx && dTx.getFullYear() === tahunAktif;
+                        const isIdSama = idDokumen.toLowerCase().includes(bulanTahunFormat);
+                        const isPeriodeSama = teksPeriodeDoc.trim().toLowerCase() === periodeTeksTampilan.trim().toLowerCase();
+
+                        const isMasukPeriode = isBulanSama || isIdSama || isPeriodeSama;
 
                         // Akumulasikan saldo dari SEMUA dokumen mutasi tabungan
                         if (idDokumen.startsWith("mutasi_tabungan1_")) {
                             saldoUtama += Math.abs(netto); // Akumulasi total saldo tabungan utama
                             
-                            // Filter untuk riwayat bulan aktif
-                            if (idDokumen.includes(`_${bulanTahunFormat}`) || teksPeriodeDoc.trim().toLowerCase() === periodeTeksTampilan.trim().toLowerCase()) {
+                            if (isMasukPeriode) {
                                 gabunganTransaksiMutasiBulanIni.push({ ...dataNormal, jenisTabungan: 'Tabungan Utama' });
                             }
                         } 
                         else if (idDokumen.startsWith("mutasi_tabungan2_")) {
                             saldoDarurat += Math.abs(netto); // Akumulasi total saldo tabungan darurat
                             
-                            // Filter untuk riwayat bulan aktif
-                            if (idDokumen.includes(`_${bulanTahunFormat}`) || teksPeriodeDoc.trim().toLowerCase() === periodeTeksTampilan.trim().toLowerCase()) {
+                            if (isMasukPeriode) {
                                 gabunganTransaksiMutasiBulanIni.push({ ...dataNormal, jenisTabungan: 'Tabungan Darurat' });
                             }
                         }
                         else if (idDokumen.startsWith("mutasi_tabungan3_")) {
                             saldoKendaraan += Math.abs(netto); // Akumulasi total saldo tabungan kendaraan
                             
-                            // Filter untuk riwayat bulan aktif
-                            if (idDokumen.includes(`_${bulanTahunFormat}`) || teksPeriodeDoc.trim().toLowerCase() === periodeTeksTampilan.trim().toLowerCase()) {
+                            if (isMasukPeriode) {
                                 gabunganTransaksiMutasiBulanIni.push({ ...dataNormal, jenisTabungan: 'Tabungan Kendaraan' });
                             }
                         }
@@ -6345,24 +6351,20 @@
             const persenKendaraan = limitTargetKendaraan > 0 ? Math.min(Math.round((Math.max(0, saldoKendaraan) / limitTargetKendaraan) * 100), 100) : 0;
 
             // Render Nilai Kumulatif ke Elemen Dashboard Panel Atas
-            // --- Tabungan Utama ---
             if(document.getElementById('tabungan-utama-saldo')) document.getElementById('tabungan-utama-saldo').innerText = `Rp ${saldoUtama.toLocaleString('id-ID')}`;
             if(document.getElementById('tabungan-utama-target')) document.getElementById('tabungan-utama-target').innerText = `Target: Rp ${limitTargetUtama.toLocaleString('id-ID')}`;
             if(document.getElementById('tabungan-utama-persen')) document.getElementById('tabungan-utama-persen').innerText = `${persenUtama}%`;
             if(document.getElementById('tabungan-utama-bar')) document.getElementById('tabungan-utama-bar').style.width = `${persenUtama}%`;
 
-            // --- Tabungan Darurat ---
             if(document.getElementById('tabungan-darurat-saldo')) document.getElementById('tabungan-darurat-saldo').innerText = `Rp ${saldoDarurat.toLocaleString('id-ID')}`;
             if(document.getElementById('tabungan-darurat-target')) document.getElementById('tabungan-darurat-target').innerText = `Target: Rp ${limitTargetDarurat.toLocaleString('id-ID')}`;
             if(document.getElementById('tabungan-darurat-persen')) document.getElementById('tabungan-darurat-persen').innerText = `${persenDarurat}%`;
             if(document.getElementById('tabungan-darurat-bar')) document.getElementById('tabungan-darurat-bar').style.width = `${persenDarurat}%`;
 
-            // --- Tabungan Kendaraan ---
             if(document.getElementById('tabungan-kendaraan-saldo')) document.getElementById('tabungan-kendaraan-saldo').innerText = `Rp ${saldoKendaraan.toLocaleString('id-ID')}`;
             if(document.getElementById('tabungan-kendaraan-target')) document.getElementById('tabungan-kendaraan-target').innerText = `Target: Rp ${limitTargetKendaraan.toLocaleString('id-ID')}`;
             if(document.getElementById('tabungan-kendaraan-persen')) document.getElementById('tabungan-kendaraan-persen').innerText = `${persenKendaraan}%`;
             if(document.getElementById('tabungan-kendaraan-bar')) document.getElementById('tabungan-kendaraan-bar').style.width = `${persenKendaraan}%`;
-
 
             // 6. RENDERING LIST RIWAYAT BULANAN DIKELOMPOKKAN PER TANGGAL
             if (!containerRiwayat) return;
@@ -6411,13 +6413,11 @@
                     let textNominal = "";
                     let kelasWarna = "";
 
-                    // Jika potongan > 0 = Setor Tabungan (Uang keluar dari dompet ke tabungan)
                     if (nominalKeluar > 0) {
                         ikonHtml = `<div class="w-7 h-7 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center text-[10px]"><i class="fas fa-arrow-down"></i></div>`;
                         textNominal = `-Rp ${nominalKeluar.toLocaleString('id-ID')}`;
                         kelasWarna = "text-purple-600 font-bold";
                     } 
-                    // Jika pendapatan > 0 = Tarik Tabungan (Uang masuk dari tabungan ke dompet)
                     else {
                         ikonHtml = `<div class="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-[10px]"><i class="fas fa-arrow-up"></i></div>`;
                         textNominal = `+Rp ${nominalMasuk.toLocaleString('id-ID')}`;
