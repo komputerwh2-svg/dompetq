@@ -1229,7 +1229,7 @@
                             <select id="mutasi-tujuan" class="w-full px-3 py-2.5 sm:py-2 bg-white border border-gray-300 rounded-xl font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer shadow-sm text-xs">
                                 <option value="tabungan1">Kantong Tabungan Utama</option>
                                 <option value="tabungan2">Kantong Tabungan Darurat</option>
-                                <option value="servis">Dana Servis Kendaraan</option>
+                                <option value="servis">Kantong Tabungan Kendaraan</option>
                             </select>
                         </div>
                     </div>
@@ -3832,15 +3832,32 @@
         };
 
         // =================================================================
-        // FUNGSIONALITAS PROSES SIMPAN MUTASI (MULTI-USER READY)
+        // FUNGSIONALITAS PROSES SIMPAN MUTASI (MULTI-USER READY - 3 TABUNGAN)
         // =================================================================
         window.simpanMutasiSaldo = async function() {
-            const tujuan = document.getElementById('mutasi-tujuan')?.value || "tabungan";
+            // 1. Ambil Elemen Tujuan
+            const elemTujuan = document.getElementById('mutasi-ke') || document.getElementById('mutasi-tujuan');
+            let tujuanVal = elemTujuan ? elemTujuan.value : "tabungan";
+
+            // MAPPING TUJUAN:
+            // jika nilainya mengandung "servis", "kendaraan", "tabungan3", atau "3", set ke 'tabungan3'
+            let targetKategori = "tabungan"; 
+            if (tujuanVal.includes("servis") || tujuanVal.includes("kendaraan") || tujuanVal.includes("3")) {
+                targetKategori = "tabungan3";
+            } else if (tujuanVal.includes("tabungan2") || tujuanVal.includes("2")) {
+                targetKategori = "tabungan2";
+            } else {
+                targetKategori = "tabungan"; // Tabungan Utama / Tabungan 1
+            }
+
             const keterangan = document.getElementById('mutasi-keterangan')?.value.trim() || "";
             
-            // Mengambil nominal bersih tanpa separator titik/koma
+            // 2. Mengambil nominal murni
             const nominal = window.ambilAngkaMurni ? window.ambilAngkaMurni('mutasi-nominal') : parseInt(document.getElementById('mutasi-nominal')?.value || 0, 10);
-            const inputPeriode = document.getElementById('mutasi-periode')?.value;
+            
+            // 3. Mengambil tanggal transaksi & Parsing Periode
+            const elemTanggal = document.getElementById('mutasi-tanggal') || document.getElementById('mutasi-periode');
+            const inputTanggalVal = elemTanggal ? elemTanggal.value : ""; // format YYYY-MM-DD atau YYYY-MM
 
             if (nominal <= 0 || !keterangan) {
                 if (typeof tampilAlert === 'function') {
@@ -3849,7 +3866,7 @@
                 return;
             }
 
-            // Ambil user aktif dari auth atau window.currentUser
+            // Ambil user aktif dari auth
             const userAktif = window.currentUser || (window.auth ? window.auth.currentUser : null);
             if (!userAktif || !userAktif.uid) {
                 if (typeof tampilAlert === 'function') {
@@ -3864,21 +3881,29 @@
                 namaUserSistem = userAktif.email.split('@')[0];
             }
 
-            // Parsing Periode Kalender
-            let periodeTeks = "Juni 2026";
-            let formatPeriodeClean = "juni_2026";
-            if (inputPeriode) {
-                const [tahun, bulan] = inputPeriode.split('-');
-                const namaBulanIndo = [
-                    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-                    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-                ];
-                const indexBulan = parseInt(bulan, 10) - 1;
-                if (indexBulan >= 0 && indexBulan <= 11) {
-                    periodeTeks = `${namaBulanIndo[indexBulan]} ${tahun}`;
-                    formatPeriodeClean = `${namaBulanIndo[indexBulan].toLowerCase()}_${tahun}`;
+            // 4. Parsing Periode Kalender (Bulan & Tahun Asli)
+            const namaBulanIndo = [
+                "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+            ];
+
+            let dateObj = new Date();
+            if (inputTanggalVal) {
+                const parts = inputTanggalVal.split('-');
+                if (parts.length >= 2) {
+                    const thn = parseInt(parts[0], 10);
+                    const bln = parseInt(parts[1], 10) - 1;
+                    if (!isNaN(thn) && !isNaN(bln)) {
+                        dateObj = new Date(thn, bln, 1);
+                    }
                 }
             }
+
+            const bulanTeks = namaBulanIndo[dateObj.getMonth()];
+            const tahunTeks = dateObj.getFullYear();
+            
+            const periodeTeks = `${bulanTeks} ${tahunTeks}`;
+            const formatPeriodeClean = `${bulanTeks.toLowerCase()}_${tahunTeks}`;
 
             try {
                 if (typeof tampilAlert === 'function') {
@@ -3889,21 +3914,21 @@
                 const projectId = window.firebaseConfig?.projectId || "dompetq-app";
                 const timestampUnik = Date.now();
 
-                // Kunci ID Unik di Firestore per-user: mutasi_tujuan_periode_timestamp
-                const keyTransaksi = `mutasi_${tujuan}_${formatPeriodeClean}_${timestampUnik}`;
+                // Kunci ID Unik di Firestore: mutasi_tabungan3_agustus_2026_17225123456
+                const keyTransaksi = `mutasi_${targetKategori}_${formatPeriodeClean}_${timestampUnik}`;
 
-                // Path Firestore terisolasi per-user: users/{uid}/rekap_finansial/{keyTransaksi}
+                // Path Firestore terisolasi per-user
                 const endpointFirestore = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/rekap_finansial/${keyTransaksi}`;
 
                 const payloadFirestore = {
                     fields: {
-                        kategori: { stringValue: `mutasi_${tujuan}` },
+                        kategori: { stringValue: `mutasi_${targetKategori}` }, // Menjadi mutasi_tabungan, mutasi_tabungan2, atau mutasi_tabungan3
                         keterangan: { stringValue: keterangan },
                         periode: { stringValue: periodeTeks },
                         pendapatan: { integerValue: "0" }, 
                         potongan: { integerValue: nominal.toString() }, 
                         totalBersihNetto: { integerValue: `-${nominal}` }, 
-                        referenceKeyImage: { stringValue: `MUTASI_${tujuan.toUpperCase()}` }, 
+                        referenceKeyImage: { stringValue: `MUTASI_${targetKategori.toUpperCase()}` }, 
                         waktuTransaksi: { timestampValue: new Date().toISOString() },
                         namaUser: { stringValue: namaUserSistem },
                         uid: { stringValue: uid },
@@ -3925,15 +3950,20 @@
                     throw new Error(`Firestore Error: ${errTxt}`);
                 }
 
+                // Teks Notifikasi Sukses Sesuai Target
+                let labelTujuan = "Tabungan Utama";
+                if (targetKategori === 'tabungan2') labelTujuan = "Tabungan 2";
+                if (targetKategori === 'tabungan3') labelTujuan = "Tabungan Kendaraan/Servis";
+
                 if (typeof tampilAlert === 'function') {
-                    tampilAlert(`Sukses! Saldo dialokasikan ke ${tujuan === 'tabungan' ? 'Target Tabungan' : 'Dana Servis'} sebesar Rp ${nominal.toLocaleString('id-ID')}`, "success");
+                    tampilAlert(`Sukses! Saldo dialokasikan ke ${labelTujuan} sebesar Rp ${nominal.toLocaleString('id-ID')}`, "success");
                 }
                 
                 if (typeof window.tutupModalMutasi === 'function') {
                     window.tutupModalMutasi();
                 }
 
-                // Trigger kalkulasi ulang dashboard berbasis UID
+                // Trigger kalkulasi ulang dashboard
                 if (typeof window.inisialisasiAplikasi === 'function') {
                     await window.inisialisasiAplikasi();
                 } else if (typeof window.muatRekapFinansialDashboard === 'function') {
