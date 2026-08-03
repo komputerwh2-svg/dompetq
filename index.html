@@ -7142,7 +7142,7 @@
         };
 
         // =================================================================
-        // FUNGSIONALITAS RENDER TAB SERVIS & KENDARAAN (DISESUAIKAN DENGAN HTML)
+        // FUNGSIONALITAS RENDER TAB SERVIS & KENDARAAN (REVISI KHUSUS SERVIS)
         // =================================================================
         window.renderKontenTabServis = async function() {
             const containerRiwayat = document.getElementById('container-riwayat-servis');
@@ -7201,25 +7201,32 @@
 
                             docsRincian.forEach(doc => {
                                 const partsR = doc.name.split('/');
-                                const idRincian = partsR[partsR.length - 1];
+                                const idRincian = partsR[partsR.length - 1]; // misal: astreagrand_servis_1785728862026
                                 const f = doc.fields || {};
 
-                                // Pengecekan Kata Kunci (Servis/Service) jika ada filter
-                                const ketText = f.keterangan?.stringValue || f.detailServis?.stringValue || "";
+                                // 🔴 REVISI 1: FILTER KHUSUS SERVIS (Abaikan Bensin)
+                                const idTransaksiLower = (f.idTransaksi?.stringValue || idRincian).toLowerCase();
+                                const ketLower = (f.keterangan?.stringValue || "").toLowerCase();
                                 
+                                const isServis = idTransaksiLower.includes('servis') || ketLower.includes('servis');
+                                if (!isServis) return; // Lewati jika transaksi bensin/lainnya!
+
                                 // Extract Data dari Struktur REST API
                                 const idKendaraan = f.idKendaraan?.stringValue || f.idKendaraan?.integerValue || "1";
                                 const kmAwal = parseInt(f.kmAwal?.integerValue || f.kmAwal?.stringValue || 0, 10);
                                 const kmAkhir = parseInt(f.kmAkhir?.integerValue || f.kmAkhir?.stringValue || 0, 10);
-                                const potongan = parseInt(f.potongan?.integerValue || f.potongan?.stringValue || f.biaya?.integerValue || 0, 10);
+                                const potongan = parseInt(f.potongan?.integerValue || f.potongan?.stringValue || 0, 10);
                                 const isoWaktu = f.waktuTransaksi?.timestampValue || f.waktuTransaksi?.stringValue || f.tanggal?.stringValue || new Date().toISOString();
-                                const detailServis = f.detailServis?.stringValue || ketText || "Servis Kendaraan";
+                                
+                                // Data Detail Servis & Keterangan (Nama/Plat Kendaraan)
+                                const detailServisVal = f.detailServis?.stringValue || "Servis Kendaraan";
+                                const keteranganVal = f.keterangan?.stringValue || `Servis Kendaraan ${idKendaraan}`;
 
                                 daftarSemuaServis.push({
                                     id: idRincian,
                                     idKendaraan: String(idKendaraan),
-                                    detailServis: detailServis,
-                                    keterangan: ketText || detailServis,
+                                    detailServis: detailServisVal, // misal: "Ganti Oli"
+                                    keterangan: keteranganVal,     // misal: "Servis - Astrea Grand (H 3129 HW)"
                                     kmAwal: kmAwal,
                                     kmAkhir: kmAkhir,
                                     trip: Math.max(0, kmAkhir - kmAwal),
@@ -7238,7 +7245,7 @@
             daftarSemuaServis.sort((a, b) => new Date(b.waktuTransaksi).getTime() - new Date(a.waktuTransaksi).getTime());
 
             // =================================================================
-            // LANGKAH 1: ISI PANEL ATAS KENDARAAN 1, 2, DAN 3 (DISESUAIKAN DENGAN ID HTML)
+            // LANGKAH 1: ISI PANEL ATAS KENDARAAN 1, 2, DAN 3
             // =================================================================
             const petaTerbaruPerKendaraan = {};
             const petaLaluPerKendaraan = {};
@@ -7248,17 +7255,16 @@
                 if (!petaTerbaruPerKendaraan[idK]) {
                     petaTerbaruPerKendaraan[idK] = item;
                 } else if (!petaLaluPerKendaraan[idK]) {
-                    petaLaluPerKendaraan[idK] = item; // Servis sebelum yang terbaru
+                    petaLaluPerKendaraan[idK] = item;
                 }
             });
 
-            // Loop 3 Panel Kendaraan v1, v2, v3
+            // Render ke 3 Panel Kendaraan v1, v2, v3
             [1, 2, 3].forEach(idK => {
                 const strId = String(idK);
                 const dataTerbaru = petaTerbaruPerKendaraan[strId];
                 const dataLalu = petaLaluPerKendaraan[strId];
 
-                // Sesuai ID HTML Anda: servis-v1-tgl-lalu, servis-v1-tgl-baru, dll.
                 const elemTglLalu = document.getElementById(`servis-v${idK}-tgl-lalu`);
                 const elemTglBaru = document.getElementById(`servis-v${idK}-tgl-baru`);
                 const elemKmAwal = document.getElementById(`servis-v${idK}-km-awal`);
@@ -7274,9 +7280,11 @@
                     if (elemKmAwal) elemKmAwal.innerText = dataTerbaru.kmAwal.toLocaleString('id-ID');
                     if (elemKmAkhir) elemKmAkhir.innerText = dataTerbaru.kmAkhir.toLocaleString('id-ID');
                     if (elemTrip) elemTrip.innerText = `${dataTerbaru.trip.toLocaleString('id-ID')} KM`;
-                    if (elemKet) elemKet.innerText = dataTerbaru.keterangan || "Servis berkala.";
+                    
+                    // 🔴 REVISI 2: CATATAN PANEL DIAMBIL DARI detailServis ("Ganti Oli")
+                    if (elemKet) elemKet.innerText = dataTerbaru.detailServis || "Servis Berkala";
 
-                    // Tgl servis lalu
+                    // Tanggal Servis Lalu
                     if (dataLalu) {
                         const dLalu = new Date(dataLalu.waktuTransaksi);
                         if (elemTglLalu) elemTglLalu.innerText = dLalu.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -7296,7 +7304,6 @@
             // =================================================================
             // LANGKAH 2: RENDER DAFTAR RIWAYAT SERVIS DI PANEL BAWAH
             // =================================================================
-            // Update Counter Total Riwayat (ID HTML: total-riwayat-servis)
             const elemTotalCounter = document.getElementById('total-riwayat-servis');
             if (elemTotalCounter) elemTotalCounter.innerText = `${daftarSemuaServis.length} Transaksi`;
 
@@ -7338,9 +7345,12 @@
                                     <i class="fas fa-wrench"></i>
                                 </div>
                                 <div class="truncate">
-                                    <p class="text-xs font-bold text-gray-800 uppercase tracking-wide truncate">${item.keterangan}</p>
-                                    <p class="text-[9px] text-gray-400 font-medium capitalize">
-                                        Kendaraan ${item.idKendaraan} • KM: ${item.kmAwal.toLocaleString('id-ID')} ➔ ${item.kmAkhir.toLocaleString('id-ID')} (${item.trip} KM)
+                                    <!-- 🔴 REVISI 3: JUDUL UTAMA = Nama Kendaraan & Plat (keterangan) -->
+                                    <p class="text-[12px] font-bold text-gray-800 uppercase tracking-wide truncate">${item.keterangan}</p>
+                                    
+                                    <!-- 🔴 REVISI 3: KETERANGAN BAWAH = detailServis + KM / Trip -->
+                                    <p class="text-[10px] text-gray-500 font-medium capitalize">
+                                        <span class="font-semibold text-blue-600">${item.detailServis}</span> • KM: ${item.kmAwal.toLocaleString('id-ID')} ➔ ${item.kmAkhir.toLocaleString('id-ID')} (${item.trip} KM)
                                     </p>
                                 </div>
                             </div>
@@ -7360,7 +7370,7 @@
             containerRiwayat.innerHTML = htmlHasil;
         };
 
-        // Aliaskan fungsi lama ke fungsi baru agar tidak error jika dipanggil di tempat lain
+        // Aliaskan fungsi
         window.prosesDataServisDariTransportasi = window.renderKontenTabServis;
         window.renderTabServis = window.renderKontenTabServis;
 
