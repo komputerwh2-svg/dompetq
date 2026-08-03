@@ -369,168 +369,168 @@
             <!-- TAB SERVIS KENDARAAN -->
             <div id="servis" class="tab-content w-full hidden pb-24">
             
-            <!-- GRID 3 PANEL UTAMA KENDARAAN -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            
-            <!-- PANEL KENDARAAN 1 -->
-            <div class="bg-white rounded-2xl p-4 shadow-xs border border-gray-200 relative cursor-pointer hover:border-blue-300 transition-all group">
-                <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-3">
-                <div class="flex items-center gap-2">
-                    <div class="p-2 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                    </div>
-                    <h3 id="servis-v1-nama-plat" class="font-bold text-gray-900 text-sm">Kendaraan 1 - B 1234 XXX</h3>
-                </div>
+                <!-- GRID 3 PANEL UTAMA KENDARAAN -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 
-                <!-- Tombol Pensil Edit Identitas (Stop propagation agar tidak men-trigger klik kartu) -->
-                <button onclick="event.stopPropagation(); bukaModalEditKendaraan(1)" class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Edit Identitas Kendaraan">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                </button>
-                </div>
-
-                <!-- Tanggal Servis -->
-                <div class="grid grid-cols-2 gap-2 text-xs bg-gray-50 p-2.5 rounded-xl mb-3">
-                <div>
-                    <span class="text-gray-400 block text-[10px]">TGL SERVIS LALU</span>
-                    <span id="servis-v1-tgl-lalu" class="font-medium text-gray-600">-</span>
-                </div>
-                <div>
-                    <span class="text-gray-400 block text-[10px]">SERVIS TERBARU</span>
-                    <span id="servis-v1-tgl-baru" class="font-semibold text-blue-600">-</span>
-                </div>
-                </div>
-
-                <!-- Odometer / KM & Trip -->
-                <div class="grid grid-cols-3 gap-1 text-center bg-blue-50/50 p-2 rounded-xl mb-3 border border-blue-100/50">
-                <div>
-                    <span class="text-gray-400 block text-[9px]">KM AWAL</span>
-                    <span id="servis-v1-km-awal" class="font-bold text-gray-700 text-xs">0</span>
-                </div>
-                <div>
-                    <span class="text-gray-400 block text-[9px]">KM AKHIR</span>
-                    <span id="servis-v1-km-akhir" class="font-bold text-gray-700 text-xs">0</span>
-                </div>
-                <div class="border-l border-blue-200/60 pl-1">
-                    <span class="text-blue-500 block text-[9px] font-bold">TRIP</span>
-                    <span id="servis-v1-trip" class="font-extrabold text-blue-600 text-xs">0 KM</span>
-                </div>
-                </div>
-
-                <!-- Keterangan -->
-                <div>
-                <span class="text-gray-400 block text-[10px] mb-0.5">KETERANGAN / CATATAN</span>
-                <p id="servis-v1-ket" class="text-xs text-gray-600 italic bg-gray-50 p-2 rounded-lg min-h-[38px] line-clamp-2">Belum ada catatan servis.</p>
-                </div>
-            </div>
-
-            <!-- PANEL KENDARAAN 2 -->
-            <div class="bg-white rounded-2xl p-4 shadow-xs border border-gray-200 relative cursor-pointer hover:border-emerald-300 transition-all group">
-                <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-3">
-                <div class="flex items-center gap-2">
-                    <div class="p-2 bg-emerald-50 text-emerald-600 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                <!-- PANEL KENDARAAN 1 -->
+                <div class="bg-white rounded-2xl p-4 shadow-xs border border-gray-200 relative cursor-pointer hover:border-blue-300 transition-all group">
+                    <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-3">
+                    <div class="flex items-center gap-2">
+                        <div class="p-2 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        </div>
+                        <h3 id="servis-v1-nama-plat" class="font-bold text-gray-900 text-sm">Kendaraan 1 - B 1234 XXX</h3>
                     </div>
-                    <h3 id="servis-v2-nama-plat" class="font-bold text-gray-900 text-sm">Kendaraan 2 - B 5678 YYY</h3>
-                </div>
-                <button onclick="event.stopPropagation(); bukaModalEditKendaraan(2)" class="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Edit Identitas Kendaraan">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                </button>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 text-xs bg-gray-50 p-2.5 rounded-xl mb-3">
-                <div>
-                    <span class="text-gray-400 block text-[10px]">TGL SERVIS LALU</span>
-                    <span id="servis-v2-tgl-lalu" class="font-medium text-gray-600">-</span>
-                </div>
-                <div>
-                    <span class="text-gray-400 block text-[10px]">SERVIS TERBARU</span>
-                    <span id="servis-v2-tgl-baru" class="font-semibold text-emerald-600">-</span>
-                </div>
-                </div>
-
-                <div class="grid grid-cols-3 gap-1 text-center bg-emerald-50/50 p-2 rounded-xl mb-3 border border-emerald-100/50">
-                <div>
-                    <span class="text-gray-400 block text-[9px]">KM AWAL</span>
-                    <span id="servis-v2-km-awal" class="font-bold text-gray-700 text-xs">0</span>
-                </div>
-                <div>
-                    <span class="text-gray-400 block text-[9px]">KM AKHIR</span>
-                    <span id="servis-v2-km-akhir" class="font-bold text-gray-700 text-xs">0</span>
-                </div>
-                <div class="border-l border-emerald-200/60 pl-1">
-                    <span class="text-emerald-500 block text-[9px] font-bold">TRIP</span>
-                    <span id="servis-v2-trip" class="font-extrabold text-emerald-600 text-xs">0 KM</span>
-                </div>
-                </div>
-
-                <div>
-                <span class="text-gray-400 block text-[10px] mb-0.5">KETERANGAN / CATATAN</span>
-                <p id="servis-v2-ket" class="text-xs text-gray-600 italic bg-gray-50 p-2 rounded-lg min-h-[38px] line-clamp-2">Belum ada catatan servis.</p>
-                </div>
-            </div>
-
-            <!-- PANEL KENDARAAN 3 -->
-            <div class="bg-white rounded-2xl p-4 shadow-xs border border-gray-200 relative cursor-pointer hover:border-purple-300 transition-all group">
-                <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-3">
-                <div class="flex items-center gap-2">
-                    <div class="p-2 bg-purple-50 text-purple-600 rounded-xl group-hover:bg-purple-600 group-hover:text-white transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    
+                    <!-- Tombol Pensil Edit Identitas (Stop propagation agar tidak men-trigger klik kartu) -->
+                    <button onclick="event.stopPropagation(); bukaModalEditKendaraan(1)" class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Edit Identitas Kendaraan">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    </button>
                     </div>
-                    <h3 id="servis-v3-nama-plat" class="font-bold text-gray-900 text-sm">Kendaraan 3 - B 9101 ZZZ</h3>
-                </div>
-                <button onclick="event.stopPropagation(); bukaModalEditKendaraan(3)" class="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all" title="Edit Identitas Kendaraan">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                </button>
+
+                    <!-- Tanggal Servis -->
+                    <div class="grid grid-cols-2 gap-2 text-xs bg-gray-50 p-2.5 rounded-xl mb-3">
+                    <div>
+                        <span class="text-gray-400 block text-[10px]">TGL SERVIS LALU</span>
+                        <span id="servis-v1-tgl-lalu" class="font-medium text-gray-600">-</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 block text-[10px]">SERVIS TERBARU</span>
+                        <span id="servis-v1-tgl-baru" class="font-semibold text-blue-600">-</span>
+                    </div>
+                    </div>
+
+                    <!-- Odometer / KM & Trip -->
+                    <div class="grid grid-cols-3 gap-1 text-center bg-blue-50/50 p-2 rounded-xl mb-3 border border-blue-100/50">
+                    <div>
+                        <span class="text-gray-400 block text-[9px]">KM AWAL</span>
+                        <span id="servis-v1-km-awal" class="font-bold text-gray-700 text-xs">0</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 block text-[9px]">KM AKHIR</span>
+                        <span id="servis-v1-km-akhir" class="font-bold text-gray-700 text-xs">0</span>
+                    </div>
+                    <div class="border-l border-blue-200/60 pl-1">
+                        <span class="text-blue-500 block text-[9px] font-bold">TRIP</span>
+                        <span id="servis-v1-trip" class="font-extrabold text-blue-600 text-xs">0 KM</span>
+                    </div>
+                    </div>
+
+                    <!-- Keterangan -->
+                    <div>
+                    <span class="text-gray-400 block text-[10px] mb-0.5">KETERANGAN / CATATAN</span>
+                    <p id="servis-v1-ket" class="text-xs text-gray-600 italic bg-gray-50 p-2 rounded-lg min-h-[38px] line-clamp-2">Belum ada catatan servis.</p>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-2 text-xs bg-gray-50 p-2.5 rounded-xl mb-3">
-                <div>
-                    <span class="text-gray-400 block text-[10px]">TGL SERVIS LALU</span>
-                    <span id="servis-v3-tgl-lalu" class="font-medium text-gray-600">-</span>
-                </div>
-                <div>
-                    <span class="text-gray-400 block text-[10px]">SERVIS TERBARU</span>
-                    <span id="servis-v3-tgl-baru" class="font-semibold text-purple-600">-</span>
-                </div>
+                <!-- PANEL KENDARAAN 2 -->
+                <div class="bg-white rounded-2xl p-4 shadow-xs border border-gray-200 relative cursor-pointer hover:border-emerald-300 transition-all group">
+                    <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-3">
+                    <div class="flex items-center gap-2">
+                        <div class="p-2 bg-emerald-50 text-emerald-600 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        </div>
+                        <h3 id="servis-v2-nama-plat" class="font-bold text-gray-900 text-sm">Kendaraan 2 - B 5678 YYY</h3>
+                    </div>
+                    <button onclick="event.stopPropagation(); bukaModalEditKendaraan(2)" class="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Edit Identitas Kendaraan">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-xs bg-gray-50 p-2.5 rounded-xl mb-3">
+                    <div>
+                        <span class="text-gray-400 block text-[10px]">TGL SERVIS LALU</span>
+                        <span id="servis-v2-tgl-lalu" class="font-medium text-gray-600">-</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 block text-[10px]">SERVIS TERBARU</span>
+                        <span id="servis-v2-tgl-baru" class="font-semibold text-emerald-600">-</span>
+                    </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-1 text-center bg-emerald-50/50 p-2 rounded-xl mb-3 border border-emerald-100/50">
+                    <div>
+                        <span class="text-gray-400 block text-[9px]">KM AWAL</span>
+                        <span id="servis-v2-km-awal" class="font-bold text-gray-700 text-xs">0</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 block text-[9px]">KM AKHIR</span>
+                        <span id="servis-v2-km-akhir" class="font-bold text-gray-700 text-xs">0</span>
+                    </div>
+                    <div class="border-l border-emerald-200/60 pl-1">
+                        <span class="text-emerald-500 block text-[9px] font-bold">TRIP</span>
+                        <span id="servis-v2-trip" class="font-extrabold text-emerald-600 text-xs">0 KM</span>
+                    </div>
+                    </div>
+
+                    <div>
+                    <span class="text-gray-400 block text-[10px] mb-0.5">KETERANGAN / CATATAN</span>
+                    <p id="servis-v2-ket" class="text-xs text-gray-600 italic bg-gray-50 p-2 rounded-lg min-h-[38px] line-clamp-2">Belum ada catatan servis.</p>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-1 text-center bg-purple-50/50 p-2 rounded-xl mb-3 border border-purple-100/50">
-                <div>
-                    <span class="text-gray-400 block text-[9px]">KM AWAL</span>
-                    <span id="servis-v3-km-awal" class="font-bold text-gray-700 text-xs">0</span>
-                </div>
-                <div>
-                    <span class="text-gray-400 block text-[9px]">KM AKHIR</span>
-                    <span id="servis-v3-km-akhir" class="font-bold text-gray-700 text-xs">0</span>
-                </div>
-                <div class="border-l border-purple-200/60 pl-1">
-                    <span class="text-purple-500 block text-[9px] font-bold">TRIP</span>
-                    <span id="servis-v3-trip" class="font-extrabold text-purple-600 text-xs">0 KM</span>
-                </div>
+                <!-- PANEL KENDARAAN 3 -->
+                <div class="bg-white rounded-2xl p-4 shadow-xs border border-gray-200 relative cursor-pointer hover:border-purple-300 transition-all group">
+                    <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-3">
+                    <div class="flex items-center gap-2">
+                        <div class="p-2 bg-purple-50 text-purple-600 rounded-xl group-hover:bg-purple-600 group-hover:text-white transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        </div>
+                        <h3 id="servis-v3-nama-plat" class="font-bold text-gray-900 text-sm">Kendaraan 3 - B 9101 ZZZ</h3>
+                    </div>
+                    <button onclick="event.stopPropagation(); bukaModalEditKendaraan(3)" class="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all" title="Edit Identitas Kendaraan">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-xs bg-gray-50 p-2.5 rounded-xl mb-3">
+                    <div>
+                        <span class="text-gray-400 block text-[10px]">TGL SERVIS LALU</span>
+                        <span id="servis-v3-tgl-lalu" class="font-medium text-gray-600">-</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 block text-[10px]">SERVIS TERBARU</span>
+                        <span id="servis-v3-tgl-baru" class="font-semibold text-purple-600">-</span>
+                    </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-1 text-center bg-purple-50/50 p-2 rounded-xl mb-3 border border-purple-100/50">
+                    <div>
+                        <span class="text-gray-400 block text-[9px]">KM AWAL</span>
+                        <span id="servis-v3-km-awal" class="font-bold text-gray-700 text-xs">0</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 block text-[9px]">KM AKHIR</span>
+                        <span id="servis-v3-km-akhir" class="font-bold text-gray-700 text-xs">0</span>
+                    </div>
+                    <div class="border-l border-purple-200/60 pl-1">
+                        <span class="text-purple-500 block text-[9px] font-bold">TRIP</span>
+                        <span id="servis-v3-trip" class="font-extrabold text-purple-600 text-xs">0 KM</span>
+                    </div>
+                    </div>
+
+                    <div>
+                    <span class="text-gray-400 block text-[10px] mb-0.5">KETERANGAN / CATATAN</span>
+                    <p id="servis-v3-ket" class="text-xs text-gray-600 italic bg-gray-50 p-2 rounded-lg min-h-[38px] line-clamp-2">Belum ada catatan servis.</p>
+                    </div>
                 </div>
 
-                <div>
-                <span class="text-gray-400 block text-[10px] mb-0.5">KETERANGAN / CATATAN</span>
-                <p id="servis-v3-ket" class="text-xs text-gray-600 italic bg-gray-50 p-2 rounded-lg min-h-[38px] line-clamp-2">Belum ada catatan servis.</p>
-                </div>
-            </div>
-
-            </div>
-
-            <!-- RIWAYAT TRANSAKSI SERVIS DI BAWAH PANEL -->
-            <div class="bg-white rounded-2xl p-5 shadow-xs border border-gray-200">
-                <div class="flex items-center justify-between mb-4">
-                <h3 class="font-bold text-gray-900 text-sm">RIWAYAT SERVIS KENDARAAN</h3>
-                <span class="text-xs text-gray-400" id="total-riwayat-servis">0 Transaksi</span>
                 </div>
 
-                <!-- Container Tempat List Riwayat Renditan -->
-                <div id="container-riwayat-servis" class="space-y-3">
-                <div class="text-center py-8 text-gray-400 text-xs">
-                    Belum ada riwayat transaksi servis tercatat.
+                <!-- RIWAYAT TRANSAKSI SERVIS DI BAWAH PANEL -->
+                <div class="bg-white rounded-2xl p-5 shadow-xs border border-gray-200">
+                    <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-gray-900 text-sm">RIWAYAT SERVIS KENDARAAN</h3>
+                    <span class="text-xs text-gray-400" id="total-riwayat-servis">0 Transaksi</span>
+                    </div>
+
+                    <!-- Container Tempat List Riwayat Renditan -->
+                    <div id="container-riwayat-servis" class="space-y-3">
+                    <div class="text-center py-8 text-gray-400 text-xs">
+                        Belum ada riwayat transaksi servis tercatat.
+                    </div>
+                    </div>
                 </div>
-                </div>
-            </div>
 
             </div>
 
@@ -2858,7 +2858,7 @@
         // LOGIKA AUTO LOGOUT & LOCK (IDLE & BACKGROUND)
         // ==========================================
 
-        const WAKTU_IDLE_MAX = 10 * 60 * 1000; // 10 Menit (dalam milidetik)
+        const WAKTU_IDLE_MAX = 30 * 60 * 1000; // 30 Menit (dalam milidetik)
         let timerIdle = null;
 
         // 1. FUNGSI UNTUK MERESET TIMER INAKTIVITAS
@@ -3057,7 +3057,7 @@
         // Variable global untuk memantau tab yang sedang aktif (default: rekap)
         let currentTab = 'rekap'; 
 
-        // REVISI 1: Fungsi Perpindahan Tab + Update State Tombol Tengah + Auto Load Data Tabungan
+        // REVISI 1: Fungsi Perpindahan Tab + Update State Tombol Tengah + Auto Load Data Tabungan & Servis
         function openTab(evt, tabName) {
             // 1. Simpan nama tab aktif saat ini ke variable global
             currentTab = tabName;
@@ -3079,7 +3079,7 @@
             if (targetContent) targetContent.classList.add("active-content");
             if (evt && evt.currentTarget) evt.currentTarget.classList.add("active-tab");
 
-            // REVISI ICON TOMBOL TENGAH (Dinamis Sesuai Request Baru)
+            // REVISI ICON TOMBOL TENGAH
             const btnTengah = document.getElementById('smart-plus-btn');
             const plusIcon = document.querySelector('#smart-plus-btn i');
             
@@ -3105,7 +3105,7 @@
             if (tabName === 'tabungan') {
                 const containerRiwayat = document.getElementById('container-riwayat-mutasi-tabungan');
                 
-                // Tampilkan loading spinner sementara agar UX terasa responsif
+                // Tampilkan loading spinner sementara
                 if (containerRiwayat) {
                     containerRiwayat.innerHTML = `
                         <div class="text-center py-10 text-gray-400 animate-pulse">
@@ -3117,6 +3117,24 @@
                 // Panggil fungsi render tabungan
                 if (typeof window.renderKontenTabTabungan === 'function') {
                     window.renderKontenTabTabungan();
+                }
+            } 
+            // 🚀 HIT OTOMATIS: Dapatkan & Render Data REST API saat Tab Servis dibuka
+            else if (tabName === 'servis') {
+                const containerServis = document.getElementById('container-riwayat-servis');
+                
+                // Tampilkan loading spinner sementara
+                if (containerServis) {
+                    containerServis.innerHTML = `
+                        <div class="text-center py-10 text-gray-400 animate-pulse">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2 block text-blue-500"></i>
+                            <p class="text-[10px] font-bold">Memuat data servis & kendaraan...</p>
+                        </div>`;
+                }
+
+                // Panggil fungsi render servis
+                if (typeof window.renderKontenTabServis === 'function') {
+                    window.renderKontenTabServis();
                 }
             }
         }
@@ -3164,13 +3182,13 @@
                     }
                     break;
                     
-                case 'servis':
-                    if (typeof openEditServisModal === 'function') {
-                        openEditServisModal();
-                    } else {
-                        tampilAlert("Membuka Modal Menu Edit / Tambah Servis...");
-                    }
-                    break;
+                //case 'servis':
+                //    if (typeof openEditServisModal === 'function') {
+                //        openEditServisModal();
+                //    } else {
+                //        tampilAlert("Membuka Modal Menu Edit / Tambah Servis...");
+                //    }
+                //    break;
             }
         }
 
@@ -7124,16 +7142,15 @@
         };
 
         // =================================================================
-        // FUNGSIONALITAS RENDER TAB SERVIS & KENDARAAN (REST API FIRESTORE)
+        // FUNGSIONALITAS RENDER TAB SERVIS & KENDARAAN (DISESUAIKAN DENGAN HTML)
         // =================================================================
         window.renderKontenTabServis = async function() {
-            // Container tempat daftar riwayat akan dirender
-            const containerRiwayat = document.getElementById('container-riwayat-servis') || document.getElementById('riwayat-servis-list');
+            const containerRiwayat = document.getElementById('container-riwayat-servis');
             
-            // 1. Validasi Sesi User & Token
+            // 1. Validasi Sesi User & Token Firebase
             const userAktif = window.currentUser || (window.auth ? window.auth.currentUser : null);
             if (!userAktif) {
-                console.warn("Render servis dibatalkan: User belum login.");
+                console.warn("Render servis dibatalkan: Sesi User belum aktif.");
                 return;
             }
 
@@ -7155,7 +7172,7 @@
             let daftarSemuaServis = [];
 
             try {
-                // 2. Ambil semua dokumen induk rekap_finansial milik User
+                // 2. Ambil semua dokumen rekap_finansial milik User
                 const urlRekap = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/rekap_finansial?pageSize=100`;
                 const responRekap = await fetch(urlRekap, { method: 'GET', headers: headersRest });
 
@@ -7163,7 +7180,7 @@
                     const dataRekap = await responRekap.json();
                     const docsRekap = dataRekap.documents || [];
 
-                    // Filter hanya dokumen induk yang diawali 'out_transportasi_'
+                    // Filter dokumen yang diawali dengan 'out_transportasi_'
                     const indukTransportasi = docsRekap.filter(d => {
                         const parts = d.name.split('/');
                         const idDoc = parts[parts.length - 1];
@@ -7187,26 +7204,27 @@
                                 const idRincian = partsR[partsR.length - 1];
                                 const f = doc.fields || {};
 
-                                // Extract data sesuai nama field di Firestore
+                                // Pengecekan Kata Kunci (Servis/Service) jika ada filter
+                                const ketText = f.keterangan?.stringValue || f.detailServis?.stringValue || "";
+                                
+                                // Extract Data dari Struktur REST API
                                 const idKendaraan = f.idKendaraan?.stringValue || f.idKendaraan?.integerValue || "1";
                                 const kmAwal = parseInt(f.kmAwal?.integerValue || f.kmAwal?.stringValue || 0, 10);
                                 const kmAkhir = parseInt(f.kmAkhir?.integerValue || f.kmAkhir?.stringValue || 0, 10);
-                                const potongan = parseInt(f.potongan?.integerValue || f.potongan?.stringValue || 0, 10);
-                                const isoWaktu = f.waktuTransaksi?.timestampValue || f.waktuTransaksi?.stringValue || new Date().toISOString();
-                                const detailServis = f.detailServis?.stringValue || f.keterangan?.stringValue || "Servis Kendaraan";
+                                const potongan = parseInt(f.potongan?.integerValue || f.potongan?.stringValue || f.biaya?.integerValue || 0, 10);
+                                const isoWaktu = f.waktuTransaksi?.timestampValue || f.waktuTransaksi?.stringValue || f.tanggal?.stringValue || new Date().toISOString();
+                                const detailServis = f.detailServis?.stringValue || ketText || "Servis Kendaraan";
 
                                 daftarSemuaServis.push({
                                     id: idRincian,
                                     idKendaraan: String(idKendaraan),
                                     detailServis: detailServis,
-                                    keterangan: f.keterangan?.stringValue || detailServis,
+                                    keterangan: ketText || detailServis,
                                     kmAwal: kmAwal,
                                     kmAkhir: kmAkhir,
                                     trip: Math.max(0, kmAkhir - kmAwal),
                                     biaya: potongan,
-                                    periode: f.periode?.stringValue || "",
-                                    waktuTransaksi: isoWaktu,
-                                    namaUser: f.namaUser?.stringValue || ""
+                                    waktuTransaksi: isoWaktu
                                 });
                             });
                         }
@@ -7220,64 +7238,74 @@
             daftarSemuaServis.sort((a, b) => new Date(b.waktuTransaksi).getTime() - new Date(a.waktuTransaksi).getTime());
 
             // =================================================================
-            // LANGKAH 1: ISI PANEL ATAS KENDARAAN 1, 2, DAN 3 (DATA TERBARU)
+            // LANGKAH 1: ISI PANEL ATAS KENDARAAN 1, 2, DAN 3 (DISESUAIKAN DENGAN ID HTML)
             // =================================================================
             const petaTerbaruPerKendaraan = {};
+            const petaLaluPerKendaraan = {};
 
             daftarSemuaServis.forEach(item => {
-                // Karena sudah di-sort descending, transaksi pertama adalah yang terbaru
-                if (!petaTerbaruPerKendaraan[item.idKendaraan]) {
-                    petaTerbaruPerKendaraan[item.idKendaraan] = item;
+                const idK = item.idKendaraan;
+                if (!petaTerbaruPerKendaraan[idK]) {
+                    petaTerbaruPerKendaraan[idK] = item;
+                } else if (!petaLaluPerKendaraan[idK]) {
+                    petaLaluPerKendaraan[idK] = item; // Servis sebelum yang terbaru
                 }
             });
 
-            // Render ke Elemen Panel Kendaraan 1, 2, dan 3
+            // Loop 3 Panel Kendaraan v1, v2, v3
             [1, 2, 3].forEach(idK => {
                 const strId = String(idK);
                 const dataTerbaru = petaTerbaruPerKendaraan[strId];
+                const dataLalu = petaLaluPerKendaraan[strId];
 
-                // Pengenalan ID Elemen DOM (Mendukung ID Fleksibel)
-                const elemTgl = document.getElementById(`kendaraan-${idK}-tgl-lalu`) || document.getElementById(`tgl-servis-k${idK}`);
-                const elemDetail = document.getElementById(`kendaraan-${idK}-servis-terbaru`) || document.getElementById(`servis-terbaru-k${idK}`);
-                const elemKmAwal = document.getElementById(`kendaraan-${idK}-km-awal`) || document.getElementById(`km-awal-k${idK}`);
-                const elemKmAkhir = document.getElementById(`kendaraan-${idK}-km-akhir`) || document.getElementById(`km-akhir-k${idK}`);
-                const elemTrip = document.getElementById(`kendaraan-${idK}-trip`) || document.getElementById(`trip-k${idK}`);
-                const elemCatatan = document.getElementById(`kendaraan-${idK}-catatan`) || document.getElementById(`catatan-k${idK}`);
+                // Sesuai ID HTML Anda: servis-v1-tgl-lalu, servis-v1-tgl-baru, dll.
+                const elemTglLalu = document.getElementById(`servis-v${idK}-tgl-lalu`);
+                const elemTglBaru = document.getElementById(`servis-v${idK}-tgl-baru`);
+                const elemKmAwal = document.getElementById(`servis-v${idK}-km-awal`);
+                const elemKmAkhir = document.getElementById(`servis-v${idK}-km-akhir`);
+                const elemTrip = document.getElementById(`servis-v${idK}-trip`);
+                const elemKet = document.getElementById(`servis-v${idK}-ket`);
 
                 if (dataTerbaru) {
-                    const dObj = new Date(dataTerbaru.waktuTransaksi);
-                    const tglFormatted = dObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                    const dBaru = new Date(dataTerbaru.waktuTransaksi);
+                    const tglBaruStr = dBaru.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 
-                    if (elemTgl) elemTgl.innerText = tglFormatted;
-                    if (elemDetail) elemDetail.innerText = dataTerbaru.detailServis;
+                    if (elemTglBaru) elemTglBaru.innerText = tglBaruStr;
                     if (elemKmAwal) elemKmAwal.innerText = dataTerbaru.kmAwal.toLocaleString('id-ID');
                     if (elemKmAkhir) elemKmAkhir.innerText = dataTerbaru.kmAkhir.toLocaleString('id-ID');
                     if (elemTrip) elemTrip.innerText = `${dataTerbaru.trip.toLocaleString('id-ID')} KM`;
-                    if (elemCatatan) elemCatatan.innerText = dataTerbaru.keterangan || "Tidak ada catatan khusus.";
+                    if (elemKet) elemKet.innerText = dataTerbaru.keterangan || "Servis berkala.";
+
+                    // Tgl servis lalu
+                    if (dataLalu) {
+                        const dLalu = new Date(dataLalu.waktuTransaksi);
+                        if (elemTglLalu) elemTglLalu.innerText = dLalu.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                    } else {
+                        if (elemTglLalu) elemTglLalu.innerText = "-";
+                    }
                 } else {
-                    if (elemTgl) elemTgl.innerText = "-";
-                    if (elemDetail) elemDetail.innerText = "-";
+                    if (elemTglLalu) elemTglLalu.innerText = "-";
+                    if (elemTglBaru) elemTglBaru.innerText = "-";
                     if (elemKmAwal) elemKmAwal.innerText = "0";
                     if (elemKmAkhir) elemKmAkhir.innerText = "0";
                     if (elemTrip) elemTrip.innerText = "0 KM";
-                    if (elemCatatan) elemCatatan.innerText = "Belum ada catatan servis.";
+                    if (elemKet) elemKet.innerText = "Belum ada catatan servis.";
                 }
             });
 
             // =================================================================
             // LANGKAH 2: RENDER DAFTAR RIWAYAT SERVIS DI PANEL BAWAH
             // =================================================================
-            if (!containerRiwayat) return;
+            // Update Counter Total Riwayat (ID HTML: total-riwayat-servis)
+            const elemTotalCounter = document.getElementById('total-riwayat-servis');
+            if (elemTotalCounter) elemTotalCounter.innerText = `${daftarSemuaServis.length} Transaksi`;
 
-            // Update elemen penghitung total transaksi jika ada di HTML
-            const elemCounter = document.getElementById('total-transaksi-servis-count');
-            if (elemCounter) elemCounter.innerText = `${daftarSemuaServis.length} Transaksi`;
+            if (!containerRiwayat) return;
 
             if (daftarSemuaServis.length === 0) {
                 containerRiwayat.innerHTML = `
-                    <div class="text-center py-10 text-gray-400">
-                        <i class="fas fa-wrench text-2xl mb-2 block text-gray-300"></i>
-                        <p class="text-[10px] font-bold">Belum ada riwayat transaksi servis tercatat.</p>
+                    <div class="text-center py-8 text-gray-400 text-xs">
+                        Belum ada riwayat transaksi servis tercatat.
                     </div>`;
                 return;
             }
@@ -7307,12 +7335,12 @@
                         <div class="p-3 flex items-center justify-between gap-2 hover:bg-gray-50 transition">
                             <div class="flex items-center space-x-3 min-w-0">
                                 <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs flex-shrink-0">
-                                    <i class="fas fa-motorcycle"></i>
+                                    <i class="fas fa-wrench"></i>
                                 </div>
                                 <div class="truncate">
                                     <p class="text-xs font-bold text-gray-800 uppercase tracking-wide truncate">${item.keterangan}</p>
                                     <p class="text-[9px] text-gray-400 font-medium capitalize">
-                                        Kendaraan ${item.idKendaraan} • KM: ${item.kmAwal} ➔ ${item.kmAkhir} (${item.trip} KM)
+                                        Kendaraan ${item.idKendaraan} • KM: ${item.kmAwal.toLocaleString('id-ID')} ➔ ${item.kmAkhir.toLocaleString('id-ID')} (${item.trip} KM)
                                     </p>
                                 </div>
                             </div>
@@ -7331,6 +7359,10 @@
 
             containerRiwayat.innerHTML = htmlHasil;
         };
+
+        // Aliaskan fungsi lama ke fungsi baru agar tidak error jika dipanggil di tempat lain
+        window.prosesDataServisDariTransportasi = window.renderKontenTabServis;
+        window.renderTabServis = window.renderKontenTabServis;
 
         // --- INTEGRASI PEMBACAAN DOKUMEN REKAP BULANAN ---
         async function muatDataBulanTerpilih(bulanTahun) {
