@@ -898,7 +898,7 @@
         </div>
 
         <!-- MODAL PENGATURAN AKUN -->
-        <div id="modal-pengaturan" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-xs transition-opacity duration-300 p-4">
+        <div id="modal-pengaturan-akun" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-xs transition-opacity duration-300 p-4">
             <!-- Kontainer Panel Melayang -->
             <div class="bg-white w-full max-w-xs rounded-3xl p-5 space-y-4 shadow-xl transform transition-all duration-300 scale-100 animate__animated animate__zoomIn animate__fast">
                 
@@ -2931,30 +2931,47 @@
             }
         });
 
-        // --- KONTROL MODAL PENGATURAN AKUN (REAL DATA + FIX ASYNC & GOOGLE AVATAR) ---
+        // ==========================================
+        // KONTROL MODAL PENGATURAN AKUN (FIXED SYNC & ASYNC DATA)
+        // ==========================================
 
         // 1. Fungsi Utama untuk Membuka Modal
         window.bukaModalPengaturan = function() {
-            // Tampilkan Modal Terlebih Dahulu
-            const modal = document.getElementById('modal-pengaturan');
+            // A. Tampilkan Modal Terlebih Dahulu
+            const modal = document.getElementById('modal-pengaturan-akun');
             if (modal) {
                 modal.style.display = 'flex';
                 modal.classList.remove('hidden');
             }
 
-            // Ambil instance Firebase Auth
-            const authObj = window.auth || (typeof firebase !== 'undefined' ? firebase.auth() : null);
+            // B. Ambil User Aktif Langsung (Synchronous Fallback)
+            let userAktif = window.currentUser || null;
 
-            if (authObj && typeof authObj.onAuthStateChanged === 'function') {
-                // Panggil Auth Listener agar selalu mendapatkan status user paling aktual (asynchronous)
-                authObj.onAuthStateChanged((user) => {
-                    window.currentUser = user; // Simpan ke variabel global
-                    window.renderDataModalPengaturan(user);
-                });
-            } else {
-                // Fallback jika memanggil instance variabel lokal
-                const userAktif = window.currentUser || (authObj ? authObj.currentUser : null);
+            // Cek dari Firebase Auth jika window.currentUser belum terisi
+            if (!userAktif && typeof firebase !== 'undefined' && firebase.auth) {
+                userAktif = firebase.auth().currentUser;
+            } else if (!userAktif && window.auth && window.auth.currentUser) {
+                userAktif = window.auth.currentUser;
+            }
+
+            // C. Jika user langsung ditemukan di memori, render seketika!
+            if (userAktif) {
+                window.currentUser = userAktif;
                 window.renderDataModalPengaturan(userAktif);
+            } else {
+                // D. Jika belum ditemukan, panggil Listener Auth (Async)
+                const authObj = window.auth || (typeof firebase !== 'undefined' ? firebase.auth() : null);
+                if (authObj && typeof authObj.onAuthStateChanged === 'function') {
+                    const unsubscribe = authObj.onAuthStateChanged((user) => {
+                        window.currentUser = user;
+                        window.renderDataModalPengaturan(user);
+                        // Unsubscribe agar listener tidak menumpuk tiap kali modal dibuka
+                        if (typeof unsubscribe === 'function') unsubscribe();
+                    });
+                } else {
+                    // Fallback terakhir (Guest/Belum Login)
+                    window.renderDataModalPengaturan(null);
+                }
             }
         };
 
@@ -3038,7 +3055,7 @@
 
         // 3. Fungsi Tutup Modal
         window.tutupModalPengaturan = function() {
-            const modal = document.getElementById('modal-pengaturan');
+            const modal = document.getElementById('modal-pengaturan-akun');
             if (modal) {
                 modal.style.display = 'none';
                 modal.classList.add('hidden');
