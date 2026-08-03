@@ -389,7 +389,7 @@
                     </div>
 
                     <!-- Tanggal Servis -->
-                    <div class="grid grid-cols-2 gap-2 text-xs bg-gray-50 p-2.5 rounded-xl mb-3">
+                    <div class="grid grid-cols-2 gap-2 text-xs bg-blue-50/50 p-2.5 rounded-xl mb-3">
                     <div>
                         <span class="text-gray-400 block text-[10px]">TGL SERVIS LALU</span>
                         <span id="servis-v1-tgl-lalu" class="font-medium text-gray-600">-</span>
@@ -419,7 +419,7 @@
                     <!-- Keterangan -->
                     <div>
                     <span class="text-gray-400 block text-[10px] mb-0.5">KETERANGAN / CATATAN</span>
-                    <p id="servis-v1-ket" class="text-xs text-gray-600 italic bg-gray-50 p-2 rounded-lg min-h-[38px] line-clamp-2">Belum ada catatan servis.</p>
+                    <p id="servis-v1-ket" class="text-xs text-blue-600 bg-blue-50/50 p-2 rounded-lg min-h-[38px] line-clamp-2">Belum ada catatan servis.</p>
                     </div>
                 </div>
 
@@ -437,7 +437,7 @@
                     </button>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2 text-xs bg-gray-50 p-2.5 rounded-xl mb-3">
+                    <div class="grid grid-cols-2 gap-2 text-xs bg-emerald-50/50 p-2.5 rounded-xl mb-3">
                     <div>
                         <span class="text-gray-400 block text-[10px]">TGL SERVIS LALU</span>
                         <span id="servis-v2-tgl-lalu" class="font-medium text-gray-600">-</span>
@@ -465,7 +465,7 @@
 
                     <div>
                     <span class="text-gray-400 block text-[10px] mb-0.5">KETERANGAN / CATATAN</span>
-                    <p id="servis-v2-ket" class="text-xs text-gray-600 italic bg-gray-50 p-2 rounded-lg min-h-[38px] line-clamp-2">Belum ada catatan servis.</p>
+                    <p id="servis-v2-ket" class="text-xs text-emerald-600 bg-emerald-50/50 p-2 rounded-lg min-h-[38px] line-clamp-2">Belum ada catatan servis.</p>
                     </div>
                 </div>
 
@@ -483,7 +483,7 @@
                     </button>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2 text-xs bg-gray-50 p-2.5 rounded-xl mb-3">
+                    <div class="grid grid-cols-2 gap-2 text-xs bg-purple-50/50 p-2.5 rounded-xl mb-3">
                     <div>
                         <span class="text-gray-400 block text-[10px]">TGL SERVIS LALU</span>
                         <span id="servis-v3-tgl-lalu" class="font-medium text-gray-600">-</span>
@@ -511,7 +511,7 @@
 
                     <div>
                     <span class="text-gray-400 block text-[10px] mb-0.5">KETERANGAN / CATATAN</span>
-                    <p id="servis-v3-ket" class="text-xs text-gray-600 italic bg-gray-50 p-2 rounded-lg min-h-[38px] line-clamp-2">Belum ada catatan servis.</p>
+                    <p id="servis-v3-ket" class="text-xs text-purple-600 bg-purple-50/50 p-2 rounded-lg min-h-[38px] line-clamp-2">Belum ada catatan servis.</p>
                     </div>
                 </div>
 
@@ -7142,7 +7142,7 @@
         };
 
         // =================================================================
-        // FUNGSIONALITAS RENDER TAB SERVIS & KENDARAAN (REVISI KHUSUS SERVIS)
+        // FUNGSIONALITAS RENDER TAB SERVIS & KENDARAAN (BERSIHKAN TEKS "SERVIS -")
         // =================================================================
         window.renderKontenTabServis = async function() {
             const containerRiwayat = document.getElementById('container-riwayat-servis');
@@ -7201,15 +7201,15 @@
 
                             docsRincian.forEach(doc => {
                                 const partsR = doc.name.split('/');
-                                const idRincian = partsR[partsR.length - 1]; // misal: astreagrand_servis_1785728862026
+                                const idRincian = partsR[partsR.length - 1];
                                 const f = doc.fields || {};
 
-                                // 🔴 REVISI 1: FILTER KHUSUS SERVIS (Abaikan Bensin)
+                                // FILTER KHUSUS SERVIS (Abaikan Bensin)
                                 const idTransaksiLower = (f.idTransaksi?.stringValue || idRincian).toLowerCase();
                                 const ketLower = (f.keterangan?.stringValue || "").toLowerCase();
                                 
                                 const isServis = idTransaksiLower.includes('servis') || ketLower.includes('servis');
-                                if (!isServis) return; // Lewati jika transaksi bensin/lainnya!
+                                if (!isServis) return; // Lewati jika transaksi bensin!
 
                                 // Extract Data dari Struktur REST API
                                 const idKendaraan = f.idKendaraan?.stringValue || f.idKendaraan?.integerValue || "1";
@@ -7218,15 +7218,18 @@
                                 const potongan = parseInt(f.potongan?.integerValue || f.potongan?.stringValue || 0, 10);
                                 const isoWaktu = f.waktuTransaksi?.timestampValue || f.waktuTransaksi?.stringValue || f.tanggal?.stringValue || new Date().toISOString();
                                 
-                                // Data Detail Servis & Keterangan (Nama/Plat Kendaraan)
+                                // Data Detail Servis
                                 const detailServisVal = f.detailServis?.stringValue || "Servis Kendaraan";
-                                const keteranganVal = f.keterangan?.stringValue || `Servis Kendaraan ${idKendaraan}`;
+
+                                // 🔴 PEMBERSIHAN JUDUL: Hapus kata "Servis - " atau "Servis " dari Keterangan
+                                let ketMentah = f.keterangan?.stringValue || `Kendaraan ${idKendaraan}`;
+                                let namaKendaraanPlat = ketMentah.replace(/^servis\s*[\-–—]?\s*/i, '').trim();
 
                                 daftarSemuaServis.push({
                                     id: idRincian,
                                     idKendaraan: String(idKendaraan),
-                                    detailServis: detailServisVal, // misal: "Ganti Oli"
-                                    keterangan: keteranganVal,     // misal: "Servis - Astrea Grand (H 3129 HW)"
+                                    detailServis: detailServisVal,   // misal: "Servis Injeksi dan Ganti Oli"
+                                    keterangan: namaKendaraanPlat,   // misal: "Vario 110 FI (H 4663 AEW)"
                                     kmAwal: kmAwal,
                                     kmAkhir: kmAkhir,
                                     trip: Math.max(0, kmAkhir - kmAwal),
@@ -7281,7 +7284,7 @@
                     if (elemKmAkhir) elemKmAkhir.innerText = dataTerbaru.kmAkhir.toLocaleString('id-ID');
                     if (elemTrip) elemTrip.innerText = `${dataTerbaru.trip.toLocaleString('id-ID')} KM`;
                     
-                    // 🔴 REVISI 2: CATATAN PANEL DIAMBIL DARI detailServis ("Ganti Oli")
+                    // Catatan Panel dari detailServis
                     if (elemKet) elemKet.innerText = dataTerbaru.detailServis || "Servis Berkala";
 
                     // Tanggal Servis Lalu
@@ -7345,10 +7348,10 @@
                                     <i class="fas fa-wrench"></i>
                                 </div>
                                 <div class="truncate">
-                                    <!-- 🔴 REVISI 3: JUDUL UTAMA = Nama Kendaraan & Plat (keterangan) -->
+                                    <!-- 🔴 HASIL: "Vario 110 FI (H 4663 AEW)" -->
                                     <p class="text-[12px] font-bold text-gray-800 uppercase tracking-wide truncate">${item.keterangan}</p>
                                     
-                                    <!-- 🔴 REVISI 3: KETERANGAN BAWAH = detailServis + KM / Trip -->
+                                    <!-- KETERANGAN BAWAH: "Servis Injeksi dan Ganti Oli • KM: 0 ➔ 73.996 (73.996 KM)" -->
                                     <p class="text-[10px] text-gray-500 font-medium capitalize">
                                         <span class="font-semibold text-blue-600">${item.detailServis}</span> • KM: ${item.kmAwal.toLocaleString('id-ID')} ➔ ${item.kmAkhir.toLocaleString('id-ID')} (${item.trip} KM)
                                     </p>
