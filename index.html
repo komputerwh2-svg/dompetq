@@ -175,8 +175,8 @@
             <div class="flex items-center space-x-4">
                 <p class="text-xs font-semibold hidden sm:block text-blue-200/80">Senin, 29 Juni 2026</p>
                     
-                <!-- Tombol Profil / Pengaturan Akun -->
-                <button type="button" onclick="window.bukaModalPengaturan()" class="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 border border-white/30 flex items-center justify-center font-bold text-xs text-white shadow-inner transition transform active:scale-95 overflow-hidden group">
+                <!-- Tombol Profil Header (Diberi ID agar bisa dirender foto oleh JS) -->
+                <button id="btn-header-avatar" type="button" onclick="window.openLoginModal()" class="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 border border-white/30 flex items-center justify-center font-bold text-xs text-white shadow-inner transition transform active:scale-95 overflow-hidden group">
                     <span id="header-avatar-text" class="group-hover:scale-105 transition duration-200">ID</span>
                 </button>
             </div>
@@ -3075,6 +3075,11 @@
                 }
                 if (iconCloud) iconCloud.className = "fas fa-database text-xs text-rose-500";
             }
+
+            // Update foto avatar di header pojok kanan atas
+            if (typeof window.updateHeaderAvatar === 'function') {
+                window.updateHeaderAvatar(userAktif);
+            }
         };
 
         // 3. Fungsi Tutup Modal
@@ -3093,10 +3098,32 @@
                 authObj.onAuthStateChanged((user) => {
                     if (user) {
                         window.currentUser = user;
+                        window.updateHeaderAvatar(user);
                     }
                 });
             }
         });
+
+        // ==========================================
+        // RENDER FOTO PROFIL DI HEADER ATAS
+        // ==========================================
+        window.updateHeaderAvatar = function(userAktif) {
+            const btnHeader = document.getElementById('btn-header-avatar');
+            if (!btnHeader) return;
+
+            if (userAktif && userAktif.photoURL) {
+                // Tampilkan Foto Profil Google jika tersedia
+                btnHeader.innerHTML = `<img src="${userAktif.photoURL}" alt="Avatar" class="w-full h-full object-cover rounded-full">`;
+            } else if (userAktif) {
+                // Tampilkan Inisial Nama jika tidak ada foto
+                let nama = userAktif.displayName || (userAktif.email ? userAktif.email.split('@')[0] : "U");
+                let inisial = nama.charAt(0).toUpperCase();
+                btnHeader.innerHTML = `<span class="font-bold text-xs text-white">${inisial}</span>`;
+            } else {
+                // Default saat belum login
+                btnHeader.innerHTML = `<span id="header-avatar-text" class="font-bold text-xs text-white">ID</span>`;
+            }
+        };
 
         // Fungsi Eksekusi Logout secara Aman
         window.eksekusiLogoutAkun = async function() {
