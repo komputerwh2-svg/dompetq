@@ -174,9 +174,10 @@
 
             <div class="flex items-center space-x-4">
                 <p class="text-xs font-semibold hidden sm:block text-blue-200/80">Senin, 29 Juni 2026</p>
-                   
-                <button onclick="openLoginModal()" class="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 border border-white/30 flex items-center justify-center font-bold text-xs text-white shadow-inner transition transform active:scale-95 overflow-hidden group">
-                    <span class="group-hover:scale-105 transition duration-200">ID</span>
+                    
+                <!-- Tombol Profil / Pengaturan Akun -->
+                <button type="button" onclick="window.bukaModalPengaturan()" class="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 border border-white/30 flex items-center justify-center font-bold text-xs text-white shadow-inner transition transform active:scale-95 overflow-hidden group">
+                    <span id="header-avatar-text" class="group-hover:scale-105 transition duration-200">ID</span>
                 </button>
             </div>
 
@@ -2274,32 +2275,26 @@
         // =================================================================
 
         // =================================================================
-        // UPDATE FUNGSIONALITAS TOMBOL PROFIL (MULTI-USER READY)
+        // UPDATE FUNGSIONALITAS TOMBOL PROFIL (MULTI-USER READY - FIXED)
         // =================================================================
         window.openLoginModal = function() {
-            // 1. JIKA USER SUDAH LOGIN: Buka Modal Profil / Pengaturan Akun
-            if (window.userSudahLogin && window.currentUser) {
-                console.log("User sudah login. Menampilkan Modal Profil/Pengaturan...");
+            // 1. JIKA USER SUDAH LOGIN: Buka Modal Pengaturan Akun Terbaru
+            if (window.userSudahLogin || window.currentUser || (typeof firebase !== 'undefined' && firebase.auth().currentUser)) {
+                console.log("User sudah login. Menampilkan Modal Pengaturan Akun...");
                 
-                // Isi data profil user yang sedang aktif ke elemen modal pengaturan (jika ada)
-                const txtEmail = document.getElementById('user-profile-email');
-                const txtNama = document.getElementById('user-profile-name');
-                const imgFoto = document.getElementById('user-profile-img');
-
-                if (txtEmail) txtEmail.innerText = window.currentUser.email || '-';
-                if (txtNama) txtNama.innerText = window.currentUser.displayName || 'Pengguna DompetQ';
-                if (imgFoto && window.currentUser.photoURL) imgFoto.src = window.currentUser.photoURL;
-
-                const modalPengaturan = document.getElementById('modal-pengaturan') || document.getElementById('profile-modal');
-                if (modalPengaturan) {
-                    modalPengaturan.classList.remove('hidden');
+                // Panggil fungsi utama buka modal pengaturan yang baru
+                if (typeof window.bukaModalPengaturan === 'function') {
+                    window.bukaModalPengaturan();
                 } else {
-                    // Fallback konfirmasi Logout jika modal khusus belum ada
-                    if (confirm(`Anda login sebagai: ${window.currentUser.email}\n\nApakah Anda ingin Logout?`)) {
-                        if (typeof window.handleLogout === 'function') {
-                            window.handleLogout();
-                        } else if (window.auth) {
-                            window.signOut(window.auth);
+                    // Fallback cari elemen ID modal secara eksplisit
+                    const modalPengaturan = document.getElementById('modal-pengaturan-akun') || 
+                                            document.getElementById('modal-pengaturan') || 
+                                            document.getElementById('profile-modal');
+                    if (modalPengaturan) {
+                        modalPengaturan.style.display = 'flex';
+                        modalPengaturan.classList.remove('hidden');
+                        if (typeof window.renderDataModalPengaturan === 'function') {
+                            window.renderDataModalPengaturan(window.currentUser || firebase.auth().currentUser);
                         }
                     }
                 }
@@ -2310,6 +2305,7 @@
             const modalLogin = document.getElementById('login-modal') || document.getElementById('modal-login');
             if (!modalLogin) return;
             
+            modalLogin.style.display = 'flex';
             modalLogin.classList.remove('hidden');
             
             // Cek fingerprint spesifik berdasarkan email pengguna terakhir di HP ini
@@ -2327,21 +2323,36 @@
                 
                 // Sinkronisasi foto profil dari cache lokal milik user tersebut
                 const fotoTersimpan = localStorage.getItem(photoKey);
-                const profilBtn = document.querySelector('button[onclick="openLoginModal()"]');
+                const profilBtn = document.querySelector('button[onclick="openLoginModal()"]') || document.querySelector('button[onclick="window.openLoginModal()"]');
                 if (profilBtn && fotoTersimpan) {
                     profilBtn.innerHTML = `<img src="${fotoTersimpan}" class="w-full h-full object-cover rounded-full border border-blue-200">`;
                 }
             } else {
-                window.tukarKeFormGoogle();
+                if (typeof window.tukarKeFormGoogle === 'function') {
+                    window.tukarKeFormGoogle();
+                }
             }
         };
 
         window.tutupLoginModal = function() {
             const modalLogin = document.getElementById('login-modal') || document.getElementById('modal-login');
-            if (modalLogin) modalLogin.classList.add('hidden');
+            if (modalLogin) {
+                modalLogin.style.display = 'none';
+                modalLogin.classList.add('hidden');
+            }
             
-            const modalPengaturan = document.getElementById('modal-pengaturan') || document.getElementById('profile-modal');
-            if (modalPengaturan) modalPengaturan.classList.add('hidden');
+            // Gunakan helper penutup modal yang baru
+            if (typeof window.tutupModalPengaturan === 'function') {
+                window.tutupModalPengaturan();
+            } else {
+                const modalPengaturan = document.getElementById('modal-pengaturan-akun') || 
+                                        document.getElementById('modal-pengaturan') || 
+                                        document.getElementById('profile-modal');
+                if (modalPengaturan) {
+                    modalPengaturan.style.display = 'none';
+                    modalPengaturan.classList.add('hidden');
+                }
+            }
         };
 
         // Fungsi beralih kembali dari panel biometrik ke form tombol Google Auth
