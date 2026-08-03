@@ -2931,11 +2931,35 @@
             }
         });
 
-        // --- KONTROL MODAL PENGATURAN AKUN (REAL DATA) ---
-        window.bukaModalPengaturan = function() {
-            // 1. Ambil objek user aktif dari Firebase
-            const userAktif = window.currentUser || (window.auth ? window.auth.currentUser : null);
+        // --- KONTROL MODAL PENGATURAN AKUN (REAL DATA + FIX ASYNC & GOOGLE AVATAR) ---
 
+        // 1. Fungsi Utama untuk Membuka Modal
+        window.bukaModalPengaturan = function() {
+            // Tampilkan Modal Terlebih Dahulu
+            const modal = document.getElementById('modal-pengaturan');
+            if (modal) {
+                modal.style.display = 'flex';
+                modal.classList.remove('hidden');
+            }
+
+            // Ambil instance Firebase Auth
+            const authObj = window.auth || (typeof firebase !== 'undefined' ? firebase.auth() : null);
+
+            if (authObj && typeof authObj.onAuthStateChanged === 'function') {
+                // Panggil Auth Listener agar selalu mendapatkan status user paling aktual (asynchronous)
+                authObj.onAuthStateChanged((user) => {
+                    window.currentUser = user; // Simpan ke variabel global
+                    window.renderDataModalPengaturan(user);
+                });
+            } else {
+                // Fallback jika memanggil instance variabel lokal
+                const userAktif = window.currentUser || (authObj ? authObj.currentUser : null);
+                window.renderDataModalPengaturan(userAktif);
+            }
+        };
+
+        // 2. Fungsi Helper khusus untuk Mengisi/Render UI
+        window.renderDataModalPengaturan = function(userAktif) {
             const elemNama = document.getElementById('pengaturan-user-nama');
             const elemEmail = document.getElementById('pengaturan-user-email');
             const elemAvatar = document.getElementById('pengaturan-user-avatar');
@@ -2946,27 +2970,33 @@
             const iconCloud = document.getElementById('icon-status-cloud');
             const btnLogout = document.getElementById('btn-aksi-logout');
 
-            // 2. Render Data User Asli
+            // Render Data User Asli
             if (userAktif) {
                 const email = userAktif.email || "-";
                 const nama = userAktif.displayName || (userAktif.email ? userAktif.email.split('@')[0] : "Pengguna");
+                const photoURL = userAktif.photoURL;
 
                 if (elemNama) elemNama.innerText = nama;
                 if (elemEmail) elemEmail.innerText = email;
                 if (elemUid) elemUid.innerText = userAktif.uid || "-";
                 
+                // Render Avatar Foto Profil Google jika tersedia
                 if (elemAvatar) {
-                    elemAvatar.innerText = nama !== "-" ? nama.charAt(0).toUpperCase() : "U";
+                    if (photoURL) {
+                        elemAvatar.innerHTML = `<img src="${photoURL}" alt="User Avatar" class="w-full h-full rounded-full object-cover">`;
+                    } else {
+                        elemAvatar.innerText = nama !== "-" ? nama.charAt(0).toUpperCase() : "U";
+                    }
                 }
 
                 if (avatarBg) {
-                    avatarBg.className = "w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm transition-all";
+                    avatarBg.className = "w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm transition-all overflow-hidden";
                 }
 
                 if (btnLogout) btnLogout.style.display = "flex";
 
             } else {
-                // Jika tidak ada user login
+                // Jika tidak ada user login / Guest
                 if (elemNama) elemNama.innerText = "Belum Login";
                 if (elemEmail) elemEmail.innerText = "Sesi Tidak Ditemukan";
                 if (elemUid) elemUid.innerText = "Offline / Guest";
@@ -2982,7 +3012,7 @@
                 if (btnLogout) btnLogout.style.display = "none";
             }
 
-            // 3. Cek Status Real Koneksi & Cloud Firestore
+            // Cek Status Real Koneksi & Cloud Firestore
             const isOnline = navigator.onLine;
 
             if (isOnline && userAktif) {
@@ -3004,20 +3034,14 @@
                 }
                 if (iconCloud) iconCloud.className = "fas fa-database text-xs text-rose-500";
             }
-
-            // 4. Tampilkan Modal
-            const modal = document.getElementById('modal-pengaturan');
-            if (modal) {
-                modal.style.display = 'flex';
-                modal.classList.remove('hidden');
-            }
         };
 
+        // 3. Fungsi Tutup Modal
         window.tutupModalPengaturan = function() {
             const modal = document.getElementById('modal-pengaturan');
             if (modal) {
+                modal.style.display = 'none';
                 modal.classList.add('hidden');
-                modal.style.display = '';
             }
         };
 
