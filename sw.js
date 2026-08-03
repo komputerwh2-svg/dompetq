@@ -1,10 +1,10 @@
-const CACHE_NAME = 'dompetq-v1';
+const CACHE_NAME = 'dompetq-v2'; // Naikkan versi cache
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
-  'https://cdn.tailwindcss.com',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
+  // 'https://cdn.tailwindcss.com' <-- DIHAPUS agar tidak bentrok CORS
 ];
 
 // 1. Install Event (Caching Aset Utama)
@@ -12,7 +12,10 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('[Service Worker] Caching assets...');
-      return cache.addAll(ASSETS_TO_CACHE);
+      // Menggunakan Promise.allSettled agar jika ada 1 asset gagal, sisanya tetap ter-cache
+      return Promise.allSettled(
+        ASSETS_TO_CACHE.map((url) => cache.add(url))
+      );
     })
   );
   self.skipWaiting();
@@ -25,7 +28,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cache) => {
           if (cache !== CACHE_NAME) {
-            console.log('[Service Worker] Clearing old cache...');
+            console.log('[Service Worker] Clearing old cache:', cache);
             return caches.delete(cache);
           }
         })
@@ -35,23 +38,42 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// 3. Fetch Event (Network First dengan Fallback Cache)
+// 3. Fetch Event (Network First dengan Fallback Cache & Handling CORS)
 self.addEventListener('fetch', (event) => {
-  // Biarkan request API/Firestore langsung ke jaringan online
-  if (event.request.url.includes('firestore.googleapis.com') || event.request.url.includes('identitytoolkit')) {
+  const reqUrl = event.request.url;
+
+  // Abaikan request ke Firebase API & Tailwind CDN dari penanganan SW
+  if (
+    reqUrl.includes('firestore.googleapis.com') || 
+    reqUrl.includes('identitytoolkit') ||
+    reqUrl.includes('cdn.tailwindcss.com')
+  ) {
     return;
   }
+
+  // Hanya proses request HTTP/HTTPS GET
+  if (event.request.method !== 'GET') return;
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Clone response jika berhasil dapat data segar dari internet
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseClone);
-        });
+        // Hanya simpan ke cache jika response valid (status 200/basic)
+        if (response && response.status === 200 && response.type === 'basic') {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
         return response;
       })
-      .catch(() => caches.match(event.request)) // Gunakan cache jika offline
+      .catch(async () => {
+        // Ambil dari cache jika offline
+        const cachedResponse = await caches.match(event.request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        // Jika tidak ada di cache, biarkan return kosong tanpa crash
+        return new Response('Offline / Resource not found', { status: 503, statusText: 'Service Unavailable' });
+      })
   );
 });
