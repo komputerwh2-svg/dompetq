@@ -2932,50 +2932,54 @@
         });
 
         // ==========================================
-        // KONTROL MODAL PENGATURAN AKUN (FIXED SYNC & ASYNC DATA)
+        // KONTROL MODAL PENGATURAN AKUN (STRICT SYNC & REALTIME RENDER)
         // ==========================================
 
         // 1. Fungsi Utama untuk Membuka Modal
         window.bukaModalPengaturan = function() {
-            // A. Tampilkan Modal Terlebih Dahulu
             const modal = document.getElementById('modal-pengaturan-akun');
             if (modal) {
                 modal.style.display = 'flex';
                 modal.classList.remove('hidden');
             }
 
-            // B. Ambil User Aktif Langsung (Synchronous Fallback)
+            // A. Ambil User secara Hirarki (Cari dari Instance Paling Cepat)
             let userAktif = window.currentUser || null;
 
-            // Cek dari Firebase Auth jika window.currentUser belum terisi
             if (!userAktif && typeof firebase !== 'undefined' && firebase.auth) {
                 userAktif = firebase.auth().currentUser;
-            } else if (!userAktif && window.auth && window.auth.currentUser) {
+            } 
+            
+            if (!userAktif && window.auth && window.auth.currentUser) {
                 userAktif = window.auth.currentUser;
             }
 
-            // C. Jika user langsung ditemukan di memori, render seketika!
+            // B. Langsung Render Jika User Ditemukan
             if (userAktif) {
                 window.currentUser = userAktif;
                 window.renderDataModalPengaturan(userAktif);
             } else {
-                // D. Jika belum ditemukan, panggil Listener Auth (Async)
+                // C. Jika belum ada di memori, panggil Listener Firebase Auth
                 const authObj = window.auth || (typeof firebase !== 'undefined' ? firebase.auth() : null);
                 if (authObj && typeof authObj.onAuthStateChanged === 'function') {
                     const unsubscribe = authObj.onAuthStateChanged((user) => {
-                        window.currentUser = user;
-                        window.renderDataModalPengaturan(user);
-                        // Unsubscribe agar listener tidak menumpuk tiap kali modal dibuka
+                        if (user) {
+                            window.currentUser = user;
+                            window.renderDataModalPengaturan(user);
+                        } else {
+                            window.renderDataModalPengaturan(null);
+                        }
+                        // Hentikan listener setelah 1x panggil agar tidak numpuk
                         if (typeof unsubscribe === 'function') unsubscribe();
                     });
                 } else {
-                    // Fallback terakhir (Guest/Belum Login)
+                    // D. Fallback jika benar-benar Guest / Offline total
                     window.renderDataModalPengaturan(null);
                 }
             }
         };
 
-        // 2. Fungsi Helper khusus untuk Mengisi/Render UI
+        // 2. Fungsi Helper khusus untuk Mengisi/Render Data ke UI
         window.renderDataModalPengaturan = function(userAktif) {
             const elemNama = document.getElementById('pengaturan-user-nama');
             const elemEmail = document.getElementById('pengaturan-user-email');
@@ -2987,22 +2991,31 @@
             const iconCloud = document.getElementById('icon-status-cloud');
             const btnLogout = document.getElementById('btn-aksi-logout');
 
-            // Render Data User Asli
             if (userAktif) {
-                const email = userAktif.email || "-";
-                const nama = userAktif.displayName || (userAktif.email ? userAktif.email.split('@')[0] : "Pengguna");
-                const photoURL = userAktif.photoURL;
+                // Ekstraksi data user
+                const email = userAktif.email || "Email Tidak Ada";
+                
+                // Cari nama: dari displayName -> potongan email -> Default
+                let nama = userAktif.displayName;
+                if (!nama && userAktif.email) {
+                    nama = userAktif.email.split('@')[0];
+                }
+                if (!nama) nama = "Pengguna";
 
+                const photoURL = userAktif.photoURL;
+                const uid = userAktif.uid || "-";
+
+                // Inject Data ke DOM HTML
                 if (elemNama) elemNama.innerText = nama;
                 if (elemEmail) elemEmail.innerText = email;
-                if (elemUid) elemUid.innerText = userAktif.uid || "-";
+                if (elemUid) elemUid.innerText = uid;
                 
-                // Render Avatar Foto Profil Google jika tersedia
+                // Render Avatar Profil
                 if (elemAvatar) {
                     if (photoURL) {
-                        elemAvatar.innerHTML = `<img src="${photoURL}" alt="User Avatar" class="w-full h-full rounded-full object-cover">`;
+                        elemAvatar.innerHTML = `<img src="${photoURL}" alt="Avatar" class="w-full h-full rounded-full object-cover">`;
                     } else {
-                        elemAvatar.innerText = nama !== "-" ? nama.charAt(0).toUpperCase() : "U";
+                        elemAvatar.innerText = nama.charAt(0).toUpperCase();
                     }
                 }
 
@@ -3013,7 +3026,7 @@
                 if (btnLogout) btnLogout.style.display = "flex";
 
             } else {
-                // Jika tidak ada user login / Guest
+                // Jika status Guest / Belum Login
                 if (elemNama) elemNama.innerText = "Belum Login";
                 if (elemEmail) elemEmail.innerText = "Sesi Tidak Ditemukan";
                 if (elemUid) elemUid.innerText = "Offline / Guest";
@@ -3029,7 +3042,7 @@
                 if (btnLogout) btnLogout.style.display = "none";
             }
 
-            // Cek Status Real Koneksi & Cloud Firestore
+            // Cek Status Realtime Network & Cloud Status
             const isOnline = navigator.onLine;
 
             if (isOnline && userAktif) {
@@ -3061,6 +3074,18 @@
                 modal.classList.add('hidden');
             }
         };
+
+        // 4. Inisialisasi Listener Global (Mencegah Lag saat Modal Pertama Ditekan)
+        document.addEventListener('DOMContentLoaded', () => {
+            const authObj = window.auth || (typeof firebase !== 'undefined' ? firebase.auth() : null);
+            if (authObj && typeof authObj.onAuthStateChanged === 'function') {
+                authObj.onAuthStateChanged((user) => {
+                    if (user) {
+                        window.currentUser = user;
+                    }
+                });
+            }
+        });
 
         // Fungsi Eksekusi Logout secara Aman
         window.eksekusiLogoutAkun = async function() {
